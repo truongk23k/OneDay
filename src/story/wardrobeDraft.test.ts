@@ -34,3 +34,29 @@ test('isPicked tells which pieces are selected', () => {
   expect(isPicked({ kind: 'item', id: 'polo', rot: 0 })).toBe(true)
   expect(isPicked({ kind: 'item', id: 'teeRed', rot: 0 })).toBe(false)
 })
+
+describe('try-on pickers', () => {
+  test('cycling a slot walks through that slot’s clothes and wraps around', () => {
+    const { cycle } = useDraft.getState()
+    const seen = new Set<string>()
+    for (let i = 0; i < 5; i++) {
+      cycle('top', 1)
+      seen.add(useDraft.getState().draft.top)
+    }
+    expect(seen.size).toBe(5)
+    expect(useDraft.getState().draft.top).toBe('pyjama')
+  })
+
+  test('cycling backwards from the first item goes to the last', () => {
+    useDraft.getState().reset({ ...PYJAMAS, shoes: 'sneakers' })
+    useDraft.getState().cycle('shoes', -1)
+    expect(useDraft.getState().draft.shoes).toBe('honeycomb')
+  })
+
+  test('cycling never picks junk and keeps the other slots', () => {
+    useDraft.getState().cycle('bottom', 1)
+    const d = useDraft.getState().draft
+    expect(['khaki', 'shortsBlack', 'floral']).toContain(d.bottom)
+    expect(d.top).toBe('pyjama')
+  })
+})

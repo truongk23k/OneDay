@@ -100,7 +100,9 @@ export const S = {
     },
     raincoat: 'Áo mưa',
     hintFrom: 'Em ❤️',
-    tip: 'Bấm vào quần áo trong tủ để chọn',
+    tip: 'Bấm ‹ › để thử, hoặc bấm thẳng vào quần áo trong tủ',
+    prev: 'trước',
+    next: 'tiếp',
     picked: 'Đang chọn',
     hints: {
       white: 'Hôm nay mặc áo trắng đôi với em nha 🤍',

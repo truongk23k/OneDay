@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
-import { HINTS, ICONS, itemLabel } from '../story/outfit'
+import { HINTS, ICONS, itemById, itemLabel, type Slot } from '../story/outfit'
 import { useStory } from '../story/store'
 import { useDraft } from '../story/wardrobeDraft'
 import { S } from '../strings'
 
-// Bảng chữ khi tủ đồ đang mở: gợi ý của Em ở trên, bộ đang chọn + nút "Mặc"/"Đóng" ở dưới.
-// Quần áo thật được chọn bằng cách bấm vào chúng trong cảnh 3D (WardrobeScene).
+const SLOTS: Slot[] = ['top', 'bottom', 'shoes']
+
+// Thử đồ trước tủ: Anh đứng trước tủ mở, bấm ‹ › để thay từng món và thấy ngay trên người Anh.
 export function Wardrobe() {
   const overlay = useStory((st) => st.s.overlay)
   const current = useStory((st) => st.s.outfit)
@@ -21,21 +22,40 @@ export function Wardrobe() {
   }, [overlay, current])
 
   if (overlay !== 'wardrobe') return null
+  const { cycle, toggleRaincoat } = useDraft.getState()
   return (
     <>
-      <div className="wardrobe-top">
+      <div className="dress-hint">
         <div className="em-bubble">
           <span className="em-name">{S.wardrobe.hintFrom}</span> {S.wardrobe.hints[HINTS[hint].id]}
         </div>
         {weather === 'rain' && <p className="game-line">{S.wardrobe.rainHint}</p>}
         {junkLine && <p className="game-line">{junkLine}</p>}
       </div>
-      <div className="wardrobe-bottom">
-        <div className="picked">
-          {ICONS[draft.top]} {itemLabel(draft.top)} · {ICONS[draft.bottom]} {itemLabel(draft.bottom)} · {ICONS[draft.shoes]}{' '}
-          {itemLabel(draft.shoes)}
-          {draft.raincoat && ` · ${ICONS.raincoat} ${S.wardrobe.raincoat}`}
-        </div>
+      <div className="dress-panel">
+        {SLOTS.map((slot) => {
+          const id = draft[slot]
+          const name = S.wardrobe.slots[slot]
+          return (
+            <div key={slot} className="dress-row">
+              <button className="dress-arrow" aria-label={`${name} ${S.wardrobe.prev}`} onClick={() => cycle(slot, -1)}>
+                ‹
+              </button>
+              <div className="dress-item">
+                <div className="dress-slot">{name}</div>
+                <div className="dress-name">
+                  <span className="swatch" style={{ background: itemById(id).color }} /> {ICONS[id]} <span>{itemLabel(id)}</span>
+                </div>
+              </div>
+              <button className="dress-arrow" aria-label={`${name} ${S.wardrobe.next}`} onClick={() => cycle(slot, 1)}>
+                ›
+              </button>
+            </div>
+          )
+        })}
+        <button className={draft.raincoat ? 'dress-toggle on' : 'dress-toggle'} aria-pressed={draft.raincoat} onClick={toggleRaincoat}>
+          {ICONS.raincoat} {S.wardrobe.raincoat}
+        </button>
         <div className="wardrobe-buttons">
           <button className="btn btn-ghost" onClick={() => dispatch({ type: 'close' })}>
             {S.hud.close}

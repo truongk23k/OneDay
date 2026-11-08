@@ -7,6 +7,7 @@ import { useGame } from '../store'
 import { player } from '../story/interact'
 import { itemById } from '../story/outfit'
 import { useStory } from '../story/store'
+import { useDraft } from '../story/wardrobeDraft'
 import { Character, type Motion } from './Character'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
@@ -22,9 +23,10 @@ const PITCH_MAX = 1.1
 const MOUSE_SENS = 0.005
 const TURN_RATE = 12
 
-// Camera nhìn thẳng vào tủ quần áo khi mở tủ chọn đồ.
-const WARDROBE_CAM: [number, number, number] = [2.1, 1.2, 5.0]
-const WARDROBE_LOOK: [number, number, number] = [0.3, 1.1, 5.0]
+// Thử đồ: Anh đứng trước tủ đang mở, quay mặt ra phía camera; camera lệch để chừa chỗ cho bảng bên phải.
+const DRESS_SPOT = { x: 1.05, z: 5.0, facing: -Math.PI / 2 }
+const WARDROBE_CAM: [number, number, number] = [2.75, 1.05, 5.0]
+const WARDROBE_LOOK: [number, number, number] = [0.9, 0.85, 4.5]
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
@@ -35,7 +37,11 @@ export function Player() {
   const body = useRef<Group>(null)
   const state = useRef({ x: SPAWN.x, z: SPAWN.z, yaw: SPAWN.yaw, pitch: 0.45, facing: SPAWN.yaw })
   const gl = useThree((s) => s.gl)
-  const outfit = useStory((st) => st.s.outfit)
+  const worn = useStory((st) => st.s.outfit)
+  const trying = useDraft((d) => d.draft)
+  const dressing = useStory((st) => st.s.overlay === 'wardrobe')
+  // Đang thử đồ thì mặc luôn bộ đang thử.
+  const outfit = dressing ? trying : worn
   const seed = useStory((st) => st.s.seed)
 
   // Lượt chơi mới: Anh về chỗ cạnh giường, camera quay về hướng cửa.
@@ -133,7 +139,13 @@ export function Player() {
     const toWardrobe = st.overlay === 'wardrobe' ? 1 : 0
     wardrobeCam.current += (toWardrobe - wardrobeCam.current) * Math.min(1, rawDt * 4)
     const wc = wardrobeCam.current
-    if (body.current) body.current.visible = wc < 0.5
+    if (toWardrobe) {
+      s.x = DRESS_SPOT.x
+      s.z = DRESS_SPOT.z
+      s.facing = DRESS_SPOT.facing
+      body.current?.position.set(s.x, 0, s.z)
+      if (body.current) body.current.rotation.y = s.facing
+    }
 
     const cp = Math.cos(s.pitch)
     const back: [number, number, number] = [Math.sin(s.yaw) * cp, Math.sin(s.pitch), Math.cos(s.yaw) * cp]

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { S } from '../strings'
-import { itemById, type PileCard } from './outfit'
+import { WARDROBE, itemById, type PileCard, type Slot } from './outfit'
 import type { Outfit } from './state'
 
 type Draft = {
@@ -10,6 +10,9 @@ type Draft = {
   // Trả về 'junk' khi lỡ lôi ra đồ tào lao (để trừ thời gian bên câu chuyện).
   pick: (c: PileCard) => 'junk' | 'ok'
   isPicked: (c: PileCard) => boolean
+  // Thử món trước/sau trong cùng loại (áo, quần, giày dép).
+  cycle: (slot: Slot, dir: 1 | -1) => void
+  toggleRaincoat: () => void
 }
 
 // Bộ đồ đang chọn trong tủ: dùng chung giữa quần áo 3D (bấm để chọn) và bảng chữ phía trên.
@@ -27,6 +30,14 @@ export const useDraft = create<Draft>()((set, get) => ({
     else set({ draft: { ...draft, [itemById(c.id).slot]: c.id }, junkLine: null })
     return 'ok'
   },
+  cycle: (slot, dir) => {
+    const { draft } = get()
+    const list = WARDROBE.filter((i) => i.slot === slot)
+    const at = list.findIndex((i) => i.id === draft[slot])
+    const next = list[(at + dir + list.length) % list.length]
+    set({ draft: { ...draft, [slot]: next.id }, junkLine: null })
+  },
+  toggleRaincoat: () => set((d) => ({ draft: { ...d.draft, raincoat: !d.draft.raincoat } })),
   isPicked: (c) => {
     const { draft } = get()
     if (c.kind === 'raincoat') return draft.raincoat

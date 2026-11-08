@@ -1,5 +1,5 @@
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, type ReactNode } from 'react'
 import type { Group } from 'three'
 import { itemById, wardrobePile, type PileCard } from '../story/outfit'
 import { useStory } from '../story/store'
@@ -98,6 +98,12 @@ function Garment({ c, base, rotY, parts }: { c: PileCard; base: V3; rotY: number
   )
 }
 
+// Món Anh đang mặc thử thì không còn treo trên thanh nữa.
+function WornHidden({ c, children }: { c: PileCard; children: ReactNode }) {
+  const worn = useDraft((d) => d.isPicked(c) && c.kind !== 'raincoat')
+  return worn ? null : <>{children}</>
+}
+
 // Cửa tủ quần áo mở/đóng + quần áo treo bên trong (chỉ vẽ khi tủ mở).
 export function WardrobeScene() {
   const open = useStory((st) => st.s.overlay === 'wardrobe')
@@ -134,6 +140,7 @@ export function WardrobeScene() {
       ))}
       {open &&
         hanging.map((c, i) => (
+          <WornHidden key={c.id} c={c}>
           <Garment
             key={c.id}
             c={c}
@@ -141,10 +148,13 @@ export function WardrobeScene() {
             rotY={-0.95}
             parts={hangingParts_[i]}
           />
+          </WornHidden>
         ))}
       {open &&
         floor.map((c, i) => (
-          <Garment key={c.id} c={c} base={[0.32, 0.48, W.minZ + 0.22 + i * ((span - 0.1) / floor.length)]} rotY={-Math.PI / 2} parts={floorParts_[i]} />
+          <WornHidden key={c.id} c={c}>
+            <Garment c={c} base={[0.32, 0.48, W.minZ + 0.22 + i * ((span - 0.1) / floor.length)]} rotY={-Math.PI / 2} parts={floorParts_[i]} />
+          </WornHidden>
         ))}
     </group>
   )
