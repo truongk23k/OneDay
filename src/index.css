@@ -820,3 +820,76 @@ body {
   text-align: left;
   cursor: pointer;
 }
+
+/* Tủ đồ 3D đang mở: chỉ có dải chữ trên/dưới, giữa để bấm vào quần áo */
+.wardrobe-top,
+.wardrobe-bottom {
+  position: absolute;
+  z-index: 45;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 120px));
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, 0.82);
+}
+
+.wardrobe-top {
+  top: max(8px, env(safe-area-inset-top));
+}
+
+.wardrobe-top .em-bubble {
+  margin: 0;
+}
+
+.wardrobe-top .game-line {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+.wardrobe-bottom {
+  bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.wardrobe-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.wardrobe-buttons .btn {
+  flex: 1;
+}
+
+.wardrobe-tip {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.6;
+  text-align: center;
+}
+
+@media (max-height: 450px) {
+  .wardrobe-top,
+  .wardrobe-bottom {
+    padding: 5px 10px;
+  }
+
+  .wardrobe-top .em-bubble {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+
+  .wardrobe-bottom .picked {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .wardrobe-buttons .btn {
+    min-height: 38px;
+    padding: 6px 10px;
+  }
+
+  .wardrobe-tip {
+    display: none;
+  }
+}

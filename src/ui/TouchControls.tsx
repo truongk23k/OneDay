@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { createTouchRouter, input, isSprintDrag, joystickVector } from '../player/input'
+import { useStory } from '../story/store'
 
 const JOY_RADIUS = 60
 const LOOK_SENS = 0.008
@@ -12,6 +13,8 @@ export function TouchControls() {
   // Tâm joystick giữ trong ref để input.move được ghi ngay trong sự kiện, không chờ React render.
   const origin = useRef<{ x: number; y: number } | null>(null)
   const [joy, setJoy] = useState<Joy | null>(null)
+  // Khi đang mở bảng (tủ đồ, điện thoại…) thì nhường chạm cho bảng và cảnh 3D.
+  const busy = useStory((st) => st.s.overlay !== null || st.s.phase !== 'room')
 
   const onDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse') return
@@ -56,6 +59,7 @@ export function TouchControls() {
     last.current.delete(e.pointerId)
   }
 
+  if (busy) return null
   return (
     <div className="touch-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
       {joy && (

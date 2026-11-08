@@ -22,6 +22,10 @@ const PITCH_MAX = 1.1
 const MOUSE_SENS = 0.005
 const TURN_RATE = 12
 
+// Camera nhìn thẳng vào tủ quần áo khi mở tủ chọn đồ.
+const WARDROBE_CAM: [number, number, number] = [2.1, 1.2, 5.0]
+const WARDROBE_LOOK: [number, number, number] = [0.3, 1.1, 5.0]
+
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
 // Đưa góc về khoảng (-π, π] để nhân vật quay theo đường ngắn nhất.
@@ -33,6 +37,8 @@ export function Player() {
   const gl = useThree((s) => s.gl)
   const outfit = useStory((st) => st.s.outfit)
   const motion = useRef<Motion>({ speed: 0 })
+  // 0 = camera theo Anh, 1 = camera đứng trước tủ quần áo đang mở.
+  const wardrobeCam = useRef(0)
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => keys.down(e.code)
@@ -118,12 +124,21 @@ export function Player() {
     body.current?.position.set(s.x, 0, s.z)
     if (body.current) body.current.rotation.y = s.facing
 
+    const toWardrobe = st.overlay === 'wardrobe' ? 1 : 0
+    wardrobeCam.current += (toWardrobe - wardrobeCam.current) * Math.min(1, rawDt * 4)
+    const wc = wardrobeCam.current
+    if (body.current) body.current.visible = wc < 0.5
+
     const cp = Math.cos(s.pitch)
     const back: [number, number, number] = [Math.sin(s.yaw) * cp, Math.sin(s.pitch), Math.cos(s.yaw) * cp]
     const origin: [number, number, number] = [s.x, LOOK_HEIGHT, s.z]
     const dist = cameraDistance(origin, back, CAM_DIST, COLLIDERS, ceilingAt(s.x, s.z))
-    camera.position.set(s.x + back[0] * dist, LOOK_HEIGHT + back[1] * dist, s.z + back[2] * dist)
-    camera.lookAt(s.x, LOOK_HEIGHT, s.z)
+    const fx = s.x + back[0] * dist
+    const fy = LOOK_HEIGHT + back[1] * dist
+    const fz = s.z + back[2] * dist
+    const mix = (a: number, b: number) => a + (b - a) * wc
+    camera.position.set(mix(fx, WARDROBE_CAM[0]), mix(fy, WARDROBE_CAM[1]), mix(fz, WARDROBE_CAM[2]))
+    camera.lookAt(mix(s.x, WARDROBE_LOOK[0]), mix(LOOK_HEIGHT, WARDROBE_LOOK[1]), mix(s.z, WARDROBE_LOOK[2]))
   })
 
   return (

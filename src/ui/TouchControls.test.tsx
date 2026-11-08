@@ -1,10 +1,14 @@
 import { act, render } from '@testing-library/react'
 import { input } from '../player/input'
+import { initialState } from '../story/state'
+import { useStory } from '../story/store'
 import { TouchControls } from './TouchControls'
 
 // Raw DOM events, not fireEvent: fireEvent wraps in act() and would hide React's deferred updates.
 const pe = (type: string, x: number, y: number) =>
   new PointerEvent(type, { bubbles: true, pointerId: 1, pointerType: 'touch', clientX: x, clientY: y })
+
+beforeEach(() => useStory.setState({ s: { ...initialState(1), phase: 'room' } }))
 
 afterEach(() => {
   input.move = { x: 0, y: 0 }
@@ -31,4 +35,10 @@ test('lifting the joystick thumb stops Anh even before React renders the last mo
   layer.dispatchEvent(pe('pointerup', 100, 240))
   await act(async () => {})
   expect(input.move).toEqual({ x: 0, y: 0 })
+})
+
+test('touch controls step aside while a screen (wardrobe, phone…) is open', () => {
+  useStory.setState({ s: { ...initialState(1), phase: 'room', overlay: 'wardrobe' } })
+  const { container } = render(<TouchControls />)
+  expect(container.querySelector('.touch-layer')).toBeNull()
 })

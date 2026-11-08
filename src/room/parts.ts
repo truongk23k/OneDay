@@ -29,9 +29,14 @@ export function partBounds(p: Part) {
   let hx: number, hy: number, hz: number
   if (p.kind === 'box') [hx, hy, hz] = [p.size[0] / 2, p.size[1] / 2, p.size[2] / 2]
   else if (p.kind === 'cyl') {
+    // Trục trụ nghiêng quanh trục x (về phía z) hoặc quanh trục z (về phía x).
     const r = Math.max(p.rTop, p.rBottom)
-    const tilted = p.rot && (Math.abs(p.rot[0]) > 0.5 || Math.abs(p.rot[2]) > 0.5)
-    ;[hx, hy, hz] = tilted ? [p.h / 2, p.h / 2, p.h / 2] : [r, p.h / 2, r]
+    const [rx, , rz] = p.rot ?? [0, 0, 0]
+    const half = p.h / 2
+    const up = Math.abs(Math.cos(rx) * Math.cos(rz))
+    hx = Math.abs(Math.sin(rz)) * half + Math.abs(Math.cos(rz)) * r
+    hy = up * half + Math.sqrt(Math.max(0, 1 - up * up)) * r
+    hz = Math.abs(Math.sin(rx)) * half + Math.abs(Math.cos(rx)) * r
   } else {
     const s = p.scale ?? [1, 1, 1]
     ;[hx, hy, hz] = [p.r * s[0], p.r * s[1], p.r * s[2]]
@@ -300,21 +305,39 @@ function chair(b: Box, backSide: '+z' | '+x', seatColor: string, frame: string):
   return p
 }
 
+// Thân tủ rỗng (cửa vẽ riêng để mở ra được): vách, nóc, đáy, thanh treo đồ, đồ chất trên nóc.
 function wardrobe(b: Box): Part[] {
-  const x = b.maxX
-  const n = 3
-  const dz = (b.maxZ - b.minZ) / n
-  const p: Part[] = [box(b.minX, b.maxX, 0, b.height, b.minZ, b.maxZ, C.white)]
-  for (let i = 0; i < n; i++) {
-    const z0 = b.minZ + i * dz
-    p.push(box(x, x + 0.02, 0.05, b.height - 0.03, z0 + 0.01, z0 + dz - 0.01, i === n - 1 ? C.wood : C.white))
-    p.push(box(x + 0.02, x + 0.04, 0.85, 1.25, z0 + dz - 0.08, z0 + dz - 0.06, C.steel))
-  }
+  const inside = '#eadfcd'
+  const p: Part[] = [
+    box(b.minX, b.minX + 0.02, 0, b.height, b.minZ, b.maxZ, inside),
+    box(b.minX, b.maxX, 0, b.height, b.minZ, b.minZ + 0.02, C.white),
+    box(b.minX, b.maxX, 0, b.height, b.maxZ - 0.02, b.maxZ, C.white),
+    box(b.minX, b.maxX, b.height - 0.03, b.height, b.minZ, b.maxZ, C.white),
+    box(b.minX, b.maxX, 0, 0.06, b.minZ, b.maxZ, C.white),
+    box(b.minX + 0.02, b.maxX, 0.06, 0.08, b.minZ + 0.02, b.maxZ - 0.02, inside),
+    box(b.minX + 0.02, b.maxX, 1.85, 1.87, b.minZ + 0.02, b.maxZ - 0.02, inside),
+    // Kệ thấp để giày dép
+    box(b.minX + 0.02, b.maxX - 0.02, 0.46, 0.48, b.minZ + 0.02, b.minZ + 1.38, inside),
+    // Vách ngăn giữa ngăn treo đồ và ngăn gỗ cố định
+    box(b.minX + 0.02, b.maxX, 0.06, b.height - 0.03, b.minZ + 1.39, b.minZ + 1.41, C.white),
+    { kind: 'cyl', rTop: 0.012, rBottom: 0.012, h: b.maxZ - b.minZ - 0.04, pos: [0.3, 1.75, (b.minZ + b.maxZ) / 2], rot: [Math.PI / 2, 0, 0], color: C.steel, mat: 'metal' },
+  ]
   // Đồ chất trên nóc
   p.push(box(0.05, 0.5, b.height, b.height + 0.25, b.minZ + 0.1, b.minZ + 0.55, '#c9a87a'))
   p.push(ico(0.3, b.height + 0.18, b.minZ + 0.9, 0.22, '#3c5a3a', [1, 0.7, 1.2]))
   p.push(box(0.05, 0.55, b.height, b.height + 0.12, b.minZ + 1.3, b.minZ + 1.9, '#e7e2d6'))
   return p
+}
+
+// Một cánh tủ theo tọa độ bản lề: dài w dọc trục z (dấu dir), tay nắm ở mép tự do.
+export function wardrobeDoorParts(w: number, dir: 1 | -1, wood: boolean): Part[] {
+  const z0 = dir === 1 ? 0 : -w
+  const z1 = dir === 1 ? w : 0
+  const free = dir === 1 ? w - 0.07 : -w + 0.05
+  return [
+    box(0, 0.02, 0.06, 1.97, z0 + 0.005, z1 - 0.005, wood ? C.wood : C.white),
+    box(0.02, 0.04, 0.85, 1.25, free, free + 0.02, C.steel),
+  ]
 }
 
 function bed(b: Box): Part[] {

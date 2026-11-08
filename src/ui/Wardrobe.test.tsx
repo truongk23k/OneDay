@@ -1,25 +1,29 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HINTS } from '../story/outfit'
 import { initialState } from '../story/state'
 import { useStory } from '../story/store'
+import { useDraft } from '../story/wardrobeDraft'
 import { Wardrobe } from './Wardrobe'
 
 beforeEach(() =>
   useStory.setState({ s: { ...initialState(1), phase: 'room', overlay: 'wardrobe', weather: 'rain', hint: HINTS.findIndex((h) => h.id === 'white') } }),
 )
 
-test('Em’s hint is shown at the top of the wardrobe', () => {
+test('Em’s hint is shown at the top of the open wardrobe', () => {
   render(<Wardrobe />)
   expect(screen.getByText(/áo trắng/i)).toBeVisible()
 })
 
-test('picking clothes from the pile and pressing Mặc dresses Anh', async () => {
+test('Mặc dresses Anh in what was picked inside the wardrobe', async () => {
   render(<Wardrobe />)
-  await userEvent.click(screen.getByRole('button', { name: 'Áo phông trắng' }))
-  await userEvent.click(screen.getByRole('button', { name: 'Quần short kaki be' }))
-  await userEvent.click(screen.getByRole('button', { name: 'Giày thể thao trắng' }))
-  await userEvent.click(screen.getByRole('button', { name: 'Áo mưa' }))
+  act(() => {
+    const { pick } = useDraft.getState()
+    pick({ kind: 'item', id: 'teeWhite', rot: 0 })
+    pick({ kind: 'item', id: 'khaki', rot: 0 })
+    pick({ kind: 'item', id: 'sneakers', rot: 0 })
+    pick({ kind: 'raincoat', id: 'raincoat', rot: 0 })
+  })
   await userEvent.click(screen.getByRole('button', { name: 'Mặc' }))
   const s = useStory.getState().s
   expect(s.outfit).toEqual({ top: 'teeWhite', bottom: 'khaki', shoes: 'sneakers', raincoat: true })
@@ -27,10 +31,11 @@ test('picking clothes from the pile and pressing Mặc dresses Anh', async () =>
   expect(s.overlay).toBeNull()
 })
 
-test('tapping junk shows a funny line and costs time', async () => {
+test('the junk line shows when junk was picked', () => {
   render(<Wardrobe />)
-  await userEvent.click(screen.getByRole('button', { name: 'Tất thối' }))
-  expect(useStory.getState().s.minutes).toBe(450.5)
+  act(() => {
+    useDraft.getState().pick({ kind: 'junk', id: 'socks', rot: 0 })
+  })
   expect(screen.getByText(/tất/i, { selector: '.game-line' })).toBeVisible()
 })
 

@@ -118,8 +118,8 @@ export function Hud({ isTouch }: { isTouch: boolean }) {
   if (phase !== 'room') return null
   return (
     <>
-      <Clock />
-      <Checklist />
+      {overlay !== 'wardrobe' && <Clock />}
+      {overlay !== 'wardrobe' && <Checklist />}
       <Toast />
       <PhoneButton />
       {overlay === null && <InteractPrompt targetId={targetId} isTouch={isTouch} />}

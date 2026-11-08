@@ -4,6 +4,7 @@ import { isDebug } from './debug'
 import { DPR_CAP, hasWebGL2, isTouchDevice, pickQuality } from './device'
 import { Player } from './player/Player'
 import { Room } from './room/Room'
+import { WardrobeScene } from './room/WardrobeScene'
 import { StoryTicker } from './story/StoryTicker'
 import { useStory } from './story/store'
 import { S } from './strings'
@@ -47,6 +48,7 @@ export default function App() {
         <directionalLight position={[-2, 5, 3]} intensity={0.9} color="#fff6e8" />
         <Room showLabels={debug} quality={quality} />
         <Player />
+        <WardrobeScene />
         <StoryTicker />
         {debug && <DebugProbe />}
       </Canvas>
