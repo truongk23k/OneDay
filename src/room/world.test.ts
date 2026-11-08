@@ -55,3 +55,28 @@ test('Anh can sit down at his desk and stand up again; reset stands him up', () 
   expect(useWorld.getState().sitting).toBe(false)
   expect(useWorld.getState().fridgeOpen).toBe(false)
 })
+
+describe('moving interrupts actions', () => {
+  test('walking cancels a running action (pull-ups, lying in, dancing…)', () => {
+    useWorld.getState().play('pullup', 5)
+    expect(useWorld.getState().interruptIfMoving(true)).toBe(true)
+    expect(useWorld.getState().transient).toBeNull()
+  })
+
+  test('walking stands Anh up from the computer', () => {
+    useWorld.getState().setSitting(true)
+    expect(useWorld.getState().interruptIfMoving(true)).toBe(true)
+    expect(useWorld.getState().sitting).toBe(false)
+  })
+
+  test('standing still changes nothing', () => {
+    useWorld.getState().play('danceSpin', 5)
+    expect(useWorld.getState().interruptIfMoving(false)).toBe(false)
+    expect(useWorld.getState().transient?.pose).toBe('danceSpin')
+  })
+
+  test('an action that already finished does not count as interrupted', () => {
+    useWorld.setState({ transient: { pose: 'drink', until: 0 } })
+    expect(useWorld.getState().interruptIfMoving(true)).toBe(false)
+  })
+})

@@ -120,7 +120,7 @@ export function Player() {
     const st = useStory.getState().s
     // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ, điện thoại…).
     const paused = useGame.getState().paused || st.phase !== 'room' || st.overlay !== null
-    const world = useWorld.getState()
+    let world = useWorld.getState()
     motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds() })
 
     motion.current.speed = 0
@@ -135,7 +135,13 @@ export function Player() {
       input.look.dy = 0
 
       const k = keys.vector()
-      const v = moveVector(k.x || k.y ? k : input.move, s.yaw)
+      const stick = k.x || k.y ? k : input.move
+      // Bấm đi là hủy động tác (đu xà, nằm, nhảy…) và đứng dậy khỏi ghế.
+      if (world.interruptIfMoving(Math.hypot(stick.x, stick.y) > 0.1)) {
+        world = useWorld.getState()
+        motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds() })
+      }
+      const v = moveVector(stick, s.yaw)
       const busyPose = SNAP[motion.current.pose ?? 'none'] !== undefined
       const speed = world.sitting || busyPose ? 0 : Math.hypot(v.x, v.z)
       if (world.sitting) {

@@ -22,6 +22,8 @@ type World = {
   // Động tác ngắn đang diễn (uống nước…), hết hạn theo đồng hồ thật (giây).
   transient: Transient
   play: (pose: Pose, seconds: number) => void
+  // Bấm đi thì hủy động tác đang diễn và đứng dậy khỏi ghế; trả về true nếu có hủy.
+  interruptIfMoving: (moving: boolean) => boolean
   reset: () => void
 }
 
@@ -52,6 +54,14 @@ export const useWorld = create<World>()((set, get) => ({
   toggleFridge: () => set((w) => ({ fridgeOpen: !w.fridgeOpen })),
   setSitting: (on) => set({ sitting: on }),
   play: (pose, seconds) => set({ transient: { pose, until: nowSeconds() + seconds } }),
+  interruptIfMoving: (moving) => {
+    if (!moving) return false
+    const { transient, sitting } = get()
+    const acting = transient !== null && nowSeconds() < transient.until
+    if (!acting && !sitting) return false
+    set({ transient: null, sitting: false })
+    return true
+  },
   reset: () => set({ ...MORNING, water: { ...MORNING.water } }),
 }))
 
