@@ -169,6 +169,18 @@ export function Character({ top, bottom, shoes, motion }: Props) {
       case 'danceSpin':
         tgt = { ...still, legL: 0.1, legR: -0.1, armL: 0, armR: 0, armLZ: -1.45, armRZ: 1.45, head: -0.15, rootY: 0.02 }
         break
+      case 'pee':
+        // Đứng trước bồn cầu, tay phía trước, cúi nhìn, người hơi ngả ra sau.
+        tgt = { ...still, legL: 0, legR: 0, armL: 0.55, armR: 0.55, armLZ: 0.25, armRZ: -0.25, head: 0.35, rootY: 0, tilt: 0.06 }
+        break
+      case 'poop':
+        // Ngồi trên bồn cầu, chống khuỷu tay lên gối, cúi đầu.
+        tgt = { ...still, legL: 1.45, legR: 1.45, armL: 0.95, armR: 0.95, armLZ: 0.15, armRZ: -0.15, head: 0.5, rootY: -0.08 }
+        break
+      case 'cook':
+        // Tay phải khuấy nồi theo vòng tròn, tay trái giữ quai nồi.
+        tgt = { ...still, legL: 0, legR: 0, armL: 1.0, armR: 1.25 + Math.sin(t * 7) * 0.15, armRZ: Math.cos(t * 7) * 0.25, head: 0.3, rootY: 0 }
+        break
       case 'phone':
         tgt = { ...still, legL: 0, legR: 0, armL: 0.9, armR: 1.25, armRZ: 0.35, armLZ: -0.25, head: 0.4, rootY: 0 }
         break

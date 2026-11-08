@@ -137,6 +137,9 @@ function kitchenLong(b: Box): Part[] {
   // Bếp từ
   p.push(box(0.1, 0.5, 0.85, 0.88, 0.7, 1.1, C.black))
   p.push(cyl(0.3, 0.88, 0.885, 0.9, 0.12, '#3a3a3e', { seg: 16 }))
+  // Nồi nấu mì trên bếp + quai nồi
+  p.push(cyl(0.3, 0.9, 1.04, 0.9, 0.12, C.steel, { mat: 'metal', seg: 16 }), cyl(0.3, 1.04, 1.05, 0.9, 0.125, '#9ea4aa', { mat: 'metal', seg: 16 }))
+  p.push(box(0.12, 0.17, 1.0, 1.02, 0.88, 0.92, '#2b2b2e'), box(0.43, 0.48, 1.0, 1.02, 0.88, 0.92, '#2b2b2e'))
   // Giá bát inox ở góc + bát đĩa
   for (const y of [0.95, 1.17, 1.39]) p.push(box(0.08, 0.5, y, y + 0.02, 1.15, 1.6, C.steel, 'metal'))
   for (const [x, z] of [

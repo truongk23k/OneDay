@@ -135,3 +135,21 @@ describe('more actions', () => {
     expect(reducer(s0(), { type: 'flex' }).minutes).toBe(450.5)
   })
 })
+
+describe('toilet and kitchen', () => {
+  test('peeing takes a minute, pooping three', () => {
+    const pee = reducer(s0(), { type: 'pee' })
+    const poop = reducer(s0(), { type: 'poop' })
+    expect(pee.minutes).toBe(451)
+    expect(poop.minutes).toBe(453)
+    expect(pee.line).toBeTruthy()
+    expect(poop.line).toBeTruthy()
+    expect(pee.line).not.toBe(poop.line)
+  })
+
+  test('cooking noodles takes 3 minutes', () => {
+    const s = reducer(s0(), { type: 'cook' })
+    expect(s.minutes).toBe(453)
+    expect(s.line).toMatch(/mì/i)
+  })
+})

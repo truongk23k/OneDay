@@ -80,3 +80,10 @@ describe('moving interrupts actions', () => {
     expect(useWorld.getState().interruptIfMoving(true)).toBe(false)
   })
 })
+
+test('the stove turns on and off, and is off in the morning', () => {
+  useWorld.getState().toggleStove()
+  expect(useWorld.getState().stoveOn).toBe(true)
+  useWorld.getState().reset()
+  expect(useWorld.getState().stoveOn).toBe(false)
+})

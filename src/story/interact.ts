@@ -4,7 +4,7 @@ import { KEY_SPOTS, type Action, type StoryState } from './state'
 
 export type Target = { id: string; x: number; z: number }
 // Hành động với đồ vật (không phải nhiệm vụ): cửa, vòi nước, đèn.
-export type WorldAction = { type: 'world'; do: 'door' | 'lights' | 'fridge' | 'sit' | 'stand' | Tap }
+export type WorldAction = { type: 'world'; do: 'door' | 'lights' | 'fridge' | 'sit' | 'stand' | 'stove' | Tap }
 export type Option = { label: string; action: Action | WorldAction }
 export type WorldView = {
   bathDoorOpen: boolean
@@ -12,6 +12,7 @@ export type WorldView = {
   lightsOn: boolean
   fridgeOpen?: boolean
   sitting?: boolean
+  stoveOn?: boolean
 }
 
 const DEFAULT_WORLD: WorldView = { bathDoorOpen: true, water: { lavabo: false, sink: false, shower: false }, lightsOn: true }
@@ -67,7 +68,11 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
     if (!s.tasks.washed) o.push({ label: S.options.wash, action: { type: 'open', overlay: 'wash' } })
     o.push(tap('lavabo', w))
   }
-  if (id === 'kitchen') o.push(tap('sink', w))
+  if (id === 'kitchen') {
+    o.push({ label: S.options.cook, action: { type: 'cook' } })
+    o.push({ label: w.stoveOn ? S.options.stoveOff : S.options.stoveOn, action: { type: 'world', do: 'stove' } })
+    o.push(tap('sink', w))
+  }
   if (id === 'fridge') {
     if (w.fridgeOpen) {
       o.push({ label: S.options.drink, action: { type: 'drink' } })
@@ -92,7 +97,10 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
   if (id === 'pullupBar') o.push({ label: S.options.pullup, action: { type: 'pullup' } })
   if (id === 'mirror') o.push({ label: S.options.flex, action: { type: 'flex' } })
   if (id === 'bed') o.push({ label: S.options.nap, action: { type: 'nap' } })
-  if (id === 'toilet') o.push({ label: S.options.toilet, action: { type: 'toilet' } })
+  if (id === 'toilet') {
+    o.push({ label: S.options.pee, action: { type: 'pee' } })
+    o.push({ label: S.options.poop, action: { type: 'poop' } })
+  }
   if (id === 'bathDoor' || id === 'bathDoorIn') o.push({ label: w.bathDoorOpen ? S.options.closeDoor : S.options.openDoor, action: { type: 'world', do: 'door' } })
   if (id === 'lightSwitch') o.push({ label: w.lightsOn ? S.options.lightsOff : S.options.lightsOn, action: { type: 'world', do: 'lights' } })
   if (id === 'wardrobe') o.push({ label: S.options.wardrobe, action: { type: 'open', overlay: 'wardrobe' } })

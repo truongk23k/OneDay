@@ -16,6 +16,8 @@ type World = {
   toggleLights: () => void
   fridgeOpen: boolean
   toggleFridge: () => void
+  stoveOn: boolean
+  toggleStove: () => void
   // Anh đang ngồi ở bàn máy tính.
   sitting: boolean
   setSitting: (on: boolean) => void
@@ -34,6 +36,7 @@ const MORNING = {
   water: { lavabo: false, sink: false, shower: false },
   lightsOn: true,
   fridgeOpen: false,
+  stoveOn: false,
   sitting: false,
   transient: null as Transient,
 }
@@ -52,6 +55,7 @@ export const useWorld = create<World>()((set, get) => ({
   toggleWater: (tap) => set((w) => ({ water: { ...w.water, [tap]: !w.water[tap] } })),
   toggleLights: () => set((w) => ({ lightsOn: !w.lightsOn })),
   toggleFridge: () => set((w) => ({ fridgeOpen: !w.fridgeOpen })),
+  toggleStove: () => set((w) => ({ stoveOn: !w.stoveOn })),
   setSitting: (on) => set({ sitting: on }),
   play: (pose, seconds) => set({ transient: { pose, until: nowSeconds() + seconds } }),
   interruptIfMoving: (moving) => {

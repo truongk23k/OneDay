@@ -51,7 +51,8 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
   const lightsOn = useWorld((w) => w.lightsOn)
   const fridgeOpen = useWorld((w) => w.fridgeOpen)
   const sitting = useWorld((w) => w.sitting)
-  const options = targetId ? actionsFor(targetId, { tasks, searched }, { bathDoorOpen, water, lightsOn, fridgeOpen, sitting }) : []
+  const stoveOn = useWorld((w) => w.stoveOn)
+  const options = targetId ? actionsFor(targetId, { tasks, searched }, { bathDoorOpen, water, lightsOn, fridgeOpen, sitting, stoveOn }) : []
 
   const run = (o: Option) => {
     const a = o.action
@@ -60,6 +61,12 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
       // Động tác đi kèm một số việc.
       if (a.type === 'drink') w.play('drink', 1.6)
       if (a.type === 'toilet') w.play('squat', 2.2)
+      if (a.type === 'pee') w.play('pee', 3)
+      if (a.type === 'poop') w.play('poop', 4.5)
+      if (a.type === 'cook') {
+        if (!w.stoveOn) w.toggleStove()
+        w.play('cook', 4.5)
+      }
       if (a.type === 'pullup') w.play('pullup', 3.5)
       if (a.type === 'flex') w.play('flex', 2.5)
       if (a.type === 'nap') w.play('lie', 3.5)
@@ -74,6 +81,7 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
     }
     else if (a.do === 'lights') w.toggleLights()
     else if (a.do === 'fridge') w.toggleFridge()
+    else if (a.do === 'stove') w.toggleStove()
     else if (a.do === 'sit') w.setSitting(true)
     else if (a.do === 'stand') w.setSitting(false)
     else w.toggleWater(a.do)

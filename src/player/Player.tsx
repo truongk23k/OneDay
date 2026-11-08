@@ -30,11 +30,15 @@ const WARDROBE_CAM: [number, number, number] = [2.75, 1.05, 5.0]
 const WARDROBE_LOOK: [number, number, number] = [0.9, 0.85, 4.5]
 
 // Động tác cần đứng đúng chỗ: đu xà dưới xà, tắm dưới vòi sen, soi gương trước gương, nằm trên giường.
-const SNAP: Partial<Record<Pose, { x: number; z: number; facing: number; after?: { x: number; z: number } }>> = {
+// cam: hướng camera khi bắt đầu động tác (mặc định đứng sau lưng Anh).
+const SNAP: Partial<Record<Pose, { x: number; z: number; facing: number; cam?: number; after?: { x: number; z: number } }>> = {
   pullup: { x: 2.45, z: 1.675, facing: 0 },
   bathe: { x: 3.78, z: 1.12, facing: Math.PI },
   flex: { x: 5.15, z: 3.95, facing: -Math.PI / 2 },
   lie: { x: 3.9, z: 5.3, facing: -Math.PI / 2, after: { x: 3.0, z: 5.3 } },
+  pee: { x: 5.15, z: 1.02, facing: 0 },
+  poop: { x: 5.15, z: 0.42, facing: Math.PI, cam: 0, after: { x: 5.15, z: 1.05 } },
+  cook: { x: 0.95, z: 0.85, facing: Math.PI / 2 },
 }
 
 // Ghế ở bàn của Anh: ngồi quay về phía bàn (bắc); đứng dậy thì ra sau ghế.
@@ -171,6 +175,11 @@ export function Player() {
     // Động tác cần đứng đúng chỗ; xong (ví dụ nằm giường) thì bước ra chỗ an toàn.
     const snap = SNAP[motion.current.pose ?? 'none']
     if (snap) {
+      // Vừa bắt đầu động tác: quay camera ra chỗ nhìn rõ Anh.
+      if (lastSnap.current !== snap) {
+        s.yaw = snap.cam ?? snap.facing
+        s.pitch = 0.5
+      }
       s.x = snap.x
       s.z = snap.z
       s.facing = snap.facing

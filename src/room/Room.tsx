@@ -1,7 +1,7 @@
 import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
-import { CanvasTexture, ExtrudeGeometry, RepeatWrapping, SRGBColorSpace, Shape, ShapeGeometry, type Group } from 'three'
+import { CanvasTexture, ExtrudeGeometry, RepeatWrapping, SRGBColorSpace, Shape, ShapeGeometry, type Group, type PointLight } from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
 import type { Quality } from '../device'
 import { Batched, PartsMesh } from './Batched'
@@ -66,6 +66,55 @@ function Helmets() {
   const parts = useMemo(() => helmetParts(2 - taken), [taken])
   if (!parts.length) return null
   return <PartsMesh parts={parts} />
+}
+
+// Bếp đang bật: vòng lửa xanh cam phập phùng dưới nồi, hơi nước bốc lên, ánh lửa hắt nhẹ.
+const FLAMES = Array.from({ length: 10 }, (_, i) => i)
+function StoveFire() {
+  const on = useWorld((w) => w.stoveOn)
+  const flames = useRef<(Group | null)[]>([])
+  const steam = useRef<(Group | null)[]>([])
+  const glow = useRef<PointLight>(null)
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    flames.current.forEach((f, i) => {
+      if (!f) return
+      const flick = 0.75 + 0.45 * Math.abs(Math.sin(t * 19 + i * 1.7)) + 0.2 * Math.sin(t * 31 + i * 3.1)
+      f.scale.set(1, flick, 1)
+    })
+    steam.current.forEach((p, i) => {
+      if (!p) return
+      const k = (t * 0.45 + i / 3) % 1
+      p.position.set(0.3 + Math.sin(t * 2 + i) * 0.03, 1.06 + k * 0.5, 0.9)
+      p.scale.setScalar(0.5 + k)
+    })
+    if (glow.current) glow.current.intensity = 0.6 + 0.3 * Math.sin(t * 23)
+  })
+  if (!on) return null
+  return (
+    <group>
+      {FLAMES.map((i) => {
+        const a = (i / FLAMES.length) * Math.PI * 2
+        return (
+          <group key={i} ref={(el) => (flames.current[i] = el)} position={[0.3 + Math.cos(a) * 0.1, 0.886, 0.9 + Math.sin(a) * 0.1]}>
+            <mesh position={[0, 0.025, 0]}>
+              <coneGeometry args={[0.018, 0.05, 6]} />
+              <meshBasicMaterial color={i % 3 === 0 ? '#ffb02e' : '#3d7bff'} transparent opacity={0.9} />
+            </mesh>
+          </group>
+        )
+      })}
+      {[0, 1, 2].map((i) => (
+        <group key={i} ref={(el) => (steam.current[i] = el)}>
+          <mesh>
+            <icosahedronGeometry args={[0.05, 0]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.25} depthWrite={false} />
+          </mesh>
+        </group>
+      ))}
+      <pointLight ref={glow} position={[0.3, 1.0, 0.9]} color="#ff9a3c" distance={1.6} decay={2} intensity={0.6} />
+    </group>
+  )
 }
 
 // Cánh dưới tủ lạnh: bản lề mép phải, mở ra phía ngoài.
@@ -223,6 +272,7 @@ export function Room({ showLabels = false, quality = 'medium' }: { showLabels?: 
       <MirrorGlass quality={quality} />
       <BathDoorLeaf />
       <FridgeDoor />
+      <StoveFire />
       <Helmets />
       <WindowGlass />
       <Water />

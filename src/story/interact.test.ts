@@ -60,7 +60,7 @@ describe('usable props', () => {
 
   test('the shower, toilet and light switch can be used', () => {
     expect(labels('shower')).toContain('Bật vòi sen')
-    expect(labels('toilet')).toEqual(['Đi vệ sinh'])
+    expect(labels('toilet')).toEqual(['Đi tè', 'Đi ị'])
     expect(labels('lightSwitch')).toEqual(['Tắt đèn'])
     expect(labels('lightSwitch', { ...world, lightsOn: false })).toEqual(['Bật đèn'])
   })
@@ -117,5 +117,14 @@ describe('more things Anh can do', () => {
     expect(nearestInteractable({ x: 5.15, z: 3.95 })?.id).toBe('mirror')
     expect(actionsFor('mirror', room()).map((o) => o.label)).toEqual(['Soi gương'])
     expect(actionsFor('bed', room()).map((o) => o.label)).toContain('Nằm ườn thêm')
+  })
+})
+
+describe('cooking', () => {
+  const world = { bathDoorOpen: true, water: { lavabo: false, sink: false, shower: false }, lightsOn: true, stoveOn: false }
+  test('the kitchen offers cooking and the stove switch', () => {
+    const labels = actionsFor('kitchen', room(), world).map((o) => o.label)
+    expect(labels).toEqual(expect.arrayContaining(['Nấu mì', 'Bật bếp']))
+    expect(actionsFor('kitchen', room(), { ...world, stoveOn: true }).map((o) => o.label)).toContain('Tắt bếp')
   })
 })

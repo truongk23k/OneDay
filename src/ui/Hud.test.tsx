@@ -45,7 +45,8 @@ test('holding E does not repeat the action', () => {
   fireEvent.keyDown(window, { code: 'KeyE' })
   fireEvent.keyDown(window, { code: 'KeyE', repeat: true })
   fireEvent.keyDown(window, { code: 'KeyE', repeat: true })
-  expect(useStory.getState().s.minutes).toBe(452)
+  // Chỉ lần bấm đầu (Đi tè, +1 phút) được tính.
+  expect(useStory.getState().s.minutes).toBe(451)
 })
 
 test('restart also resets the world store', () => {
