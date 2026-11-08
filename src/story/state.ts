@@ -190,7 +190,7 @@ export function reducer(s: StoryState, a: Action): StoryState {
       // Em lên xe: soi mũ bảo hiểm, bộ đồ, chuyện ướt mưa.
       let mood = s.mood
       let hygiene = s.hygiene
-      let line = S.ride.pickupHappy
+      let line: string = S.ride.pickupHappy
       const verdict = outfitVerdict(s.outfit, s.weather)
       if (verdict.disaster) {
         mood -= 5
