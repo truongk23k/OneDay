@@ -192,3 +192,8 @@ test('the shelf is 2/3 as wide as the mirror', () => {
   const m = get('mirror')
   expect(s.maxZ - s.minZ).toBeCloseTo(((m.maxZ - m.minZ) * 2) / 3, 2)
 })
+
+test('the shelf is shallow: sticks out at most 0.2 m from the wall', () => {
+  const s = get('shelf')
+  expect(s.maxX - s.minX).toBeLessThanOrEqual(0.2)
+})
