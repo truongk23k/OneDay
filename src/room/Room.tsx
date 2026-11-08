@@ -1,6 +1,6 @@
 import { Html } from '@react-three/drei'
 import type { CSSProperties } from 'react'
-import { FURNITURE, HELMETS, ROOM, WALLS, WINDOW, type Box } from './layout'
+import { FURNITURE, HELMETS, PASSAGE_SOFFIT, ROOM, WALLS, WINDOW, type Box } from './layout'
 import { splitWall, type Block, type Opening } from './openings'
 
 const COLORS: Record<string, string> = {
@@ -130,6 +130,7 @@ export function Room() {
         <Block3 key={f.id} b={toBlock(f)} color={COLORS[f.id] ?? COLORS.furniture} />
       ))}
       <Window />
+      <Block3 b={PASSAGE_SOFFIT} color={COLORS.wall} />
 
       {/* 2 mũ bảo hiểm treo trên cửa */}
       {HELMETS.map((h) => (

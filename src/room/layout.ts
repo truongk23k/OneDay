@@ -34,6 +34,9 @@ export const WALLS: Box[] = [
 // Ô khoét chỉ để vẽ; va chạm vẫn dùng nguyên tường.
 export const WINDOW: Opening = { wall: 'wallW', axis: 'z', min: 3.5, max: 4.3, minY: 1.35, maxY: 2.25 }
 
+// Trần lối đi thấp hơn trần phòng; mép phía phòng là xà ngang nối cột với tường nhà vệ sinh (chỉ để vẽ).
+export const PASSAGE_SOFFIT = { minX: 1.95, maxX: 2.95, minY: 2.7, maxY: 3.0, minZ: 0, maxZ: 1.85 }
+
 const L = S.labels
 
 export const FURNITURE: Furniture[] = [
