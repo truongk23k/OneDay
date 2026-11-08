@@ -144,6 +144,10 @@ export const S = {
       honeycomb: 'Dép tổ ong… thôi em không nói nữa 🙄',
     },
   },
+  dance: {
+    button: 'Nhảy',
+    names: { danceTiktok: 'Nhảy TikTok', danceHips: 'Lắc hông', danceSpin: 'Xoay vòng' },
+  },
   chat: {
     contact: 'Em ❤️',
     online: 'đang hoạt động',

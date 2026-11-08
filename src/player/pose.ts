@@ -1,7 +1,26 @@
 import type { Overlay } from '../story/state'
 
 // Động tác của Anh: đi/đứng bình thường, ngồi máy tính, đánh răng, rửa mặt, uống nước, ngồi xổm (đi vệ sinh).
-export type Pose = 'none' | 'sit' | 'brush' | 'wash' | 'drink' | 'squat' | 'pullup' | 'bathe' | 'flex' | 'lie' | 'stretch' | 'phone'
+export type Pose =
+  | 'none'
+  | 'sit'
+  | 'brush'
+  | 'wash'
+  | 'drink'
+  | 'squat'
+  | 'pullup'
+  | 'bathe'
+  | 'flex'
+  | 'lie'
+  | 'stretch'
+  | 'phone'
+  | 'danceTiktok'
+  | 'danceHips'
+  | 'danceSpin'
+
+// Các điệu nhảy (nút 💃 hoặc phím G).
+export const DANCES = ['danceTiktok', 'danceHips', 'danceSpin'] as const satisfies readonly Pose[]
+export type Dance = (typeof DANCES)[number]
 export type Transient = { pose: Pose; until: number } | null
 
 export function poseFor(i: { overlay: Overlay | null; sitting: boolean; transient: Transient; now: number }): Pose {

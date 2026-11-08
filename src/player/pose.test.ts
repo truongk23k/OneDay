@@ -1,4 +1,4 @@
-import { poseFor } from './pose'
+import { DANCES, poseFor } from './pose'
 
 const base = { overlay: null, sitting: false, transient: null, now: 0 } as const
 
@@ -23,4 +23,9 @@ test('a short action (drinking) ends by itself', () => {
 
 test('looking at the phone makes Anh hold it', () => {
   expect(poseFor({ ...base, overlay: 'phone' })).toBe('phone')
+})
+
+test('a dance plays as a short action', () => {
+  expect(poseFor({ ...base, transient: { pose: 'danceTiktok', until: 4 }, now: 1 })).toBe('danceTiktok')
+  expect(DANCES).toEqual(['danceTiktok', 'danceHips', 'danceSpin'])
 })

@@ -96,7 +96,8 @@ export function Character({ top, bottom, shoes, motion }: Props) {
   const phase = useRef(0)
   const blend = useRef(0)
   // Góc hiện tại của các khớp (lerp dần tới tư thế mục tiêu).
-  const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, armLZ: 0, head: 0, rootY: 0, tilt: 0, armScale: 1 })
+  const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, armLZ: 0, head: 0, rootY: 0, tilt: 0, armScale: 1, sway: 0, twist: 0 })
+  const spin = useRef(0)
 
   const leg = useMemo(() => legParts(bottom, shoes), [bottom, shoes])
   const armLeft = useMemo(() => armParts(-1, top), [top])
@@ -114,9 +115,10 @@ export function Character({ top, bottom, shoes, motion }: Props) {
     const swing = 0.65 * w + 0.35 * Math.max(0, run - 1)
     const t = state.clock.elapsedTime
     // Tư thế mặc định: đi bộ / đứng.
-    const still = { armRZ: 0, armLZ: 0, tilt: 0, armScale: 1 }
+    const still = { armRZ: 0, armLZ: 0, tilt: 0, armScale: 1, sway: 0, twist: 0 }
+    const pose = motion?.current.pose ?? 'none'
     let tgt = { ...still, legL: s * swing, legR: -s * swing, armL: -s * swing * 0.8, armR: s * swing * 0.8, head: 0, rootY: Math.abs(s) * 0.035 * w }
-    switch (motion?.current.pose ?? 'none') {
+    switch (pose) {
       case 'sit':
         tgt = { ...still, legL: 1.45, legR: 1.45, armL: 1.15 + Math.sin(t * 17) * 0.06, armR: 1.15 + Math.sin(t * 17 + 1.6) * 0.06, head: 0.12, rootY: 0 }
         break
@@ -152,6 +154,21 @@ export function Character({ top, bottom, shoes, motion }: Props) {
       case 'stretch':
         tgt = { ...still, legL: 0, legR: 0, armL: 2.9 + Math.sin(t * 4) * 0.1, armR: 2.9 - Math.sin(t * 4) * 0.1, armLZ: -0.3, armRZ: 0.3, head: -0.35, rootY: 0.02 }
         break
+      case 'danceTiktok': {
+        // Hai tay thay nhau đẩy lên trời, hông lắc theo nhịp.
+        const b = Math.sin(t * 8)
+        tgt = { ...still, legL: Math.max(0, b) * 0.3, legR: Math.max(0, -b) * 0.3, armL: 2.2 + b * 0.8, armR: 2.2 - b * 0.8, armLZ: -0.3, armRZ: 0.3, head: b * 0.1, rootY: Math.abs(b) * 0.05, sway: b * 0.06, twist: b * 0.25 }
+        break
+      }
+      case 'danceHips': {
+        // Đá chân, vẫy hai tay sang hai bên, người vặn qua lại.
+        const b = Math.sin(t * 6)
+        tgt = { ...still, legL: Math.max(0, b) * 0.7, legR: Math.max(0, -b) * 0.7, armL: 0.6, armR: 0.6, armLZ: -1.0 - b * 0.5, armRZ: 1.0 - b * 0.5, head: 0, rootY: 0.03, sway: b * 0.08, twist: -b * 0.35 }
+        break
+      }
+      case 'danceSpin':
+        tgt = { ...still, legL: 0.1, legR: -0.1, armL: 0, armR: 0, armLZ: -1.45, armRZ: 1.45, head: -0.15, rootY: 0.02 }
+        break
       case 'phone':
         tgt = { ...still, legL: 0, legR: 0, armL: 0.9, armR: 1.25, armRZ: 0.35, armLZ: -0.25, head: 0.4, rootY: 0 }
         break
@@ -171,9 +188,13 @@ export function Character({ top, bottom, shoes, motion }: Props) {
       armR.current.rotation.z = cur.armRZ
       armR.current.scale.y = cur.armScale
     }
+    // Xoay vòng: quay liên tục khi đang nhảy xoay, ngoài ra thì về hướng cũ.
+    spin.current = pose === 'danceSpin' ? spin.current + dt * 9 : spin.current * Math.max(0, 1 - dt * 10)
     if (root.current) {
       root.current.position.y = cur.rootY
+      root.current.position.x = cur.sway
       root.current.rotation.x = cur.tilt
+      root.current.rotation.y = cur.twist + spin.current
     }
     if (torso.current) {
       torso.current.scale.y = 1 + Math.sin(t * 2.2) * 0.012 * (1 - w)
