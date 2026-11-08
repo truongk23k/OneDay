@@ -1,19 +1,12 @@
 import { Html } from '@react-three/drei'
-import type { CSSProperties } from 'react'
-import { BATH_CEILING, BATH_DOOR, BATH_LOFT, FURNITURE, HELMETS, PULLUP_BAR, RENDER_WALLS, ROOM, WINDOW, type Box } from './layout'
-import { splitWall, type Block, type Opening } from './openings'
+import { useMemo, type CSSProperties } from 'react'
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three'
+import { Batched } from './Batched'
+import { BATH_CEILING, BATH_DOOR, BATH_LOFT, FURNITURE, HELMETS, PULLUP_BAR, ROOM, WINDOW } from './layout'
+import type { Block, Opening } from './openings'
+import { buildRoomParts } from './parts'
 
-const COLORS: Record<string, string> = {
-  wall: '#e6e2da',
-  furniture: '#8f949c',
-  door: '#7a3b22',
-  bed: '#b98a5a',
-  mirror: '#e48fb0',
-  fridge: '#b9bdc2',
-  fridge2: '#b9bdc2',
-  chairMine: '#2b2b2e',
-  chairFriend: '#3a3a3e',
-}
+const COLORS = { wall: '#ebe7df' }
 
 const WHITE = '#f7f7f5'
 const OPENINGS: Opening[] = [WINDOW, BATH_DOOR, BATH_LOFT]
@@ -27,39 +20,34 @@ function Block3({ b, color }: { b: Block; color: string }) {
   )
 }
 
-const toBlock = (b: Box): Block => ({ minX: b.minX, maxX: b.maxX, minY: 0, maxY: b.height, minZ: b.minZ, maxZ: b.maxZ })
-
-function Wall({ w }: { w: Box }) {
-  const holes = OPENINGS.filter((o) => o.wall === w.id)
-  const blocks = holes.length ? splitWall(w, holes) : [toBlock(w)]
-  return (
-    <>
-      {blocks.map((b, i) => (
-        <Block3 key={i} b={b} color={COLORS.wall} />
-      ))}
-    </>
-  )
+// Gạch lát nền 60 cm màu trắng ngà, ron xám nhạt.
+function useTileTexture() {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 128
+    const g = c.getContext('2d')!
+    g.fillStyle = '#e9e6df'
+    g.fillRect(0, 0, 128, 128)
+    g.fillStyle = '#f3f1ec'
+    g.fillRect(3, 3, 122, 122)
+    g.fillStyle = '#c9c5bc'
+    g.fillRect(0, 0, 128, 2)
+    g.fillRect(0, 0, 2, 128)
+    const t = new CanvasTexture(c)
+    t.wrapS = t.wrapT = RepeatWrapping
+    t.repeat.set(ROOM.width / 0.6, ROOM.depth / 0.6)
+    t.colorSpace = SRGBColorSpace
+    t.anisotropy = 4
+    return t
+  }, [])
 }
 
 // Cửa sổ tường tây: song sắt trắng phía trong, hai cánh kính lùa khung trắng; bên ngoài sáng trắng.
 function Window() {
   const { min, max, minY, maxY } = WINDOW
-  const x0 = -0.1
-  const x1 = 0.02
   const t = 0.05
-  const bar = 0.02
-  const bars: Block[] = [
-    { minX: x0, maxX: x1, minY, maxY: minY + t, minZ: min, maxZ: max },
-    { minX: x0, maxX: x1, minY: maxY - t, maxY, minZ: min, maxZ: max },
-    { minX: x0, maxX: x1, minY, maxY, minZ: min, maxZ: min + t },
-    { minX: x0, maxX: x1, minY, maxY, minZ: max - t, maxZ: max },
-  ]
-  for (let z = min + 0.16; z < max - 0.1; z += 0.16) {
-    bars.push({ minX: x0 + 0.02, maxX: x1, minY, maxY, minZ: z - bar / 2, maxZ: z + bar / 2 })
-  }
-  for (let y = minY + 0.22; y < maxY - 0.1; y += 0.22) {
-    bars.push({ minX: x0 + 0.02, maxX: x1, minY: y - bar / 2, maxY: y + bar / 2, minZ: min, maxZ: max })
-  }
+  // Khung, song sắt và điều hòa nằm trong parts.ts; ở đây chỉ còn hai cánh kính lùa và khung cánh.
+  const bars: Block[] = []
   const midZ = (min + max) / 2
   // Hai cánh lùa chồng lên nhau 5 cm ở giữa, mỗi cánh nằm trên một ray khác nhau.
   const sashes = [
@@ -88,8 +76,6 @@ function Window() {
           <meshStandardMaterial color="#e8f4ff" transparent opacity={0.18} />
         </mesh>
       ))}
-      {/* Điều hòa ngay trên cửa sổ */}
-      <Block3 b={{ minX: 0, maxX: 0.24, minY: 2.45, maxY: 2.75, minZ: midZ - 0.4, maxZ: midZ + 0.4 }} color="#ffffff" />
       {/* Bên ngoài: ánh sáng ban ngày trắng xóa như trong ảnh */}
       <mesh position={[-1.5, 2, midZ]} rotation-y={Math.PI / 2}>
         <planeGeometry args={[12, 10]} />
@@ -163,26 +149,26 @@ const labelStyle: CSSProperties = {
   pointerEvents: 'none',
 }
 
-export function Room() {
+export function Room({ showLabels = false }: { showLabels?: boolean }) {
   const cx = ROOM.width / 2
   const cz = ROOM.depth / 2
+  const tiles = useTileTexture()
+  const parts = useMemo(() => buildRoomParts(OPENINGS), [])
   return (
     <group>
       <mesh rotation-x={-Math.PI / 2} position={[cx, 0, cz]}>
         <planeGeometry args={[ROOM.width, ROOM.depth]} />
-        <meshStandardMaterial color="#d9d9d4" />
+        <meshStandardMaterial map={tiles} roughness={0.35} />
       </mesh>
       <mesh rotation-x={Math.PI / 2} position={[cx, ROOM.height, cz]}>
         <planeGeometry args={[ROOM.width, ROOM.depth]} />
         <meshStandardMaterial color="#f4f2ee" />
       </mesh>
 
-      {RENDER_WALLS.map((w) => (
-        <Wall key={w.id} w={w} />
-      ))}
-      {FURNITURE.map((f) => (
-        <Block3 key={f.id} b={toBlock(f)} color={COLORS[f.id] ?? COLORS.furniture} />
-      ))}
+      <Batched parts={parts} />
+      {/* Ánh sáng 2 đèn tuýp */}
+      <pointLight position={[4.0, 2.45, 1.75]} intensity={3.2} distance={7} decay={1.6} color="#f4f8ff" />
+      <pointLight position={[0.3, 2.45, 2.6]} intensity={2.6} distance={7} decay={1.6} color="#f4f8ff" />
       <Window />
       <Bathroom />
       <mesh position={[(PULLUP_BAR.x0 + PULLUP_BAR.x1) / 2, PULLUP_BAR.y, PULLUP_BAR.z]} rotation-z={Math.PI / 2}>
@@ -198,7 +184,7 @@ export function Room() {
         </mesh>
       ))}
 
-      {FURNITURE.filter((f) => f.label).map((f) => (
+      {showLabels && FURNITURE.filter((f) => f.label).map((f) => (
         <Html
           key={f.id}
           center
