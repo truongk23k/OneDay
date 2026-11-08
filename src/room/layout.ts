@@ -37,6 +37,13 @@ export const WALLS: Box[] = [
 // Ô khoét chỉ để vẽ; va chạm vẫn dùng nguyên tường.
 export const WINDOW: Opening = { wall: 'wallW', axis: 'z', min: 3.5, max: 4.3, minY: 1.35, maxY: 2.25 }
 
+// Cửa nhà vệ sinh (cao 2 m) và ô gác xép phía trên, cùng nằm trên tường tây của nhà vệ sinh.
+export const BATH_DOOR: Opening = { wall: 'bathWallW', axis: 'z', min: 0.325, max: 1.125, minY: 0, maxY: 2.0 }
+export const BATH_LOFT: Opening = { wall: 'bathWallW', axis: 'z', min: 0.1, max: 0.95, minY: 2.4, maxY: 2.95 }
+
+// Trần nhà vệ sinh thấp (sàn gác xép để chậu, rổ).
+export const BATH_CEILING = 2.35
+
 // Xà đơn màu đen ngang miệng lối đi, từ cột bếp sang tường cạnh tủ lạnh; cao khoảng 1.65 lần người để nhảy lên đu.
 export const PULLUP_BAR = { x0: 1.95, x1: 2.95, y: 1.65 * CHARACTER_HEIGHT, z: 1.675, radius: 0.02 }
 
@@ -62,6 +69,18 @@ export const FURNITURE: Furniture[] = [
 ]
 
 export const COLLIDERS: Box[] = [...WALLS, ...FURNITURE]
+
+// Khi vẽ, tường tây nhà vệ sinh là một khối liền có khoét cửa và ô gác xép (va chạm vẫn dùng 2 đoạn).
+export const RENDER_WALLS: Box[] = [
+  ...WALLS.filter((w) => w.id !== 'bathWallW1' && w.id !== 'bathWallW2'),
+  box('bathWallW', 2.95, 3.05, 0, 1.7, 3.0),
+]
+
+// Độ cao trần tại một điểm (camera không được chui lên trần).
+export function ceilingAt(x: number, z: number): number {
+  const bath = WALLS.find((w) => w.id === 'bathWallS')!
+  return x > 3.05 && z < bath.minZ ? BATH_CEILING : ROOM.height
+}
 
 const door = FURNITURE[0]
 const doorCentre = (door.minX + door.maxX) / 2

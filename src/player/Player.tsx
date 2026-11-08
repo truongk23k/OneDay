@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
-import { CHARACTER_HEIGHT, COLLIDERS, ROOM, SPAWN } from '../room/layout'
+import { CHARACTER_HEIGHT, COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
 import { useGame } from '../store'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
@@ -107,7 +107,7 @@ export function Player() {
     const cp = Math.cos(s.pitch)
     const back: [number, number, number] = [Math.sin(s.yaw) * cp, Math.sin(s.pitch), Math.cos(s.yaw) * cp]
     const origin: [number, number, number] = [s.x, LOOK_HEIGHT, s.z]
-    const dist = cameraDistance(origin, back, CAM_DIST, COLLIDERS, ROOM.height)
+    const dist = cameraDistance(origin, back, CAM_DIST, COLLIDERS, ceilingAt(s.x, s.z))
     camera.position.set(s.x + back[0] * dist, LOOK_HEIGHT + back[1] * dist, s.z + back[2] * dist)
     camera.lookAt(s.x, LOOK_HEIGHT, s.z)
   })

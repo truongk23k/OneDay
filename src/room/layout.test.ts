@@ -1,4 +1,4 @@
-import { CHARACTER_HEIGHT, COLLIDERS, FURNITURE, HELMETS, PULLUP_BAR, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
+import { BATH_DOOR, BATH_LOFT, CHARACTER_HEIGHT, COLLIDERS, FURNITURE, HELMETS, PULLUP_BAR, RENDER_WALLS, ROOM, SPAWN, WALLS, WINDOW, ceilingAt, type Box } from './layout'
 
 const R = 0.25
 
@@ -223,4 +223,30 @@ test('the bathroom door is centred on the bathroom wall and about 0.8 m wide', (
   const bathCentre = wall('bathWallS').minZ / 2
   expect(w2.minZ - w1.maxZ).toBeGreaterThanOrEqual(0.8 - 1e-9)
   expect(doorCentre).toBeCloseTo(bathCentre, 2)
+})
+
+test('the bathroom door is 2 m tall and fills the gap between the bathroom wall pieces', () => {
+  expect(BATH_DOOR.min).toBeCloseTo(wall('bathWallW1').maxZ)
+  expect(BATH_DOOR.max).toBeCloseTo(wall('bathWallW2').minZ)
+  expect(BATH_DOOR.minY).toBe(0)
+  expect(BATH_DOOR.maxY).toBe(2.0)
+})
+
+test('a storage loft opening sits above the bathroom door, under the ceiling', () => {
+  expect(BATH_LOFT.wall).toBe(BATH_DOOR.wall)
+  expect(BATH_LOFT.minY).toBeGreaterThanOrEqual(BATH_DOOR.maxY + 0.3)
+  expect(BATH_LOFT.maxY).toBeLessThanOrEqual(ROOM.height)
+  expect(BATH_LOFT.min).toBeGreaterThanOrEqual(0)
+})
+
+test('the bathroom west wall renders as one piece covering both collision pieces', () => {
+  const w = RENDER_WALLS.find((r) => r.id === BATH_DOOR.wall)!
+  expect(w.minZ).toBeCloseTo(wall('bathWallW1').minZ)
+  expect(w.maxZ).toBeCloseTo(wall('bathWallW2').maxZ)
+  expect(RENDER_WALLS.some((r) => r.id === 'bathWallW1' || r.id === 'bathWallW2')).toBe(false)
+})
+
+test('the bathroom has a lower ceiling (the loft floor); the room keeps its full height', () => {
+  expect(ceilingAt(4.0, 0.7)).toBeLessThan(BATH_LOFT.minY)
+  expect(ceilingAt(2.45, 3.0)).toBe(ROOM.height)
 })
