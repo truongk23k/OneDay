@@ -381,26 +381,7 @@ function mirror(b: Box): Part[] {
     box(b.minX - 0.15, b.maxX, 0, 0.03, b.minZ, b.minZ + 0.03, C.pink),
     box(b.minX - 0.15, b.maxX, 0, 0.03, b.maxZ - 0.03, b.maxZ, C.pink),
   ]
-  // Vòm trên của gương
-  const cz = (b.minZ + b.maxZ) / 2
-  const r = (b.maxZ - b.minZ) / 2
-  // Mỗi đoạn vòm là một thanh nghiêng nối hai điểm liên tiếp trên nửa vòng tròn.
-  const arc = (i: number) => {
-    const ang = (i / 8) * Math.PI
-    return { y: 1.45 + Math.sin(ang) * r, z: cz - Math.cos(ang) * r }
-  }
-  for (let i = 0; i < 8; i++) {
-    const p0 = arc(i)
-    const p1 = arc(i + 1)
-    const len = Math.hypot(p1.y - p0.y, p1.z - p0.z)
-    p.push({
-      kind: 'box',
-      size: [b.maxX - b.minX, len + 0.02, t],
-      pos: [(b.minX + b.maxX) / 2, (p0.y + p1.y) / 2, (p0.z + p1.z) / 2],
-      rot: [Math.atan2(p1.z - p0.z, p1.y - p0.y), 0, 0],
-      color: C.pink,
-    })
-  }
+  // Vòm trên của khung là một dải cong liền (MirrorGlass trong Room.tsx).
   // Tấm lưng gương (phía sau mặt kính phản chiếu).
   p.push(box(b.maxX - 0.015, b.maxX, 0.14, 1.45, b.minZ + t, b.maxZ - t, '#c97a99'))
   return p

@@ -1,6 +1,6 @@
 import { Html } from '@react-three/drei'
 import { useEffect, useMemo, type CSSProperties } from 'react'
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Shape, ShapeGeometry } from 'three'
+import { CanvasTexture, ExtrudeGeometry, RepeatWrapping, SRGBColorSpace, Shape, ShapeGeometry } from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
 import type { Quality } from '../device'
 import { Batched } from './Batched'
@@ -163,12 +163,28 @@ function MirrorGlass({ quality }: { quality: Quality }) {
     return new Reflector(geometry, { textureWidth: size / 2, textureHeight: size, color: 0xc4ccd2, clipBias: 0.003 })
   }, [geometry, quality])
   useEffect(() => () => reflector?.dispose(), [reflector])
-  const position: [number, number, number] = [m.minX + 0.012, bottom, (m.minZ + m.maxZ) / 2]
-  if (reflector) return <primitive object={reflector} position={position} rotation-y={-Math.PI / 2} />
+  // Vòm khung hồng: nửa vành khuyên đùn theo bề dày khung, liền một khối.
+  const arch = useMemo(() => {
+    const s = new Shape()
+    s.absarc(0, archY, r + t, 0, Math.PI, false)
+    s.absarc(0, archY, r, Math.PI, 0, true)
+    return new ExtrudeGeometry(s, { depth: m.maxX - m.minX, bevelEnabled: false, curveSegments: 24 })
+  }, [r, archY, m.maxX, m.minX])
+  const cz = (m.minZ + m.maxZ) / 2
+  const position: [number, number, number] = [m.minX + 0.012, bottom, cz]
   return (
-    <mesh geometry={geometry} position={position} rotation-y={-Math.PI / 2}>
-      <meshStandardMaterial color="#cfd8dd" metalness={0.6} roughness={0.15} />
-    </mesh>
+    <>
+      <mesh geometry={arch} position={[m.maxX, bottom, cz]} rotation-y={-Math.PI / 2}>
+        <meshStandardMaterial color="#e48fb0" flatShading roughness={0.6} />
+      </mesh>
+      {reflector ? (
+        <primitive object={reflector} position={position} rotation-y={-Math.PI / 2} />
+      ) : (
+        <mesh geometry={geometry} position={position} rotation-y={-Math.PI / 2}>
+          <meshStandardMaterial color="#cfd8dd" metalness={0.6} roughness={0.15} />
+        </mesh>
+      )}
+    </>
   )
 }
 
