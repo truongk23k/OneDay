@@ -1,4 +1,4 @@
-import { createKeyTracker } from './input'
+import { createKeyTracker, isSprintDrag } from './input'
 
 describe('createKeyTracker', () => {
   test('W gives forward', () => {
@@ -40,5 +40,33 @@ describe('createKeyTracker', () => {
     k.down('KeyD')
     k.clear()
     expect(k.vector()).toEqual({ x: 0, y: 0 })
+  })
+})
+
+describe('sprint', () => {
+  test('holding Shift sprints, releasing stops', () => {
+    const k = createKeyTracker()
+    k.down('ShiftLeft')
+    expect(k.sprinting()).toBe(true)
+    k.up('ShiftLeft')
+    expect(k.sprinting()).toBe(false)
+  })
+
+  test('Shift is not a movement key', () => {
+    const k = createKeyTracker()
+    k.down('ShiftRight')
+    expect(k.vector()).toEqual({ x: 0, y: 0 })
+  })
+
+  test('clear() also stops sprinting', () => {
+    const k = createKeyTracker()
+    k.down('ShiftLeft')
+    k.clear()
+    expect(k.sprinting()).toBe(false)
+  })
+
+  test('pushing the joystick past 1.5× its radius sprints', () => {
+    expect(isSprintDrag(0, -60, 60)).toBe(false)
+    expect(isSprintDrag(0, -95, 60)).toBe(true)
   })
 })

@@ -5,12 +5,12 @@ export const S = {
     title: 'Hướng dẫn',
     resume: 'Chơi tiếp',
     desktop: [
-      'Đi lại: W A S D hoặc phím mũi tên',
+      'Đi lại: W A S D hoặc phím mũi tên · giữ Shift để chạy nhanh',
       'Xoay camera: giữ chuột trái và kéo',
       'Mở/đóng hướng dẫn: phím Esc hoặc nút ?',
     ],
     touch: [
-      'Đi lại: kéo joystick bên trái',
+      'Đi lại: kéo joystick bên trái · đẩy ra xa vòng tròn để chạy nhanh',
       'Xoay camera: vuốt ở nửa bên phải màn hình',
       'Mở hướng dẫn: nút ?',
     ],

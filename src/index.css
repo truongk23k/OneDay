@@ -623,3 +623,13 @@ body {
   cursor: grab;
   object-fit: contain;
 }
+
+/* Joystick khi đang chạy nhanh */
+.joy-base.sprint {
+  border-color: #ffb347;
+  background: rgba(255, 179, 71, 0.2);
+}
+
+.joy-base.sprint .joy-knob {
+  background: #ffb347;
+}

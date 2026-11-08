@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
 import { COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
+import { dynamicColliders } from '../room/world'
 import { useGame } from '../store'
 import { player } from '../story/interact'
 import { itemById } from '../story/outfit'
@@ -13,6 +14,7 @@ import { clampDelta, moveVector } from './movement'
 
 const RADIUS = 0.25
 const SPEED = 2.2
+const SPRINT = 1.65
 const CAM_DIST = 2.0
 const LOOK_HEIGHT = 1.1
 const PITCH_MIN = 0.15
@@ -100,8 +102,10 @@ export function Player() {
       const v = moveVector(k.x || k.y ? k : input.move, s.yaw)
       const speed = Math.hypot(v.x, v.z)
       if (speed > 0.01) {
-        motion.current.speed = speed
-        const next = resolveCircleBoxes({ x: s.x + v.x * SPEED * dt, z: s.z + v.z * SPEED * dt }, RADIUS, COLLIDERS)
+        const run = keys.sprinting() || input.sprint ? SPRINT : 1
+        motion.current.speed = speed * run
+        const step = SPEED * run * dt
+        const next = resolveCircleBoxes({ x: s.x + v.x * step, z: s.z + v.z * step }, RADIUS, [...COLLIDERS, ...dynamicColliders()])
         s.x = next.x
         s.z = next.z
         const target = Math.atan2(-v.x, -v.z)

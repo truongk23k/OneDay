@@ -3,6 +3,8 @@
 export const input = {
   move: { x: 0, y: 0 },
   look: { dx: 0, dy: 0 },
+  // Chạy nhanh bằng joystick (đẩy quá vòng); Shift trên bàn phím do keys.sprinting() báo.
+  sprint: false,
 }
 
 const AXES: Record<string, [number, number]> = {
@@ -18,15 +20,22 @@ const AXES: Record<string, [number, number]> = {
 
 export function createKeyTracker() {
   const held = new Set<string>()
+  let shift = false
   return {
     down(code: string) {
       if (code in AXES) held.add(code)
+      if (code === 'ShiftLeft' || code === 'ShiftRight') shift = true
     },
     up(code: string) {
       held.delete(code)
+      if (code === 'ShiftLeft' || code === 'ShiftRight') shift = false
     },
     clear() {
       held.clear()
+      shift = false
+    },
+    sprinting() {
+      return shift
     },
     vector() {
       let x = 0
@@ -56,6 +65,9 @@ export function joystickVector(dx: number, dy: number, radius: number) {
   }
   return { x, y }
 }
+
+// Đẩy ngón cái ra xa quá 1.5 lần bán kính joystick thì chạy nhanh.
+export const isSprintDrag = (dx: number, dy: number, radius: number) => Math.hypot(dx, dy) > radius * 1.5
 
 export type TouchRole = 'move' | 'look'
 

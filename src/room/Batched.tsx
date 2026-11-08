@@ -16,7 +16,7 @@ import {
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { groupParts, type Mat, type Part } from './parts'
 
-const MATERIALS: Record<Mat, MeshStandardMaterial | MeshBasicMaterial> = {
+export const MATERIALS: Record<Mat, MeshStandardMaterial | MeshBasicMaterial> = {
   std: new MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85 }),
   metal: new MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.35, metalness: 0.35 }),
   emit: new MeshBasicMaterial({ vertexColors: true }),
@@ -44,16 +44,26 @@ function partGeometry(p: Part): BufferGeometry {
   return g
 }
 
+// Gộp nhiều mảnh (đã tô màu theo đỉnh) thành một hình duy nhất.
+export function mergeParts(parts: Part[]): BufferGeometry {
+  const geoms = parts.map(partGeometry)
+  const merged = mergeGeometries(geoms)
+  geoms.forEach((g) => g.dispose())
+  return merged
+}
+
+// Một lưới duy nhất từ các mảnh cùng chất liệu thường (dùng cho từng bộ phận nhân vật).
+export function PartsMesh({ parts }: { parts: Part[] }) {
+  const geom = useMemo(() => mergeParts(parts), [parts])
+  useEffect(() => () => geom.dispose(), [geom])
+  return <mesh geometry={geom} material={MATERIALS.std} />
+}
+
 // Gộp mọi mảnh cùng chất liệu thành một lưới duy nhất: cả phòng chỉ tốn vài lệnh vẽ.
 export function Batched({ parts }: { parts: Part[] }) {
   const meshes = useMemo(
     () =>
-      [...groupParts(parts)].map(([mat, list]) => {
-        const geoms = list.map(partGeometry)
-        const merged = mergeGeometries(geoms)
-        geoms.forEach((g) => g.dispose())
-        return { mat, geom: merged }
-      }),
+      [...groupParts(parts)].map(([mat, list]) => ({ mat, geom: mergeParts(list) })),
     [parts],
   )
   useEffect(() => () => meshes.forEach((m) => m.geom.dispose()), [meshes])

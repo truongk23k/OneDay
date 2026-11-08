@@ -1,4 +1,4 @@
-import { FURNITURE, PULLUP_BAR, RENDER_WALLS, ROOM, WINDOW, type Box, type Furniture } from './layout'
+import { BATH_CEILING, BATH_DOOR, FURNITURE, HELMETS, PULLUP_BAR, RENDER_WALLS, ROOM, WINDOW, type Box, type Furniture } from './layout'
 import { splitWall, type Opening } from './openings'
 
 // Đồ đạc low-poly mô tả bằng dữ liệu (các mảnh hộp, trụ, khối cầu), sau đó gộp theo chất liệu để vẽ ít lần.
@@ -464,6 +464,22 @@ function windowParts(): Part[] {
   )
   for (let z = min + 0.16; z < max - 0.1; z += 0.16) p.push(box(x0 + 0.02, x1, minY, maxY, z - 0.01, z + 0.01, C.white))
   for (let y = minY + 0.22; y < maxY - 0.1; y += 0.22) p.push(box(x0 + 0.02, x1, y - 0.01, y + 0.01, min, max, C.white))
+  // Hai cánh kính lùa: khung cánh trắng (kính vẽ riêng trong Room.tsx)
+  const midZ = (min + max) / 2
+  const f = 0.045
+  for (const s of [
+    { x: -0.085, z0: min + t, z1: midZ + 0.025 },
+    { x: -0.055, z0: midZ - 0.025, z1: max - t },
+  ]) {
+    const sx0 = s.x - 0.012
+    const sx1 = s.x + 0.012
+    p.push(
+      box(sx0, sx1, minY + t, minY + t + f, s.z0, s.z1, C.white),
+      box(sx0, sx1, maxY - t - f, maxY - t, s.z0, s.z1, C.white),
+      box(sx0, sx1, minY + t, maxY - t, s.z0, s.z0 + f, C.white),
+      box(sx0, sx1, minY + t, maxY - t, s.z1 - f, s.z1, C.white),
+    )
+  }
   // Điều hòa phía trên
   const mid = (min + max) / 2
   p.push(box(0, 0.24, 2.45, 2.75, mid - 0.4, mid + 0.4, '#fbfbfb'), box(0.2, 0.245, 2.47, 2.5, mid - 0.36, mid + 0.36, '#d6d8da'))
@@ -489,7 +505,44 @@ function decorParts(): Part[] {
   return p
 }
 
+// Khung cửa nhà vệ sinh, gác xép (chậu đỏ, rổ xanh), công tắc, bông tắm, mũ bảo hiểm, ống xà đơn.
+function fixtureParts(): Part[] {
+  const { min, max, maxY } = BATH_DOOR
+  const xf = 2.95
+  const j = 0.05
+  const p: Part[] = [
+    box(xf - 0.03, xf, 0, maxY + j, min - j, min, C.white),
+    box(xf - 0.03, xf, 0, maxY + j, max, max + j, C.white),
+    box(xf - 0.03, xf, maxY, maxY + j, min - j, max + j, C.white),
+    box(3.05, 5.6, BATH_CEILING, BATH_CEILING + 0.05, 0, 1.45, C.wall),
+    cyl(3.3, BATH_CEILING + 0.05, BATH_CEILING + 0.19, 0.35, 0.16, '#d8322b', { rTop: 0.2, seg: 16 }),
+    box(3.15, 3.6, BATH_CEILING + 0.05, BATH_CEILING + 0.13, 0.6, 0.92, C.plastic),
+    box(2.93, 2.95, 1.3, 1.42, max + 0.2, max + 0.28, C.white),
+    box(2.93, 2.95, 1.15, 1.25, max + 0.2, max + 0.28, C.white),
+    ico(2.9, 1.25, min - 0.18, 0.07, '#151515'),
+  ]
+  for (const h of HELMETS) p.push(ico(h.x, h.y, h.z + 0.02, 0.13, '#1b1b1b', [1, 0.75, 0.75]))
+  const { x0, x1, y, z, radius } = PULLUP_BAR
+  p.push({ kind: 'cyl', rTop: radius, rBottom: radius, h: x1 - x0, pos: [(x0 + x1) / 2, y, z], rot: [0, 0, Math.PI / 2], color: '#141414' })
+  return p
+}
+
 export function buildRoomParts(openings: Opening[] = []): Part[] {
-  return [...wallParts(openings), ...FURNITURE.flatMap(furnitureParts), ...windowParts(), ...decorParts()]
+  return [...wallParts(openings), ...FURNITURE.flatMap(furnitureParts), ...windowParts(), ...decorParts(), ...fixtureParts()]
+}
+
+// Cánh cửa nhà vệ sinh (khung nhôm trắng, nửa dưới tấm nhựa) theo tọa độ bản lề; xoay được nên vẽ riêng.
+export function bathDoorLeafParts(): Part[] {
+  const w = BATH_DOOR.max - BATH_DOOR.min - 0.02
+  const h = BATH_DOOR.maxY - 0.03
+  const f = 0.04
+  return [
+    box(0, 0.03, 0.02, 0.02 + f, -w, 0, C.white),
+    box(0, 0.03, h - f, h, -w, 0, C.white),
+    box(0, 0.03, 0.02, h, -f, 0, C.white),
+    box(0, 0.03, 0.02, h, -w, -w + f, C.white),
+    box(0.005, 0.025, 0.02, 0.7, -w, 0, C.white),
+    ico(0.04, 1.0, -w + 0.08, 0.025, C.steel),
+  ]
 }
 

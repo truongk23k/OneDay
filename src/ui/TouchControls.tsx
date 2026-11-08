@@ -1,10 +1,10 @@
 import { useRef, useState, type PointerEvent } from 'react'
-import { createTouchRouter, input, joystickVector } from '../player/input'
+import { createTouchRouter, input, isSprintDrag, joystickVector } from '../player/input'
 
 const JOY_RADIUS = 60
 const LOOK_SENS = 0.008
 
-type Joy = { x: number; y: number; kx: number; ky: number }
+type Joy = { x: number; y: number; kx: number; ky: number; sprint?: boolean }
 
 export function TouchControls() {
   const router = useRef(createTouchRouter())
@@ -39,15 +39,17 @@ export function TouchControls() {
     const dx = e.clientX - o.x
     const dy = e.clientY - o.y
     input.move = joystickVector(dx, dy, JOY_RADIUS)
+    input.sprint = isSprintDrag(dx, dy, JOY_RADIUS)
     const len = Math.hypot(dx, dy)
     const k = len > JOY_RADIUS ? JOY_RADIUS / len : 1
-    setJoy({ x: o.x, y: o.y, kx: dx * k, ky: dy * k })
+    setJoy({ x: o.x, y: o.y, kx: dx * k, ky: dy * k, sprint: input.sprint })
   }
 
   const onUp = (e: PointerEvent<HTMLDivElement>) => {
     if (router.current.role(e.pointerId) === 'move') {
       origin.current = null
       input.move = { x: 0, y: 0 }
+      input.sprint = false
       setJoy(null)
     }
     router.current.end(e.pointerId)
@@ -57,7 +59,7 @@ export function TouchControls() {
   return (
     <div className="touch-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
       {joy && (
-        <div className="joy-base" style={{ left: joy.x - JOY_RADIUS, top: joy.y - JOY_RADIUS }}>
+        <div className={joy.sprint ? 'joy-base sprint' : 'joy-base'} style={{ left: joy.x - JOY_RADIUS, top: joy.y - JOY_RADIUS }}>
           <div className="joy-knob" style={{ transform: `translate(${joy.kx}px, ${joy.ky}px)` }} />
         </div>
       )}
