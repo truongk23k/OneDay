@@ -86,3 +86,22 @@ test('going to the toilet takes 2 minutes and says something', () => {
   expect(s.minutes).toBe(452)
   expect(s.line).toBeTruthy()
 })
+
+describe('leaving the room', () => {
+  test('taking both helmets, or only one', () => {
+    expect(reducer(s0(), { type: 'takeHelmets', n: 2 }).tasks.helmets).toBe(2)
+    expect(reducer(s0(), { type: 'takeHelmets', n: 1 }).tasks.helmets).toBe(1)
+  })
+
+  test('cannot leave without keys', () => {
+    const s = reducer(s0(), { type: 'leave' })
+    expect(s.phase).toBe('room')
+    expect(s.line).toMatch(/chìa khóa/i)
+  })
+
+  test('leaving with the keys ends the room part', () => {
+    const base = s0()
+    const s = reducer({ ...base, tasks: { ...base.tasks, keys: true } }, { type: 'leave' })
+    expect(s.phase).toBe('left')
+  })
+})

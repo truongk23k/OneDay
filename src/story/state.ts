@@ -56,6 +56,8 @@ export type Action =
   | { type: 'toilet' }
   | { type: 'junk'; id: string }
   | { type: 'chatReply'; index: number }
+  | { type: 'takeHelmets'; n: 1 | 2 }
+  | { type: 'leave' }
   | { type: 'chatSeen' }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
@@ -153,6 +155,11 @@ export function reducer(s: StoryState, a: Action): StoryState {
       const line = S.wardrobe.junkLines[a.id as keyof typeof S.wardrobe.junkLines] ?? null
       return { ...s, minutes: s.minutes + 0.5, line }
     }
+    case 'takeHelmets':
+      return { ...s, tasks: { ...s.tasks, helmets: a.n }, line: a.n === 2 ? S.story.helmets : S.story.helmetOne }
+    case 'leave':
+      if (!s.tasks.keys) return { ...s, line: S.story.needKeys }
+      return { ...s, phase: 'left', overlay: null, line: null }
     case 'clearLine':
       return { ...s, line: null }
     case 'restart':

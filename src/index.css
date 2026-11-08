@@ -893,3 +893,35 @@ body {
     display: none;
   }
 }
+
+/* Thẻ tổng kết */
+.end-time {
+  color: #ffd27a;
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  margin: 6px 0 10px;
+}
+
+.stats strong {
+  font-size: 20px;
+}
+
+.end-tasks {
+  position: static;
+  margin: 0 0 8px;
+  padding: 0;
+  background: none;
+  pointer-events: auto;
+}
+
+.end-tasks li.done {
+  text-decoration: none;
+  opacity: 1;
+}
+
+.end-tasks li:not(.done) .tick {
+  color: #ff7a6b;
+}

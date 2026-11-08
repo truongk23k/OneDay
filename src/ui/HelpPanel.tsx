@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { keys } from '../player/input'
 import { useGame } from '../store'
+import { useStory } from '../story/store'
 import { S } from '../strings'
 
 // Nút "?" luôn ở góc màn hình; mở bảng hướng dẫn thì game tạm dừng.
@@ -22,6 +23,7 @@ export function HelpPanel({ isTouch }: { isTouch: boolean }) {
   }, [open])
 
   const controls = isTouch ? S.help.touch : S.help.desktop
+  const phase = useStory((st) => st.s.phase)
 
   return (
     <>
@@ -38,7 +40,7 @@ export function HelpPanel({ isTouch }: { isTouch: boolean }) {
               ))}
             </ul>
             <h3>{S.help.sceneTitle}</h3>
-            <p>{S.help.scene}</p>
+            <p>{S.help.scenes[phase]}</p>
             <button className="help-resume" onClick={() => setOpen(false)}>
               {S.help.resume}
             </button>

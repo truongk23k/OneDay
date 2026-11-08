@@ -64,7 +64,11 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
   if (id === 'bathDoor') o.push({ label: w.bathDoorOpen ? S.options.closeDoor : S.options.openDoor, action: { type: 'world', do: 'door' } })
   if (id === 'lightSwitch') o.push({ label: w.lightsOn ? S.options.lightsOff : S.options.lightsOn, action: { type: 'world', do: 'lights' } })
   if (id === 'wardrobe') o.push({ label: S.options.wardrobe, action: { type: 'open', overlay: 'wardrobe' } })
-  if (id === 'door') o.push({ label: S.options.door, action: { type: 'open', overlay: 'door' } })
+  if (id === 'door') {
+    if (s.tasks.helmets < 2) o.push({ label: S.options.helmets2, action: { type: 'takeHelmets', n: 2 } })
+    if (s.tasks.helmets === 0) o.push({ label: S.options.helmets1, action: { type: 'takeHelmets', n: 1 } })
+    o.push({ label: S.options.leave, action: { type: 'leave' } })
+  }
   if (isKeySpot(id) && !s.tasks.keys && !s.searched.includes(id)) {
     o.push({ label: S.options.search, action: { type: 'search', id } })
   }

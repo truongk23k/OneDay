@@ -7,7 +7,8 @@ import type { Quality } from '../device'
 import { Batched, PartsMesh } from './Batched'
 import { BATH_DOOR, BATH_LOFT, FURNITURE, ROOM, WINDOW } from './layout'
 import type { Opening } from './openings'
-import { bathDoorLeafParts, buildRoomParts } from './parts'
+import { useStory } from '../story/store'
+import { bathDoorLeafParts, buildRoomParts, helmetParts } from './parts'
 import { useWorld } from './world'
 
 const OPENINGS: Opening[] = [WINDOW, BATH_DOOR, BATH_LOFT]
@@ -58,6 +59,13 @@ function WindowGlass() {
       </mesh>
     </group>
   )
+}
+
+function Helmets() {
+  const taken = useStory((st) => st.s.tasks.helmets)
+  const parts = useMemo(() => helmetParts(2 - taken), [taken])
+  if (!parts.length) return null
+  return <PartsMesh parts={parts} />
 }
 
 const LEAF_OPEN = -1.4
@@ -197,6 +205,7 @@ export function Room({ showLabels = false, quality = 'medium' }: { showLabels?: 
       <Batched parts={parts} />
       <MirrorGlass quality={quality} />
       <BathDoorLeaf />
+      <Helmets />
       <WindowGlass />
       <Water />
       {/* Ánh sáng 2 đèn tuýp (tắt được bằng công tắc cạnh cửa nhà vệ sinh) */}

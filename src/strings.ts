@@ -1,6 +1,6 @@
 // Toàn bộ chữ trong game nằm ở đây để sau này dịch được.
 export const S = {
-  title: 'One Day · bản thử 0.2',
+  title: 'One Day · bản thử 0.3',
   help: {
     title: 'Hướng dẫn',
     resume: 'Chơi tiếp',
@@ -15,7 +15,12 @@ export const S = {
       'Mở hướng dẫn: nút ?',
     ],
     sceneTitle: 'Màn này',
-    scene: 'Bản thử phòng trọ: đi một vòng xem đồ đạc đã đúng chỗ chưa. Nhiệm vụ sẽ có ở bản sau.',
+    scenes: {
+      alarm: 'Báo thức đang reo. Dậy ngay, hay ngủ thêm 5 phút? Ngủ tới 8:00 là trễ hết.',
+      room: 'Làm các việc trong danh sách: đánh răng, rửa mặt, chọn đồ, nhắn tin cho Em, tìm chìa khóa xe, lấy mũ bảo hiểm. Đứng gần đồ vật sẽ hiện nút để dùng. Xong thì ra cửa — Em cần tới chỗ làm trước 8:25!',
+      left: 'Hết phần trong phòng. Bấm "Chơi lại" để thử nhanh hơn.',
+      overslept: 'Ngủ quên mất rồi. Bấm "Chơi lại" và đừng báo lại nhiều quá nhé.',
+    },
   },
   alarm: {
     label: 'Báo thức',
@@ -25,6 +30,10 @@ export const S = {
     rain: 'Hôm nay trời mưa 🌧️',
   },
   end: {
+    leftTitle: 'Ra khỏi phòng lúc',
+    leftNote: 'Phần chạy xe đi đón Em ❤️ sẽ có ở bản sau. Thử lại cho nhanh hơn nhé!',
+    hygiene: 'Thơm tho',
+    mood: 'Tâm trạng Em',
     oversleptTitle: 'Ngủ quên!',
     oversleptBody: 'Anh ngủ một mạch tới trưa. Mở mắt ra thấy 12 cuộc gọi nhỡ từ Em ❤️…',
     restart: 'Chơi lại',
@@ -32,7 +41,6 @@ export const S = {
   hud: {
     deadlines: 'Đón Em 8:25 · Vào làm 8:30',
     pressE: 'E',
-    soon: 'Phần này sắp có ở bản sau.',
     close: 'Đóng',
   },
   tasks: {
@@ -48,7 +56,9 @@ export const S = {
     wash: 'Rửa mặt',
     wardrobe: 'Chọn đồ',
     search: 'Tìm chìa khóa',
-    door: 'Ra cửa',
+    helmets2: 'Lấy mũ bảo hiểm (2)',
+    helmets1: 'Chỉ lấy 1 mũ',
+    leave: 'Ra khỏi phòng',
     closeDoor: 'Đóng cửa',
     openDoor: 'Mở cửa',
     tapOn: 'Vặn vòi',
@@ -161,6 +171,9 @@ export const S = {
     wrongTube: 'Ối, sữa rửa mặt! Phì phì… mất 2 phút súc miệng.',
     washFail: 'Té nước ướt hết áo rồi, làm lại!',
     keysFound: 'Thấy chìa khóa rồi! 🔑',
+    helmets: 'Đã lấy mũ bảo hiểm 🪖',
+    helmetOne: 'Lấy 1 mũ thôi… mong là Em có mũ 😬',
+    needKeys: 'Chưa có chìa khóa xe thì đi kiểu gì 🔑',
     toilet: ['Nhẹ cả người 😌', 'Xả nước… ào ào 🚽', 'Ngồi lướt điện thoại hơi lâu rồi đấy 📱'],
     keysNotHere: ['Không có ở đây…', 'Chỗ này cũng không…', 'Chìa khóa ơi mày trốn đâu rồi…', 'Hôm qua để đâu nhỉ…'],
   },

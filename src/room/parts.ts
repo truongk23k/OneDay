@@ -542,7 +542,6 @@ function fixtureParts(): Part[] {
     box(2.93, 2.95, 1.15, 1.25, max + 0.2, max + 0.28, C.white),
     ico(2.9, 1.25, min - 0.18, 0.07, '#151515'),
   ]
-  for (const h of HELMETS) p.push(ico(h.x, h.y, h.z + 0.02, 0.13, '#1b1b1b', [1, 0.75, 0.75]))
   const { x0, x1, y, z, radius } = PULLUP_BAR
   p.push({ kind: 'cyl', rTop: radius, rBottom: radius, h: x1 - x0, pos: [(x0 + x1) / 2, y, z], rot: [0, 0, Math.PI / 2], color: '#141414' })
   return p
@@ -550,6 +549,11 @@ function fixtureParts(): Part[] {
 
 export function buildRoomParts(openings: Opening[] = []): Part[] {
   return [...wallParts(openings), ...FURNITURE.flatMap(furnitureParts), ...windowParts(), ...decorParts(), ...fixtureParts()]
+}
+
+// Mũ bảo hiểm còn treo trên cửa (lấy mũ nào thì mũ đó biến mất).
+export function helmetParts(left: number): Part[] {
+  return HELMETS.slice(0, left).map((h) => ico(h.x, h.y, h.z + 0.02, 0.13, '#1b1b1b', [1, 0.75, 0.75]))
 }
 
 // Cánh cửa nhà vệ sinh (khung nhôm trắng, nửa dưới tấm nhựa) theo tọa độ bản lề; xoay được nên vẽ riêng.

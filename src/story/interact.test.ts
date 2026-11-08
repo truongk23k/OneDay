@@ -68,3 +68,16 @@ describe('usable props', () => {
     expect(nearestInteractable({ x: 2.62, z: 0.73 })?.id).toBe('bathDoor')
   })
 })
+
+describe('front door', () => {
+  test('offers helmets, then leaving', () => {
+    const s = room()
+    expect(actionsFor('door', s).map((o) => o.action)).toEqual([
+      { type: 'takeHelmets', n: 2 },
+      { type: 'takeHelmets', n: 1 },
+      { type: 'leave' },
+    ])
+    const both = { ...s, tasks: { ...s.tasks, helmets: 2 as const } }
+    expect(actionsFor('door', both).map((o) => o.action)).toEqual([{ type: 'leave' }])
+  })
+})
