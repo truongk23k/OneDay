@@ -41,7 +41,7 @@ export default function App() {
       <Canvas dpr={[1, DPR_CAP[quality]]} camera={{ fov: 70, near: 0.05, far: 50 }}>
         <hemisphereLight args={['#fffaf2', '#9a9184', 1.25]} />
         <directionalLight position={[-2, 5, 3]} intensity={0.9} color="#fff6e8" />
-        <Room showLabels={debug} />
+        <Room showLabels={debug} quality={quality} />
         <Player />
         <StoryTicker />
         {debug && <DebugProbe />}

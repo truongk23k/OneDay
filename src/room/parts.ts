@@ -318,16 +318,19 @@ function wardrobe(b: Box): Part[] {
 }
 
 function bed(b: Box): Part[] {
-  const top = 0.38
+  // Khung gỗ thấp, đệm dày 17 cm, chiếu trúc trải trên đệm.
+  const frameTop = 0.25
+  const top = 0.42
   const p: Part[] = [
-    box(b.minX, b.maxX, 0, top, b.minZ, b.maxZ, C.wood),
-    box(b.minX + 0.03, b.maxX - 0.03, top, top + 0.04, b.minZ + 0.03, b.maxZ - 0.03, C.bamboo),
+    box(b.minX, b.maxX, 0, frameTop, b.minZ, b.maxZ, C.wood),
+    box(b.minX + 0.04, b.maxX - 0.02, frameTop, top, b.minZ + 0.04, b.maxZ - 0.06, '#eeeae2'),
+    box(b.minX + 0.06, b.maxX - 0.04, top, top + 0.02, b.minZ + 0.06, b.maxZ - 0.08, C.bamboo),
     // Đầu giường gỗ dọc tường nam + đệm đen tựa tường đông
-    box(b.minX, b.maxX, top, 0.95, b.maxZ - 0.05, b.maxZ, C.wood),
-    box(b.maxX - 0.06, b.maxX, top + 0.04, 0.78, b.maxZ - 1.0, b.maxZ - 0.05, '#222226'),
+    box(b.minX, b.maxX, frameTop, 0.95, b.maxZ - 0.05, b.maxZ, C.wood),
+    box(b.maxX - 0.06, b.maxX, top, 0.8, b.maxZ - 1.0, b.maxZ - 0.05, '#222226'),
   ]
   // Sọc chiếu trúc
-  for (let x = b.minX + 0.1; x < b.maxX - 0.05; x += 0.12) p.push(box(x, x + 0.01, top + 0.04, top + 0.045, b.minZ + 0.05, b.maxZ - 0.05, '#8a6538'))
+  for (let x = b.minX + 0.12; x < b.maxX - 0.06; x += 0.12) p.push(box(x, x + 0.01, top + 0.02, top + 0.025, b.minZ + 0.07, b.maxZ - 0.09, '#8a6538'))
   // Gối + chăn
   p.push(ico(b.minX + 0.7, top + 0.1, b.maxZ - 0.3, 0.22, C.pillowPink, [1.4, 0.45, 0.8]))
   p.push(ico(b.minX + 1.5, top + 0.1, b.maxZ - 0.3, 0.22, C.pillowNavy, [1.4, 0.45, 0.8]))
@@ -375,7 +378,6 @@ function mirror(b: Box): Part[] {
     box(b.minX, b.maxX, 0.1, 1.45, b.minZ, b.minZ + t, C.pink),
     box(b.minX, b.maxX, 0.1, 1.45, b.maxZ - t, b.maxZ, C.pink),
     box(b.minX, b.maxX, 0.1, 0.14, b.minZ, b.maxZ, C.pink),
-    box(b.minX + 0.02, b.maxX - 0.01, 0.14, 1.45, b.minZ + t, b.maxZ - t, C.mirror, 'metal'),
     box(b.minX - 0.15, b.maxX, 0, 0.03, b.minZ, b.minZ + 0.03, C.pink),
     box(b.minX - 0.15, b.maxX, 0, 0.03, b.maxZ - 0.03, b.maxZ, C.pink),
   ]
@@ -399,7 +401,8 @@ function mirror(b: Box): Part[] {
       color: C.pink,
     })
   }
-  p.push(box(b.minX + 0.02, b.maxX - 0.01, 1.45, 1.45 + r * 0.75, cz - r * 0.7, cz + r * 0.7, C.mirror, 'metal'))
+  // Tấm lưng gương (phía sau mặt kính phản chiếu).
+  p.push(box(b.maxX - 0.015, b.maxX, 0.14, 1.45, b.minZ + t, b.maxZ - t, '#c97a99'))
   return p
 }
 

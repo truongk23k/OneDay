@@ -34,3 +34,19 @@ test('groupParts groups by material only, whatever the colour', () => {
   expect(g.size).toBe(2)
   expect(g.get('std')).toHaveLength(2)
 })
+
+test('the bed has a thick mattress on the wooden frame, with the bamboo mat on top', () => {
+  const bed = FURNITURE.find((f) => f.id === 'bed')!
+  const parts = furnitureParts(bed)
+  const mattress = parts.find((p) => p.color === '#eeeae2' && p.kind === 'box')
+  expect(mattress).toBeDefined()
+  const m = partBounds(mattress!)
+  expect(m.maxY - m.minY).toBeGreaterThanOrEqual(0.15)
+  const mat = parts.find((p) => p.color === '#a37b4c')!
+  expect(partBounds(mat).minY).toBeCloseTo(m.maxY, 2)
+})
+
+test('the mirror frame leaves the glass to the live reflector (no static glass parts)', () => {
+  const mirror = FURNITURE.find((f) => f.id === 'mirror')!
+  expect(furnitureParts(mirror).some((p) => p.mat === 'metal')).toBe(false)
+})

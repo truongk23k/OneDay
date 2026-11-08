@@ -1,6 +1,8 @@
 import { Html } from '@react-three/drei'
-import { useMemo, type CSSProperties } from 'react'
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three'
+import { useEffect, useMemo, type CSSProperties } from 'react'
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Shape, ShapeGeometry } from 'three'
+import { Reflector } from 'three/addons/objects/Reflector.js'
+import type { Quality } from '../device'
 import { Batched } from './Batched'
 import { BATH_CEILING, BATH_DOOR, BATH_LOFT, FURNITURE, HELMETS, PULLUP_BAR, ROOM, WINDOW } from './layout'
 import type { Block, Opening } from './openings'
@@ -139,6 +141,37 @@ function Bathroom() {
   )
 }
 
+// Mặt gương đứng (vòm trên) phản chiếu thật cả căn phòng; máy yếu dùng mặt tĩnh cho nhẹ.
+function MirrorGlass({ quality }: { quality: Quality }) {
+  const m = FURNITURE.find((f) => f.id === 'mirror')!
+  const t = 0.04
+  const r = (m.maxZ - m.minZ) / 2 - t
+  const bottom = 0.14
+  const archY = 1.45 - bottom
+  const geometry = useMemo(() => {
+    const s = new Shape()
+    s.moveTo(-r, 0)
+    s.lineTo(r, 0)
+    s.lineTo(r, archY)
+    s.absarc(0, archY, r, 0, Math.PI, false)
+    s.lineTo(-r, 0)
+    return new ShapeGeometry(s, 16)
+  }, [r, archY])
+  const reflector = useMemo(() => {
+    if (quality === 'low') return null
+    const size = quality === 'high' ? 1024 : 512
+    return new Reflector(geometry, { textureWidth: size / 2, textureHeight: size, color: 0xc4ccd2, clipBias: 0.003 })
+  }, [geometry, quality])
+  useEffect(() => () => reflector?.dispose(), [reflector])
+  const position: [number, number, number] = [m.minX + 0.012, bottom, (m.minZ + m.maxZ) / 2]
+  if (reflector) return <primitive object={reflector} position={position} rotation-y={-Math.PI / 2} />
+  return (
+    <mesh geometry={geometry} position={position} rotation-y={-Math.PI / 2}>
+      <meshStandardMaterial color="#cfd8dd" metalness={0.6} roughness={0.15} />
+    </mesh>
+  )
+}
+
 const labelStyle: CSSProperties = {
   padding: '2px 8px',
   borderRadius: 10,
@@ -149,7 +182,7 @@ const labelStyle: CSSProperties = {
   pointerEvents: 'none',
 }
 
-export function Room({ showLabels = false }: { showLabels?: boolean }) {
+export function Room({ showLabels = false, quality = 'medium' }: { showLabels?: boolean; quality?: Quality }) {
   const cx = ROOM.width / 2
   const cz = ROOM.depth / 2
   const tiles = useTileTexture()
@@ -166,6 +199,7 @@ export function Room({ showLabels = false }: { showLabels?: boolean }) {
       </mesh>
 
       <Batched parts={parts} />
+      <MirrorGlass quality={quality} />
       {/* Ánh sáng 2 đèn tuýp */}
       <pointLight position={[4.0, 2.45, 1.75]} intensity={3.2} distance={7} decay={1.6} color="#f4f8ff" />
       <pointLight position={[0.3, 2.45, 2.6]} intensity={2.6} distance={7} decay={1.6} color="#f4f8ff" />
