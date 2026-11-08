@@ -8,9 +8,12 @@ import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
 
 const RADIUS = 0.25
+// Nhân vật cao ngang tủ lạnh (1.3 m).
+const BODY_RADIUS = 0.2
+const BODY_HEIGHT = 1.3
 const SPEED = 2.2
-const CAM_DIST = 2.2
-const LOOK_HEIGHT = 1.4
+const CAM_DIST = 2.0
+const LOOK_HEIGHT = 1.1
 const PITCH_MIN = 0.15
 const PITCH_MAX = 1.1
 const MOUSE_SENS = 0.005
@@ -112,12 +115,12 @@ export function Player() {
 
   return (
     <group ref={body}>
-      <mesh position={[0, 0.8, 0]}>
-        <capsuleGeometry args={[RADIUS, 1.1, 4, 12]} />
+      <mesh position={[0, BODY_HEIGHT / 2, 0]}>
+        <capsuleGeometry args={[BODY_RADIUS, BODY_HEIGHT - 2 * BODY_RADIUS, 4, 12]} />
         <meshStandardMaterial color="#d23c3c" />
       </mesh>
       {/* Mũi chỉ hướng mặt nhân vật (về -z khi quay 0). */}
-      <mesh position={[0, 1.35, -0.28]} rotation-x={-Math.PI / 2}>
+      <mesh position={[0, BODY_HEIGHT - 0.25, -0.22]} rotation-x={-Math.PI / 2}>
         <coneGeometry args={[0.08, 0.18, 10]} />
         <meshStandardMaterial color="#f1c27d" />
       </mesh>

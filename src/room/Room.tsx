@@ -1,6 +1,7 @@
 import { Html } from '@react-three/drei'
 import type { CSSProperties } from 'react'
-import { FURNITURE, ROOM, WALLS, type Box } from './layout'
+import { FURNITURE, HELMETS, KITCHEN_PASS, ROOM, WALLS, WINDOW, type Box } from './layout'
+import { splitWall, type Block, type Opening } from './openings'
 
 const COLORS: Record<string, string> = {
   wall: '#e6e2da',
@@ -10,16 +11,75 @@ const COLORS: Record<string, string> = {
   mirror: '#e48fb0',
   fridge: '#b9bdc2',
   fridge2: '#b9bdc2',
+  chairMine: '#2b2b2e',
+  chairFriend: '#3a3a3e',
 }
 
-function BoxMesh({ b, color }: { b: Box; color: string }) {
-  const w = b.maxX - b.minX
-  const d = b.maxZ - b.minZ
+const WHITE = '#f7f7f5'
+const OPENINGS: Opening[] = [WINDOW, KITCHEN_PASS]
+
+function Block3({ b, color }: { b: Block; color: string }) {
   return (
-    <mesh position={[(b.minX + b.maxX) / 2, b.height / 2, (b.minZ + b.maxZ) / 2]}>
-      <boxGeometry args={[w, b.height, d]} />
+    <mesh position={[(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2, (b.minZ + b.maxZ) / 2]}>
+      <boxGeometry args={[b.maxX - b.minX, b.maxY - b.minY, b.maxZ - b.minZ]} />
       <meshStandardMaterial color={color} />
     </mesh>
+  )
+}
+
+const toBlock = (b: Box): Block => ({ minX: b.minX, maxX: b.maxX, minY: 0, maxY: b.height, minZ: b.minZ, maxZ: b.maxZ })
+
+function Wall({ w }: { w: Box }) {
+  const hole = OPENINGS.find((o) => o.wall === w.id)
+  const blocks = hole ? splitWall(w, hole) : [toBlock(w)]
+  return (
+    <>
+      {blocks.map((b, i) => (
+        <Block3 key={i} b={b} color={COLORS.wall} />
+      ))}
+    </>
+  )
+}
+
+// Cửa sổ tường tây: khung trắng, song sắt trắng, kính trong; nhìn ra trời và nhà hàng xóm.
+function Window() {
+  const { min, max, minY, maxY } = WINDOW
+  const x0 = -0.1
+  const x1 = 0.02
+  const t = 0.05
+  const bar = 0.02
+  const bars: Block[] = [
+    { minX: x0, maxX: x1, minY, maxY: minY + t, minZ: min, maxZ: max },
+    { minX: x0, maxX: x1, minY: maxY - t, maxY, minZ: min, maxZ: max },
+    { minX: x0, maxX: x1, minY, maxY, minZ: min, maxZ: min + t },
+    { minX: x0, maxX: x1, minY, maxY, minZ: max - t, maxZ: max },
+  ]
+  for (let z = min + 0.16; z < max - 0.1; z += 0.16) {
+    bars.push({ minX: x0 + 0.02, maxX: x1, minY, maxY, minZ: z - bar / 2, maxZ: z + bar / 2 })
+  }
+  for (let y = minY + 0.22; y < maxY - 0.1; y += 0.22) {
+    bars.push({ minX: x0 + 0.02, maxX: x1, minY: y - bar / 2, maxY: y + bar / 2, minZ: min, maxZ: max })
+  }
+  const midZ = (min + max) / 2
+  return (
+    <group>
+      {bars.map((b, i) => (
+        <Block3 key={i} b={b} color={WHITE} />
+      ))}
+      <mesh position={[-0.06, (minY + maxY) / 2, midZ]} rotation-y={Math.PI / 2}>
+        <planeGeometry args={[max - min, maxY - minY]} />
+        <meshStandardMaterial color="#dff1ff" transparent opacity={0.15} />
+      </mesh>
+      {/* Điều hòa ngay trên cửa sổ */}
+      <Block3 b={{ minX: 0, maxX: 0.24, minY: 2.45, maxY: 2.75, minZ: midZ - 0.4, maxZ: midZ + 0.4 }} color="#ffffff" />
+      {/* Bên ngoài: trời + hai khối nhà hàng xóm */}
+      <mesh position={[-8, 3, midZ]} rotation-y={Math.PI / 2}>
+        <planeGeometry args={[30, 16]} />
+        <meshBasicMaterial color="#cfe6ff" />
+      </mesh>
+      <Block3 b={{ minX: -3.2, maxX: -2.2, minY: -6, maxY: 2.6, minZ: midZ - 3, maxZ: midZ - 0.2 }} color="#e2d6c6" />
+      <Block3 b={{ minX: -4.5, maxX: -3.4, minY: -6, maxY: 4.5, minZ: midZ + 0.2, maxZ: midZ + 3.5 }} color="#d3c2ae" />
+    </group>
   )
 }
 
@@ -48,24 +108,17 @@ export function Room() {
       </mesh>
 
       {WALLS.map((w) => (
-        <BoxMesh key={w.id} b={w} color={COLORS.wall} />
+        <Wall key={w.id} w={w} />
       ))}
       {FURNITURE.map((f) => (
-        <BoxMesh key={f.id} b={f} color={COLORS[f.id] ?? COLORS.furniture} />
+        <Block3 key={f.id} b={toBlock(f)} color={COLORS[f.id] ?? COLORS.furniture} />
       ))}
+      <Window />
 
-      {/* Trang trí, không va chạm: cửa sổ + điều hòa tường tây, 2 mũ bảo hiểm trên cửa */}
-      <mesh position={[0.02, 1.6, 2.4]}>
-        <boxGeometry args={[0.04, 1.2, 1.0]} />
-        <meshStandardMaterial color="#a9d3ee" />
-      </mesh>
-      <mesh position={[0.13, 2.6, 2.5]}>
-        <boxGeometry args={[0.25, 0.3, 0.8]} />
-        <meshStandardMaterial color="#ffffff" />
-      </mesh>
-      {[1.75, 2.15].map((x) => (
-        <mesh key={x} position={[x, 1.5, 0.08]} rotation-x={-Math.PI / 2}>
-          <sphereGeometry args={[0.14, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+      {/* 2 mũ bảo hiểm treo trên cửa */}
+      {HELMETS.map((h) => (
+        <mesh key={h.x} position={[h.x, h.y, h.z]} rotation-x={-Math.PI / 2}>
+          <sphereGeometry args={[0.13, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <meshStandardMaterial color="#1b1b1b" />
         </mesh>
       ))}
@@ -75,6 +128,7 @@ export function Room() {
           key={f.id}
           center
           zIndexRange={[10, 0]}
+          style={{ pointerEvents: 'none' }}
           position={[(f.minX + f.maxX) / 2, Math.min(f.height + 0.3, ROOM.height - 0.2), (f.minZ + f.maxZ) / 2]}
         >
           <div style={labelStyle}>{f.label}</div>

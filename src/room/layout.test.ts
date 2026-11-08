@@ -1,4 +1,4 @@
-import { COLLIDERS, FURNITURE, ROOM, SPAWN, type Box } from './layout'
+import { COLLIDERS, FURNITURE, HELMETS, KITCHEN_PASS, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
 
 const R = 0.25
 
@@ -39,6 +39,9 @@ function reachableSet() {
   }
 }
 
+const get = (id: string) => FURNITURE.find((f) => f.id === id)!
+const wall = (id: string) => WALLS.find((w) => w.id === id)!
+
 test('every furniture box lies inside the room interior', () => {
   for (const f of FURNITURE) {
     expect(f.minX, f.id).toBeGreaterThanOrEqual(0)
@@ -65,14 +68,117 @@ test('spawn is at least 0.25 m from every collider', () => {
 })
 
 test.each([
-  ['lavabo front', 3.0, 0.7],
-  ['wardrobe front', 0.95, 4.3],
-  ['bed side', 2.1, 4.0],
-  ['fridge front', 2.45, 1.8],
-  ['deskMine front', 3.6, 2.5],
-  ['mirror front', 3.65, 2.65],
-  ['main door front', 1.95, 0.4],
-  ['kitchen front', 1.0, 1.0],
+  ['lavabo front', 3.75, 0.7],
+  ['wardrobe front', 0.95, 5.4],
+  ['bed side', 2.95, 5.2],
+  ['fridge front', 2.75, 1.85],
+  ['deskMine side', 3.9, 2.8],
+  ['mirror front', 5.2, 3.9],
+  ['main door front', 2.45, 0.4],
+  ['kitchen front', 1.0, 0.7],
+  ['roommate desk front', 1.1, 2.15],
 ])('reachable with radius 0.25: %s', (_name, x, z) => {
   expect(reachableSet()(x, z)).toBe(true)
+})
+
+test('room is 5.6 m by 6.4 m', () => {
+  expect(ROOM.width).toBe(5.6)
+  expect(ROOM.depth).toBe(6.4)
+})
+
+test('a wall separates the kitchen from the roommate desk', () => {
+  // Đi thẳng từ bàn bạn cùng phòng lên bếp phải cắt qua một bức tường.
+  const blocking = WALLS.filter((w) => w.minX <= 1.0 && w.maxX >= 1.0 && w.minZ >= 1.0 && w.maxZ <= 2.5)
+  expect(blocking.length).toBeGreaterThan(0)
+})
+
+test('the passage to the main door is narrow, about 1 m', () => {
+  const width = wall('bathWallW1').minX - wall('kitchenWall').maxX
+  expect(width).toBeGreaterThanOrEqual(0.9)
+  expect(width).toBeLessThanOrEqual(1.1)
+})
+
+test('the bathroom sits right next to the main door', () => {
+  const gap = wall('bathWallW1').minX - get('door').maxX
+  expect(gap).toBeGreaterThanOrEqual(0)
+  expect(gap).toBeLessThanOrEqual(0.1)
+})
+
+test('the kitchen L runs along the west wall and the partition wall', () => {
+  const long = get('kitchenW')
+  const short = get('kitchenS')
+  expect(long.minX).toBe(0)
+  expect(long.maxZ - long.minZ).toBeGreaterThan(short.maxX - short.minX)
+  expect(short.maxZ).toBeCloseTo(wall('kitchenWall').minZ)
+  expect(FURNITURE.some((f) => f.id === 'kitchenN')).toBe(false)
+})
+
+test('the kitchen wall has a high pass-through opening', () => {
+  expect(KITCHEN_PASS.wall).toBe('kitchenWall')
+  expect(KITCHEN_PASS.minY).toBeGreaterThanOrEqual(1.4)
+})
+
+test('my desk is big: about 2 m long and 0.9 m deep', () => {
+  const d = get('deskMine')
+  expect(d.maxX - d.minX).toBeGreaterThanOrEqual(1.9)
+  expect(d.maxZ - d.minZ).toBeGreaterThanOrEqual(0.85)
+})
+
+test('the bed is big: at least 2.2 m wide', () => {
+  const b = get('bed')
+  expect(b.maxX - b.minX).toBeGreaterThanOrEqual(2.2)
+})
+
+test('the mirror is flat against the wall and touches the bed', () => {
+  const m = get('mirror')
+  expect(m.maxX - m.minX).toBeLessThanOrEqual(0.08)
+  expect(m.maxZ).toBeCloseTo(get('bed').minZ)
+})
+
+test('the shelf is small, right next to the mirror', () => {
+  const s = get('shelf')
+  expect(s.maxX - s.minX).toBeLessThanOrEqual(0.35)
+  expect(s.maxZ - s.minZ).toBeLessThanOrEqual(0.35)
+  expect(get('mirror').minZ - s.maxZ).toBeGreaterThanOrEqual(0)
+  expect(get('mirror').minZ - s.maxZ).toBeLessThanOrEqual(0.15)
+})
+
+test('each desk has a chair right in front of it', () => {
+  for (const [desk, chair] of [
+    ['deskMine', 'chairMine'],
+    ['deskFriend', 'chairFriend'],
+  ]) {
+    const d = get(desk)
+    const c = get(chair)
+    const gap = Math.max(c.minX - d.maxX, d.minX - c.maxX, c.minZ - d.maxZ, d.minZ - c.maxZ)
+    expect(gap, chair).toBeGreaterThanOrEqual(0)
+    expect(gap, chair).toBeLessThanOrEqual(0.3)
+  }
+})
+
+test('the roommate desk runs from the kitchen wall to the roommate fridge', () => {
+  const d = get('deskFriend')
+  expect(d.minZ - wall('kitchenWall').maxZ).toBeLessThanOrEqual(0.1)
+  expect(d.maxZ).toBeCloseTo(get('fridge2').minZ)
+})
+
+test('the window is above the roommate fridge, on the west wall', () => {
+  const f = get('fridge2')
+  expect(WINDOW.wall).toBe('wallW')
+  expect(WINDOW.min).toBeLessThan(f.maxZ)
+  expect(WINDOW.max).toBeGreaterThan(f.minZ)
+  expect(WINDOW.minY).toBeGreaterThan(f.height)
+  expect(WINDOW.maxY).toBeLessThan(ROOM.height)
+})
+
+test('both helmets hang on the door, evenly spaced around its centre', () => {
+  const d = get('door')
+  const centre = (d.minX + d.maxX) / 2
+  expect(HELMETS).toHaveLength(2)
+  for (const h of HELMETS) {
+    expect(h.x).toBeGreaterThan(d.minX + 0.1)
+    expect(h.x).toBeLessThan(d.maxX - 0.1)
+  }
+  expect(HELMETS[0].x + HELMETS[1].x).toBeCloseTo(2 * centre)
+  expect(HELMETS[0].y).toBeCloseTo(HELMETS[1].y)
 })
