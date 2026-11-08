@@ -1,23 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
-import { WASH_ZONE, washLevel, washOk } from '../story/minigames'
+import { WASH_ROUNDS, washLevel, washOk } from '../story/minigames'
 import { useStory } from '../story/store'
 import { S } from '../strings'
 
 const isHoldKey = (e: KeyboardEvent) => e.code === 'Space' || e.code === 'KeyE'
 
-// Giữ nút để vốc nước, thả đúng lúc thanh nằm trong vùng xanh.
+// Giữ nút để vốc nước, thả đúng lúc thanh nằm trong vùng xanh. 3 lượt, lượt sau nhanh hơn, vùng hẹp hơn.
 export function WashGame() {
   const overlay = useStory((st) => st.s.overlay)
   const dispatch = useStory((st) => st.dispatch)
   const startedAt = useRef<number | null>(null)
+  const [round, setRound] = useState(0)
   const [level, setLevel] = useState(0)
   const [failed, setFailed] = useState(false)
+  const roundRef = useRef(0)
+  roundRef.current = round
+
+  useEffect(() => {
+    if (overlay === 'wash') {
+      setRound(0)
+      setFailed(false)
+    }
+  }, [overlay])
 
   // Cập nhật thanh nước khi đang giữ.
   useEffect(() => {
     let raf = 0
     const loop = () => {
-      if (startedAt.current !== null) setLevel(washLevel(Date.now() - startedAt.current))
+      if (startedAt.current !== null) setLevel(washLevel(Date.now() - startedAt.current, roundRef.current))
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
@@ -29,15 +39,18 @@ export function WashGame() {
   }
   const release = () => {
     if (startedAt.current === null) return
-    const l = washLevel(Date.now() - startedAt.current)
+    const r = roundRef.current
+    const l = washLevel(Date.now() - startedAt.current, r)
     startedAt.current = null
     setLevel(0)
-    if (washOk(l)) {
-      dispatch({ type: 'washDone' })
-    } else {
+    if (!washOk(l, r)) {
       setFailed(true)
       dispatch({ type: 'washFail' })
+      return
     }
+    setFailed(false)
+    if (r === WASH_ROUNDS.length - 1) dispatch({ type: 'washDone' })
+    else setRound(r + 1)
   }
 
   useEffect(() => {
@@ -57,6 +70,7 @@ export function WashGame() {
   })
 
   if (overlay !== 'wash') return null
+  const [lo, hi] = WASH_ROUNDS[round].zone
   return (
     <div className="overlay-backdrop">
       <div className="card game">
@@ -64,10 +78,13 @@ export function WashGame() {
           ×
         </button>
         <h2>{S.wash.title}</h2>
+        <p>
+          <strong>{`${S.wash.round} ${round + 1}/${WASH_ROUNDS.length}`}</strong>
+        </p>
         <p>{S.wash.hint}</p>
         {failed && <p className="game-line">{S.story.washFail}</p>}
         <div className="bar">
-          <div className="bar-zone" style={{ left: `${WASH_ZONE[0]}%`, width: `${WASH_ZONE[1] - WASH_ZONE[0]}%` }} />
+          <div className="bar-zone" style={{ left: `${lo}%`, width: `${hi - lo}%` }} />
           <div className="bar-fill water" style={{ width: `${level}%` }} />
         </div>
         <button

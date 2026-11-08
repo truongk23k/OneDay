@@ -54,13 +54,14 @@ export const S = {
     title: 'Đánh răng',
     pick: 'Mắt nhắm mắt mở… tuýp nào là kem đánh răng nhỉ?',
     tubes: ['Tuýp trắng xanh', 'Tuýp xanh trắng'],
-    scrubKeys: 'Nhấn A và D xen kẽ để chà răng',
-    scrubTouch: 'Vuốt qua lại trong khung để chà răng',
+    scrubMouse: 'Giữ chuột trái và chà lên răng cho sạch hết vết bẩn',
+    scrubTouch: 'Chà ngón tay lên răng cho sạch hết vết bẩn',
   },
   wash: {
     title: 'Rửa mặt',
     hint: 'Giữ nút để vốc nước, thả tay khi thanh nằm trong vùng xanh',
     hold: 'Giữ để vốc nước',
+    round: 'Lượt',
   },
   wardrobe: {
     title: 'Tủ quần áo',
