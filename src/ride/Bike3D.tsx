@@ -6,7 +6,7 @@ import { Batched } from '../room/Batched'
 import type { Part, V3 } from '../room/parts'
 import { itemById } from '../story/outfit'
 import type { Outfit } from '../story/state'
-import { MARKERS, ROAD_HALF } from './city'
+import { ROAD_HALF, ROADS_Z } from './city'
 import { useRide } from './store'
 
 // Xe tay ga đen nhám kiểu AB 2026 (không logo, không chữ). Đầu xe hướng về -z.
@@ -92,7 +92,7 @@ export function EmWalker() {
     if (moving) g.rotation.y = Math.atan2(-dx, -dz)
     // 1 = dáng đi bộ của Character.
     motion.current.speed = moving ? 1 : 0
-    const onRoad = Math.abs(emPos.z - MARKERS.emHouse.z) < ROAD_HALF
+    const onRoad = Math.abs(emPos.z - ROADS_Z[1]) < ROAD_HALF
     g.position.set(emPos.x, onRoad ? 0.02 : 0.12, emPos.z)
     last.current = { x: emPos.x, z: emPos.z }
   })

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { newBike } from '../ride/bike'
 import { LIGHTS } from '../ride/city'
 import { rideInput, useRide } from '../ride/store'
@@ -89,4 +89,36 @@ test('inside the stop ring the arrow becomes a pin instead of spinning', () => {
   render(<RideHud isTouch={false} />)
   expect(screen.getByText('📍')).toBeVisible()
   expect(screen.queryByText('▲')).toBeNull()
+})
+
+test('the ride shows its missions, ticking off what is done', () => {
+  useStory.setState({ s: { ...useStory.getState().s, stage: 'withEm' } })
+  render(<RideHud isTouch={false} />)
+  const list = screen.getByRole('list', { name: 'Nhiệm vụ' })
+  const items = within(list).getAllByRole('listitem')
+  expect(items.map((li) => li.textContent)).toEqual([
+    expect.stringContaining('Đón Em'),
+    expect.stringContaining('Đưa Em tới chỗ làm trước 8:25'),
+    expect.stringContaining('Tới công ty trước 8:30'),
+  ])
+  expect(items[0]).toHaveClass('done')
+  expect(items[1]).toHaveClass('current')
+  expect(items[2]).not.toHaveClass('done')
+})
+
+test('dropping Em late is marked on her mission', () => {
+  useStory.setState({ s: { ...useStory.getState().s, stage: 'sprint', emDropLate: true } })
+  render(<RideHud isTouch={false} />)
+  const items = within(screen.getByRole('list', { name: 'Nhiệm vụ' })).getAllByRole('listitem')
+  expect(items[1]).toHaveClass('late')
+  expect(items[2]).toHaveClass('current')
+})
+
+test('holding the Bốc đầu pedal asks for a wheelie; letting go stops it', () => {
+  render(<RideHud isTouch={true} />)
+  const lift = screen.getByRole('button', { name: 'Bốc đầu' })
+  fireEvent.pointerDown(lift, { pointerId: 3 })
+  expect(rideInput.wheelie).toBe(1)
+  fireEvent.pointerUp(lift, { pointerId: 3 })
+  expect(rideInput.wheelie).toBe(0)
 })

@@ -1,7 +1,7 @@
 import type { Box } from '../room/layout'
 import type { Mat, Part } from '../room/parts'
 import { mulberry32 } from '../story/rng'
-import { BARRIERS, LIGHTS, MARKERS, POTHOLES, ROADS_X, ROADS_Z, ROAD_HALF, SIDEWALK, blockBoxes, cityBounds } from './city'
+import { BARRIERS, EM_HOUSE_HEIGHT, LIGHTS, MARKERS, OFFICES, POTHOLES, ROADS_X, ROADS_Z, ROAD_HALF, SIDEWALK, blockBoxes, cityBounds } from './city'
 
 // Khu phố low-poly kiểu Việt Nam dựng bằng mảnh (gộp theo chất liệu như trong phòng).
 const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, color: string, mat?: Mat): Part => ({
@@ -86,7 +86,8 @@ function tubeHouse(p: Part[], e: Edge, t0: number, t1: number, depth: number, h:
   const w = t1 - t0
   rect(t0, t1, 0, depth, 0, h, special ?? color)
   // Cửa cuốn tầng trệt (hơi nhô ra khỏi mặt tiền)
-  rect(t0 + 0.3, t1 - 0.3, -0.04, 0, 0.1, 2.6, rnd() < 0.5 ? '#9aa1a8' : '#5d646b', 'metal')
+  const shutter = rnd() < 0.5 ? '#9aa1a8' : '#5d646b'
+  rect(t0 + 0.3, t1 - 0.3, -0.04, 0, 0.1, 2.6, special ? '#f7c6d9' : shutter, 'metal')
   // Ban công + lan can mỗi tầng
   for (let y = 3.3; y < h - 1.5; y += 3.2) {
     rect(t0 + 0.1, t1 - 0.1, -0.7, 0, y, y + 0.15, '#d9d4cb')
@@ -103,6 +104,15 @@ function tubeHouse(p: Part[], e: Edge, t0: number, t1: number, depth: number, h:
   }
 }
 
+// Chỗ đã dành cho toà văn phòng thì không xây nhà ống.
+function insideOffice(e: Edge, t0: number, t1: number, depth: number) {
+  const alongX = e.x0 !== e.x1 || e.z0 === e.z1
+  const [minX, maxX, minZ, maxZ] = alongX
+    ? [t0, t1, Math.min(e.z0, e.z0 - e.out[1] * depth), Math.max(e.z0, e.z0 - e.out[1] * depth)]
+    : [Math.min(e.x0, e.x0 - e.out[0] * depth), Math.max(e.x0, e.x0 - e.out[0] * depth), t0, t1]
+  return Object.values(OFFICES).some((o) => minX < o.maxX && maxX > o.minX && minZ < o.maxZ && maxZ > o.minZ)
+}
+
 // Một dãy nhà ống san sát dọc một mép.
 function houseRow(p: Part[], e: Edge, depth: number, rnd: () => number) {
   const along = e.x0 === e.x1 ? 'z' : 'x'
@@ -112,10 +122,14 @@ function houseRow(p: Part[], e: Edge, depth: number, rnd: () => number) {
     const w = Math.min(end - t, 3.8 + rnd() * 1.6)
     const h = 7 + Math.floor(rnd() * 3) * 3.2 + rnd() * 1.2
     const color = FACADES[Math.floor(rnd() * FACADES.length)]
+    if (insideOffice(e, t, t + w, depth)) {
+      t += w
+      continue
+    }
     // Nhà Em: căn màu hồng phía nam con phố, ngay sau cửa Em bước ra.
     const dz = e.z0 - MARKERS.emHouse.z
     const em = along === 'x' && t < MARKERS.emHouse.x && t + w > MARKERS.emHouse.x && dz > 0 && dz < 8
-    tubeHouse(p, e, t, t + w, depth, h, color, rnd, em ? '#f4a6c0' : undefined)
+    tubeHouse(p, e, t, t + w, depth, em ? EM_HOUSE_HEIGHT : h, color, rnd, em ? '#f4a6c0' : undefined)
     t += w
   }
 }
@@ -152,14 +166,114 @@ function outerRows(p: Part[], rnd: () => number) {
   for (const e of edges) houseRow(p, e, d, rnd)
 }
 
-// Văn phòng của Em và công ty phần mềm của Anh: nhà cao, kính xanh.
+type Office = (typeof OFFICES)[keyof typeof OFFICES]
+type TowerStyle = { body: string; glass: string; accent: string; crown?: boolean }
+
+// Toà văn phòng cao tầng: kính từng tầng, sảnh kính sáng đèn, mái che lối vào, biển hiệu, nóc có ăng-ten.
+// front: mặt quay ra đường ('z' = mặt minZ nhìn về -z, 'x' = mặt minX nhìn về -x).
+function tower(p: Part[], o: Office, front: 'x' | 'z', s: TowerStyle) {
+  const H = o.height
+  // Hộp trên mặt tiền: a0..a1 dọc mặt, y0..y1 cao, d0..d1 nhô ra phía đường.
+  const face = (a0: number, a1: number, y0: number, y1: number, d0: number, d1: number, color: string, mat?: Mat) =>
+    p.push(front === 'z' ? box(a0, a1, y0, y1, o.minZ - d1, o.minZ - d0, color, mat) : box(o.minX - d1, o.minX - d0, y0, y1, a0, a1, color, mat))
+  const [A0, A1] = front === 'z' ? [o.minX, o.maxX] : [o.minZ, o.maxZ]
+  const mid = (A0 + A1) / 2
+  const top = s.crown ? H - 6 : H
+  p.push(box(o.minX, o.maxX, 0, top, o.minZ, o.maxZ, s.body))
+  if (s.crown) p.push(box(o.minX + 3, o.maxX - 3, top, H, o.minZ + 3, o.maxZ - 3, s.body))
+
+  // Kính từng tầng: mặt tiền và hai mặt bên.
+  for (let y = 4.4; y < top - 1.5; y += 3.4) {
+    face(A0 + 0.4, A1 - 0.4, y, y + 2.3, 0, 0.06, s.glass, 'metal')
+    if (front === 'z') {
+      p.push(box(o.minX - 0.06, o.minX, y, y + 2.3, o.minZ + 0.4, o.maxZ - 0.4, s.glass, 'metal'))
+      p.push(box(o.maxX, o.maxX + 0.06, y, y + 2.3, o.minZ + 0.4, o.maxZ - 0.4, s.glass, 'metal'))
+    } else {
+      p.push(box(o.minX + 0.4, o.maxX - 0.4, y, y + 2.3, o.minZ - 0.06, o.minZ, s.glass, 'metal'))
+      p.push(box(o.minX + 0.4, o.maxX - 0.4, y, y + 2.3, o.maxZ, o.maxZ + 0.06, s.glass, 'metal'))
+    }
+  }
+  for (let a = A0 + 2.8; a < A1 - 1; a += 2.8) face(a - 0.08, a + 0.08, 4, top - 1, 0, 0.14, '#eef1f4')
+
+  // Sảnh: kính tối, cửa chính sáng đèn ở giữa, mái che và hai cột đỡ, bậc thềm, chậu cây.
+  face(A0 + 0.6, A1 - 0.6, 0.12, 3.8, 0, 0.03, '#2a3b4c', 'metal')
+  face(mid - 1.8, mid + 1.8, 0.12, 2.8, 0.03, 0.05, '#ffe9b8', 'emit')
+  face(mid - 3.6, mid + 3.6, 3.7, 3.95, 0, 2.6, s.accent)
+  face(mid - 3.4, mid - 3.25, 0.12, 3.7, 2.3, 2.45, '#c8ccd0')
+  face(mid + 3.25, mid + 3.4, 0.12, 3.7, 2.3, 2.45, '#c8ccd0')
+  face(mid - 2.6, mid + 2.6, 0.12, 0.28, 0, 0.9, '#d9d4cb')
+  for (const a of [mid - 5, mid + 5]) {
+    face(a - 0.4, a + 0.4, 0.12, 0.7, 0.3, 1.1, '#6d6f73')
+    const [x, z] = front === 'z' ? [a, o.minZ - 0.7] : [o.minX - 0.7, a]
+    p.push(ico(x, 1.15, z, 0.55, '#2f8f4e'))
+  }
+
+  // Biển hiệu gần nóc: khung màu nhấn, giữa sáng (không chữ, không logo thật).
+  face(mid - 5, mid + 5, top - 3.6, top - 1.4, 0, 0.25, s.accent)
+  face(mid - 4.4, mid + 1.6, top - 3.0, top - 2.0, 0.25, 0.3, '#ffffff', 'emit')
+  face(mid + 2.2, mid + 4.2, top - 3.2, top - 1.8, 0.25, 0.3, '#ffd23f', 'emit')
+
+  // Biển dọc chìa ra vỉa hè ở góc phía xe tới: nhìn dọc phố từ xa vẫn thấy cột sáng màu của toà.
+  face(A1 - 1.7, A1 - 1.3, 6, 18, 0, 1.8, s.accent)
+  face(A1 - 1.75, A1 - 1.25, 7, 17, 0.25, 1.6, '#ffffff', 'emit')
+
+  // Nóc: lan can, cục máy lạnh, ăng-ten có đèn đỏ.
+  const r = s.crown ? 3 : 0
+  p.push(
+    box(o.minX + r, o.maxX - r, H, H + 0.6, o.minZ + r, o.minZ + r + 0.3, s.body),
+    box(o.minX + r, o.maxX - r, H, H + 0.6, o.maxZ - r - 0.3, o.maxZ - r, s.body),
+    box(o.minX + r, o.minX + r + 0.3, H, H + 0.6, o.minZ + r, o.maxZ - r, s.body),
+    box(o.maxX - r - 0.3, o.maxX - r, H, H + 0.6, o.minZ + r, o.maxZ - r, s.body),
+  )
+  const cx = (o.minX + o.maxX) / 2
+  const cz = (o.minZ + o.maxZ) / 2
+  p.push(box(cx - 3, cx - 0.5, H, H + 1.6, cz - 2, cz + 1, '#9aa0a6', 'metal'), box(cx + 1, cx + 3.5, H, H + 1.2, cz - 1, cz + 2, '#9aa0a6', 'metal'))
+  p.push(cyl(cx + 2, H, H + 7, cz - 3, 0.06, 0.12, '#c8c8c8'), {
+    kind: 'ico',
+    r: 0.25,
+    pos: [cx + 2, H + 7.1, cz - 3],
+    color: '#ff2a2a',
+    mat: 'emit',
+  })
+}
+
 function offices(p: Part[]) {
-  const em = MARKERS.emOffice
-  p.push(box(em.x - 12, em.x + 12, 0, 16, em.z + 7, em.z + 16, '#9fb8c8'))
-  for (let y = 3; y < 15; y += 3) p.push(box(em.x - 11.5, em.x + 11.5, y, y + 2, em.z + 6.95, em.z + 7, '#bfe3ff', 'emit'))
-  const anh = MARKERS.anhOffice
-  p.push(box(anh.x + 7, anh.x + 17, 0, 21, anh.z - 12, anh.z + 12, '#7f93a6'))
-  for (let y = 3; y < 20; y += 3) p.push(box(anh.x + 6.95, anh.x + 7, y, y + 2, anh.z - 11.5, anh.z + 11.5, '#a9d8ff', 'emit'))
+  tower(p, OFFICES.emOffice, 'z', { body: '#e4e1da', glass: '#3f9c9a', accent: '#c58cff', crown: true })
+  tower(p, OFFICES.anhOffice, 'x', { body: '#d3d8de', glass: '#2f5f8f', accent: '#2f80ed' })
+}
+
+// Nhà Em cho thật nổi: biển trái tim sáng hồng trên cửa, mái hiên sọc hồng trắng, cửa hồng, chậu hoa, dây đèn.
+function emHouseDecor(p: Part[]) {
+  const x = MARKERS.emHouse.x
+  const f = ROADS_Z[1] + ROAD_HALF + SIDEWALK
+  const HEART = '#ff3d7f'
+  p.push(box(x - 1.1, x + 1.1, 3.3, 4.9, f - 0.1, f, '#ffe1ec'))
+  p.push(
+    { kind: 'ico', r: 0.42, pos: [x - 0.38, 4.2, f - 0.3], color: HEART, mat: 'emit' },
+    { kind: 'ico', r: 0.42, pos: [x + 0.38, 4.2, f - 0.3], color: HEART, mat: 'emit' },
+    { kind: 'box', size: [0.66, 0.66, 0.3], pos: [x, 3.86, f - 0.3], rot: [0, 0, Math.PI / 4], color: HEART, mat: 'emit' },
+  )
+  // Biển trái tim gắn vuông góc mặt tiền (kiểu biển quán), nhìn dọc phố từ xa vẫn thấy.
+  p.push(box(x - 0.05, x + 0.05, 5.55, 5.65, f - 1.7, f, '#3a3a3a'))
+  p.push(
+    { kind: 'ico', r: 0.42, pos: [x, 5.05, f - 1.6], color: HEART, mat: 'emit' },
+    { kind: 'ico', r: 0.42, pos: [x, 5.05, f - 0.84], color: HEART, mat: 'emit' },
+    { kind: 'box', size: [0.3, 0.66, 0.66], pos: [x, 4.69, f - 1.22], rot: [Math.PI / 4, 0, 0], color: HEART, mat: 'emit' },
+  )
+  for (let i = 0; i < 6; i++) {
+    const x0 = x - 1.8 + i * 0.6
+    p.push(box(x0, x0 + 0.6, 2.72, 2.86, f - 1.5, f, i % 2 ? '#ffffff' : '#ff8fb5'))
+  }
+  p.push(box(x - 0.6, x + 0.6, 0.12, 2.45, f - 0.09, f, '#c95b86'), box(x - 0.42, x + 0.42, 1.1, 2.25, f - 0.11, f - 0.09, '#a8d8f0', 'metal'))
+  for (const px of [x - 1.75, x + 1.75]) {
+    p.push(cyl(px, 0.12, 0.62, f - 0.45, 0.32, 0.24, '#b5651d', 10), ico(px, 0.95, f - 0.45, 0.42, '#2f8f4e'))
+    for (const [dx, dy] of [[-0.18, 1.2], [0.2, 1.1], [0, 1.32]]) p.push(ico(px + dx, dy, f - 0.62, 0.11, '#ff6fa3'))
+  }
+  for (let i = 0; i <= 10; i++) {
+    const lx = x - 2 + i * 0.4
+    const sag = Math.sin((i / 10) * Math.PI) * 0.18
+    p.push({ kind: 'ico', r: 0.07, pos: [lx, 3.12 - sag, f - 0.2], color: '#ffe9a8', mat: 'emit' })
+  }
 }
 
 // Cột điện bê tông dọc vỉa hè và bó dây chằng chịt giữa các cột.
@@ -220,9 +334,9 @@ function lightPoles(p: Part[]) {
 
 // Hàng xôi trước văn phòng của Em, trạm xe buýt.
 function streetLife(p: Part[]) {
-  const em = MARKERS.emOffice
-  const x = em.x + 16
-  const z = em.z + ROAD_HALF + 1.6
+  // Hàng xôi trên vỉa hè cạnh toà nhà của Em.
+  const x = OFFICES.emOffice.maxX + 2.5
+  const z = ROADS_Z[2] + ROAD_HALF + 1.6
   p.push(box(x - 0.7, x + 0.7, 0.12, 0.85, z - 0.45, z + 0.45, '#8a5a35'), cyl(x, 0.85, 1.05, z, 0.28, 0.24, '#d8d2c4', 12))
   p.push(cyl(x, 0.85, 2.6, z + 0.6, 0.03, 0.03, '#d9d9d9'), cyl(x, 2.5, 2.9, z + 0.6, 0, 1.3, '#2f8f4e', 12))
   p.push(cyl(x - 1.3, 0.12, 0.55, z, 0.18, 0.18, '#3a7bd5', 10), cyl(x + 1.3, 0.12, 0.55, z, 0.18, 0.18, '#d93a2f', 10))
@@ -240,6 +354,7 @@ export function buildCityParts(): Part[] {
   sidewalks(p, blocks)
   buildings(p, blocks, rnd)
   offices(p)
+  emHouseDecor(p)
   powerLines(p, rnd)
   trees(p)
   roadworks(p)

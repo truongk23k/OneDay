@@ -1,3 +1,4 @@
+import { S } from '../strings'
 import { useGame } from '../store'
 import { STREET_SPEED } from './clock'
 import { initialState, reducer, type StoryState } from './state'
@@ -191,5 +192,21 @@ describe('street clock and stages', () => {
     const s = reducer({ ...street(), stage: 'withEm' }, { type: 'restart', seed: 3 })
     expect(s.phase).toBe('alarm')
     expect(s.stage).toBe('toEm')
+  })
+})
+
+describe('wheelie on the street', () => {
+  const ride = (stage: StoryState['stage']): StoryState => ({ ...s0(), phase: 'street', stage, mood: 60 })
+
+  test('with Em aboard a wheelie scares her', () => {
+    const s = reducer(ride('withEm'), { type: 'rideEvent', kind: 'wheelie' })
+    expect(s.mood).toBe(52)
+    expect(s.line).toBe(S.ride.wheelieWithEm)
+  })
+
+  test('alone it is just for fun', () => {
+    const s = reducer(ride('toEm'), { type: 'rideEvent', kind: 'wheelie' })
+    expect(s.mood).toBe(60)
+    expect(s.line).toBe(S.ride.wheelieAlone)
   })
 })

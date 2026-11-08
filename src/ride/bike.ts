@@ -19,6 +19,13 @@ export const BIKE = {
   hardFrom: 7,
   hardDrop: 6,
   hardWindow: 1,
+  // Bốc đầu: giữ nút khi xe chạy trên 3 m/s, bánh trước nhấc dần tới ~31°; đang bốc đầu thì tay lái rất nặng.
+  wheelieMin: 3,
+  wheelieMax: 0.55,
+  wheelieRise: 1.1,
+  wheelieFall: 1.6,
+  wheelieSteer: 0.3,
+  liftOff: 0.12,
 }
 
 export type BikeState = {
@@ -31,9 +38,12 @@ export type BikeState = {
   brakeFor: number
   brakeFrom: number
   hardDone: boolean
+  // Góc bốc đầu (rad, 0 = hai bánh chạm đất) và đã báo lần nhấc bánh này chưa.
+  pitch: number
+  lifted: boolean
 }
-export type BikeInput = { throttle: number; brake: number; steer: number }
-export type BikeEvent = { kind: 'crash'; impact: number } | { kind: 'hardBrake' }
+export type BikeInput = { throttle: number; brake: number; steer: number; wheelie?: number }
+export type BikeEvent = { kind: 'crash'; impact: number } | { kind: 'hardBrake' } | { kind: 'wheelie' }
 
 export const newBike = (x: number, z: number, heading: number): BikeState => ({
   x,
@@ -44,6 +54,8 @@ export const newBike = (x: number, z: number, heading: number): BikeState => ({
   brakeFor: 0,
   brakeFrom: 0,
   hardDone: false,
+  pitch: 0,
+  lifted: false,
 })
 
 const SUBSTEP = 0.15
@@ -57,8 +69,11 @@ export function stepBike(s: BikeState, input: BikeInput, dt: number, colliders: 
   const brakeFrom = braking && !s.braking ? speed : s.brakeFrom
   let hardDone = braking && s.braking ? s.hardDone : false
 
-  if (input.throttle > 0 && speed >= 0) {
-    speed = Math.min(BIKE.maxSpeed, speed + BIKE.accel * input.throttle * dt)
+  // Bốc đầu luôn đi kèm vặn ga.
+  const wheelie = input.wheelie ?? 0
+  const throttle = Math.max(input.throttle, wheelie)
+  if (throttle > 0 && speed >= 0) {
+    speed = Math.min(BIKE.maxSpeed, speed + BIKE.accel * throttle * dt)
   } else if (input.brake > 0) {
     const bite = BIKE.brakeSoft + (BIKE.brake - BIKE.brakeSoft) * Math.min(1, brakeFor / BIKE.brakeRamp)
     if (speed > 0) speed = Math.max(0, speed - bite * input.brake * dt)
@@ -66,7 +81,7 @@ export function stepBike(s: BikeState, input: BikeInput, dt: number, colliders: 
   } else {
     const d = BIKE.drag * dt
     speed = Math.abs(speed) <= d ? 0 : speed - Math.sign(speed) * d
-    if (input.throttle > 0 && speed < 0) speed = Math.min(0, speed + BIKE.brake * dt)
+    if (throttle > 0 && speed < 0) speed = Math.min(0, speed + BIKE.brake * dt)
   }
 
   // Tính phanh gấp trước khi va chạm làm tụt tốc độ (đâm xe không tính thêm là phanh gấp).
@@ -75,8 +90,18 @@ export function stepBike(s: BikeState, input: BikeInput, dt: number, colliders: 
     hardDone = true
   }
 
-  // Rẽ: chỉ khi xe lăn bánh; đi lùi thì tay lái ngược chiều.
-  const grip = Math.min(1, Math.abs(speed) / 3)
+  const pitch =
+    wheelie > 0 && speed > BIKE.wheelieMin
+      ? Math.min(BIKE.wheelieMax, s.pitch + BIKE.wheelieRise * dt)
+      : Math.max(0, s.pitch - BIKE.wheelieFall * dt)
+  let lifted = pitch > 0 && s.lifted
+  if (pitch > BIKE.liftOff && !lifted) {
+    events.push({ kind: 'wheelie' })
+    lifted = true
+  }
+
+  // Rẽ: chỉ khi xe lăn bánh; đi lùi thì tay lái ngược chiều; trên một bánh thì rất khó bẻ lái.
+  const grip = Math.min(1, Math.abs(speed) / 3) * (pitch > BIKE.liftOff ? BIKE.wheelieSteer : 1)
   const heading = s.heading - input.steer * BIKE.steerRate * grip * Math.sign(speed || 1) * dt
 
   // Di chuyển theo từng bước nhỏ để không xuyên tường khi chạy nhanh.
@@ -101,5 +126,5 @@ export function stepBike(s: BikeState, input: BikeInput, dt: number, colliders: 
     speed *= 0.15
   }
 
-  return { state: { x, z, heading, speed, braking, brakeFor, brakeFrom, hardDone }, events }
+  return { state: { x, z, heading, speed, braking, brakeFor, brakeFrom, hardDone, pitch, lifted }, events }
 }

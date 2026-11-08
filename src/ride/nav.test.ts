@@ -21,7 +21,8 @@ test('from home to Em the route takes the alley, around the roadworks', () => {
   expect(r.points).toContainEqual({ x: 200, z: 0 })
   expect(r.points).toContainEqual({ x: 200, z: -100 })
   expect(crossesRoadworks(r.points)).toBe(false)
-  expect(r.length).toBeCloseTo(340)
+  // 340 m theo tim đường + 2.5 m ra sát mép đường trước cửa nhà Em.
+  expect(r.length).toBeCloseTo(342.5)
 })
 
 test('the route length matches a flood fill of the real streets', () => {
@@ -30,14 +31,14 @@ test('the route length matches a flood fill of the real streets', () => {
 })
 
 test('from Em’s house to her office, then to Anh’s office', () => {
-  expect(routeTo(MARKERS.emHouse, MARKERS.emOffice).length).toBeCloseTo(320)
-  expect(routeTo(MARKERS.emOffice, MARKERS.anhOffice).length).toBeCloseTo(130)
+  expect(routeTo(MARKERS.emHouse, MARKERS.emOffice).length).toBeCloseTo(320 + 5)
+  expect(routeTo(MARKERS.emOffice, MARKERS.anhOffice).length).toBeCloseTo(130 + 5)
 })
 
 test('starting beside the roadworks it turns back rather than going through', () => {
   const r = routeTo({ x: 240, z: -10 }, MARKERS.emHouse)
   expect(crossesRoadworks(r.points)).toBe(false)
-  expect(r.length).toBeCloseTo(250)
+  expect(r.length).toBeCloseTo(250 + 2.5)
 })
 
 test('a bike slightly off the road centre still gets a route', () => {

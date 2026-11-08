@@ -90,3 +90,38 @@ test('the brake bites harder the longer it is held', () => {
   const later = run(first, BRAKE, 0.2).s
   expect(12 - first.speed).toBeLessThan(first.speed - later.speed)
 })
+
+describe('wheelie (bốc đầu)', () => {
+  const LIFT: BikeInput = { throttle: 0, brake: 0, steer: 0, wheelie: 1 }
+
+  test('holding wheelie at speed lifts the front wheel; letting go brings it down', () => {
+    const up = run({ ...newBike(0, 0, 0), speed: 8 }, LIFT, 1)
+    expect(up.s.pitch).toBeGreaterThan(0.3)
+    expect(up.s.pitch).toBeLessThanOrEqual(BIKE.wheelieMax)
+    // Bốc đầu là vừa vặn ga vừa nhấc bánh: xe không chậm lại.
+    expect(up.s.speed).toBeGreaterThanOrEqual(8)
+    const down = run(up.s, IDLE, 1)
+    expect(down.s.pitch).toBe(0)
+  })
+
+  test('no wheelie when crawling', () => {
+    const { s } = run({ ...newBike(0, 0, 0), speed: 1 }, { ...LIFT, throttle: 0 }, 0.3)
+    expect(s.pitch).toBe(0)
+  })
+
+  test('lift-off is reported once per wheelie', () => {
+    const first = run({ ...newBike(0, 0, 0), speed: 8 }, LIFT, 2)
+    expect(first.events.filter((e) => e === 'wheelie')).toHaveLength(1)
+    const landed = run(first.s, IDLE, 1)
+    const again = run(landed.s, LIFT, 1)
+    expect(again.events.filter((e) => e === 'wheelie')).toHaveLength(1)
+  })
+
+  test('steering is weak on the back wheel', () => {
+    const turn = (wheelie: number) => {
+      const lifted = run({ ...newBike(0, 0, 0), speed: 8 }, { throttle: 1, brake: 0, steer: 0, wheelie }, 1).s
+      return Math.abs(run(lifted, { throttle: 1, brake: 0, steer: 1, wheelie }, 0.5).s.heading - lifted.heading)
+    }
+    expect(turn(1)).toBeLessThan(turn(0) * 0.5)
+  })
+})

@@ -10,12 +10,37 @@ const EDGE = ROAD_HALF + SIDEWALK
 
 export type Marker = { x: number; z: number; heading?: number }
 
+// Điểm dừng nằm sát mép đường, ngay trước cửa toà nhà (cách tim đường 2.5 m về phía nhà).
+const KERB = ROAD_HALF - 1.5
 export const MARKERS = {
   home: { x: 60, z: 0, heading: -Math.PI / 2 },
-  emHouse: { x: 300, z: -100 },
-  emOffice: { x: 80, z: -200 },
-  anhOffice: { x: 0, z: -150 },
+  emHouse: { x: 300, z: -100 + KERB },
+  emOffice: { x: 80, z: -200 + KERB },
+  anhOffice: { x: 0 + KERB, z: -150 },
 } satisfies Record<string, Marker>
+
+// Hai toà văn phòng cao tầng, mặt tiền sát vỉa hè: chỗ làm của Em quay ra đường z = -200,
+// công ty Anh quay ra đường x = 0.
+export const OFFICES = {
+  emOffice: { minX: 66, maxX: 94, minZ: -200 + EDGE, maxZ: -200 + EDGE + 18, height: 32 },
+  anhOffice: { minX: 0 + EDGE, maxX: EDGE + 20, minZ: -164, maxZ: -136, height: 46 },
+}
+
+// Nhà Em cao cố định 3 tầng để biểu tượng đặt vừa trên nóc.
+export const EM_HOUSE_HEIGHT = 10.2
+
+// Biểu tượng lơ lửng: ở xa thì trên nóc (far), lại gần thì hạ xuống ngay trên cửa (near).
+export const BEACONS = {
+  emHouse: { far: { x: 300, z: -100 + EDGE + 4, y: EM_HOUSE_HEIGHT + 3.5 }, near: { x: 300, z: -100 + EDGE - 1.6, y: 6.6 } },
+  emOffice: {
+    far: { x: 80, z: OFFICES.emOffice.minZ + 9, y: OFFICES.emOffice.height + 4 },
+    near: { x: 80, z: OFFICES.emOffice.minZ - 1.4, y: 7.5 },
+  },
+  anhOffice: {
+    far: { x: OFFICES.anhOffice.minX + 10, z: -150, y: OFFICES.anhOffice.height + 4 },
+    near: { x: OFFICES.anhOffice.minX - 1.4, z: -150, y: 7.5 },
+  },
+}
 
 // Hai đoạn đường đang sửa chắn các lối đi thẳng tới nhà Em, nên hẻm tắt mới đáng đi.
 export const BARRIERS: Box[] = [

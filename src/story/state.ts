@@ -69,7 +69,7 @@ export type Action =
   | { type: 'pickup' }
   | { type: 'dropoff' }
   | { type: 'arrive' }
-  | { type: 'rideEvent'; kind: 'crash' | 'hardBrake' | 'pothole' | 'redLight' }
+  | { type: 'rideEvent'; kind: 'crash' | 'hardBrake' | 'pothole' | 'redLight' | 'wheelie' }
   | { type: 'drink' }
   | { type: 'pullup' }
   | { type: 'pee' }
@@ -221,9 +221,16 @@ export function reducer(s: StoryState, a: Action): StoryState {
       return { ...s, stage: 'done', line: S.ride.arrive }
     case 'rideEvent': {
       const withEm = s.stage === 'withEm'
-      const cost = { crash: 10, hardBrake: 3, pothole: 5, redLight: 5 }[a.kind]
-      const lines = { crash: withEm ? S.ride.crashWithEm : S.ride.crashAlone, hardBrake: S.ride.hardBrake, pothole: S.ride.pothole, redLight: S.ride.redLight }
-      if (!withEm) return a.kind === 'crash' ? { ...s, line: lines.crash } : s
+      const cost = { crash: 10, hardBrake: 3, pothole: 5, redLight: 5, wheelie: 8 }[a.kind]
+      const lines = {
+        crash: withEm ? S.ride.crashWithEm : S.ride.crashAlone,
+        hardBrake: S.ride.hardBrake,
+        pothole: S.ride.pothole,
+        redLight: S.ride.redLight,
+        wheelie: withEm ? S.ride.wheelieWithEm : S.ride.wheelieAlone,
+      }
+      // Đi một mình: chỉ đâm xe và bốc đầu là có câu thoại, không ai giận.
+      if (!withEm) return a.kind === 'crash' || a.kind === 'wheelie' ? { ...s, line: lines[a.kind] } : s
       return { ...s, mood: clamp100(s.mood - cost), line: lines[a.kind] }
     }
     case 'stage': {

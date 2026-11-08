@@ -4,12 +4,12 @@ import { useGame } from '../store'
 import { useStory } from '../story/store'
 import { S } from '../strings'
 import { newBike, stepBike, type BikeInput, type BikeState } from './bike'
-import { LIGHTS, MARKERS, POTHOLES, ROAD_HALF, STREET_COLLIDERS } from './city'
+import { LIGHTS, MARKERS, POTHOLES, ROAD_HALF, ROADS_Z, SIDEWALK, STREET_COLLIDERS } from './city'
 import { arrivedAt, STOP_SPEED } from './rules'
 import { axisOf, lightState, newTraffic, stepTraffic, vehicleBox, type Vehicle } from './traffic'
 
 // Nút ga/phanh/rẽ trên điện thoại ghi vào đây; bàn phím đọc từ keys (W/S/A/D, mũi tên).
-export const rideInput: BikeInput = { throttle: 0, brake: 0, steer: 0 }
+export const rideInput: Required<BikeInput> = { throttle: 0, brake: 0, steer: 0, wheelie: 0 }
 
 const POTHOLE_RADIUS = 1.1
 const POTHOLE_SPEED = 6
@@ -18,7 +18,8 @@ const CRASH_COOLDOWN = 1.5
 const RED_LIGHT_SPEED = 2
 
 // Đón Em: dừng trước nhà → gọi điện → chuông đổ → Em mở cửa đi ra xe → lên xe.
-export const EM_DOOR = { x: MARKERS.emHouse.x, z: MARKERS.emHouse.z + 6.7 }
+// Cửa nhà Em: mặt tiền phía nam con phố z = -100 (sau vỉa hè).
+export const EM_DOOR = { x: MARKERS.emHouse.x, z: ROADS_Z[1] + ROAD_HALF + SIDEWALK - 0.3 }
 const RING_TIME = 2.2
 const WALK_SPEED = 1.6
 // Xe đỗ xa cửa hơn mức này thì Em ra đứng ở mép vỉa hè chờ.
@@ -104,6 +105,7 @@ export function readInput(): BikeInput {
     throttle: Math.max(k.y > 0 ? 1 : 0, rideInput.throttle),
     brake: Math.max(k.y < 0 ? 1 : 0, rideInput.brake),
     steer: Math.max(-1, Math.min(1, k.x + rideInput.steer)),
+    wheelie: Math.max(keys.sprinting() ? 1 : 0, rideInput.wheelie),
   }
 }
 
@@ -124,7 +126,7 @@ export function stepRide(dt: number, now: number) {
     if (e.kind === 'crash') {
       if (now - lastCrash > CRASH_COOLDOWN) story.dispatch({ type: 'rideEvent', kind: 'crash' })
       lastCrash = now
-    } else story.dispatch({ type: 'rideEvent', kind: 'hardBrake' })
+    } else story.dispatch({ type: 'rideEvent', kind: e.kind })
   }
 
   const hole = POTHOLES.findIndex((p) => Math.hypot(p.x - state.x, p.z - state.z) < POTHOLE_RADIUS)
@@ -156,5 +158,6 @@ useStory.subscribe((st, prev) => {
   rideInput.throttle = 0
   rideInput.brake = 0
   rideInput.steer = 0
+  rideInput.wheelie = 0
   keys.clear()
 })

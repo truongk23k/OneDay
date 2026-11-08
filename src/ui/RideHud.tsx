@@ -12,12 +12,13 @@ import { useStory } from '../story/store'
 import { S } from '../strings'
 import { RideMap } from './RideMap'
 
-type Pedal = 'left' | 'right' | 'gas' | 'brake'
+type Pedal = 'left' | 'right' | 'gas' | 'brake' | 'wheelie'
 
 function clearRideInput() {
   rideInput.throttle = 0
   rideInput.brake = 0
   rideInput.steer = 0
+  rideInput.wheelie = 0
 }
 
 // Nút lái trên điện thoại: mỗi nút tự giữ ngón của nó, nên ga + rẽ cùng lúc được.
@@ -28,6 +29,7 @@ function Pedals() {
     rideInput.throttle = h.has('gas') ? 1 : 0
     rideInput.brake = h.has('brake') ? 1 : 0
     rideInput.steer = (h.has('right') ? 1 : 0) - (h.has('left') ? 1 : 0)
+    rideInput.wheelie = h.has('wheelie') ? 1 : 0
   }
   useEffect(() => clearRideInput, [])
 
@@ -63,7 +65,10 @@ function Pedals() {
       </div>
       <div className="ride-feet">
         <button {...pedal('brake', S.ride.brake, S.ride.brake, 'brake')} />
-        <button {...pedal('gas', S.ride.gas, S.ride.gas, 'gas')} />
+        <div className="ride-gas-stack">
+          <button {...pedal('wheelie', S.ride.wheelie, S.ride.wheelie, 'wheelie')} />
+          <button {...pedal('gas', S.ride.gas, S.ride.gas, 'gas')} />
+        </div>
       </div>
     </>
   )
@@ -127,6 +132,34 @@ function RideToast() {
   return <div className="toast">{line}</div>
 }
 
+const MISSION_ORDER: Stage[] = ['toEm', 'withEm', 'sprint']
+const MISSIONS = [
+  { stage: 'toEm', label: S.ride.missions.pickup },
+  { stage: 'withEm', label: S.ride.missions.dropoff },
+  { stage: 'sprint', label: S.ride.missions.arrive },
+] as const
+
+// Ba nhiệm vụ của chuyến xe: xong thì tích, đang làm thì sáng lên, đưa Em trễ thì gạch đỏ.
+function RideMissions({ stage }: { stage: Stage }) {
+  const emDropLate = useStory((st) => st.s.emDropLate)
+  const now = MISSION_ORDER.indexOf(stage)
+  return (
+    <ul className="ride-missions" aria-label={S.ride.missions.title}>
+      {MISSIONS.map((m, i) => {
+        const done = now < 0 ? true : i < now
+        const late = m.stage === 'withEm' && done && emDropLate
+        const cls = [done && 'done', i === now && 'current', late && 'late'].filter(Boolean).join(' ')
+        return (
+          <li key={m.stage} className={cls}>
+            <span className="tick">{late ? '!' : done ? '✓' : i === now ? '▸' : '○'}</span>
+            {m.label}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 // HUD Màn 3–5: giờ, điểm tới + mũi tên, tốc độ, tim của Em, nút lái trên điện thoại.
 export function RideHud({ isTouch }: { isTouch: boolean }) {
   const phase = useStory((st) => st.s.phase)
@@ -183,6 +216,7 @@ export function RideHud({ isTouch }: { isTouch: boolean }) {
           </div>
         </div>
       )}
+      <RideMissions stage={stage} />
       {nav.light && (
         <div className={`ride-light ${nav.light}`}>
           <span className="ride-light-dot" aria-hidden />
