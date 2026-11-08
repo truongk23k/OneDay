@@ -1,6 +1,6 @@
 // Toàn bộ chữ trong game nằm ở đây để sau này dịch được.
 export const S = {
-  title: 'One Day · bản thử 0.1',
+  title: 'One Day · bản thử 0.2',
   help: {
     title: 'Hướng dẫn',
     resume: 'Chơi tiếp',
@@ -29,10 +29,33 @@ export const S = {
     oversleptBody: 'Anh ngủ một mạch tới trưa. Mở mắt ra thấy 12 cuộc gọi nhỡ từ Em ❤️…',
     restart: 'Chơi lại',
   },
+  hud: {
+    deadlines: 'Đón Em 8:25 · Vào làm 8:30',
+    pressE: 'E',
+    soon: 'Phần này sắp có ở bản sau.',
+    close: 'Đóng',
+  },
+  tasks: {
+    brushed: 'Đánh răng',
+    washed: 'Rửa mặt',
+    dressed: 'Chọn đồ',
+    texted: 'Nhắn tin cho Em ❤️',
+    keys: 'Tìm chìa khóa xe',
+    helmets: 'Lấy mũ bảo hiểm (2)',
+  },
+  options: {
+    brush: 'Đánh răng',
+    wash: 'Rửa mặt',
+    wardrobe: 'Chọn đồ',
+    search: 'Tìm chìa khóa',
+    door: 'Ra cửa',
+  },
   story: {
     snooze: ['5 phút nữa thôi…', 'Thêm 5 phút, thề luôn…', 'Chăn ấm quá…', 'Mai đi làm sớm bù…', 'Ngủ nốt lần này thôi…', 'Ơ… mấy giờ rồi nhỉ…'],
     wrongTube: 'Ối, sữa rửa mặt! Phì phì… mất 2 phút súc miệng.',
     washFail: 'Té nước ướt hết áo rồi, làm lại!',
+    keysFound: 'Thấy chìa khóa rồi! 🔑',
+    keysNotHere: ['Không có ở đây…', 'Chỗ này cũng không…', 'Chìa khóa ơi mày trốn đâu rồi…', 'Hôm qua để đâu nhỉ…'],
   },
   rotate: 'Xoay ngang điện thoại để chơi nhé',
   noWebGL:

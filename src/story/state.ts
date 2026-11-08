@@ -47,6 +47,8 @@ export type Action =
   | { type: 'brushDone' }
   | { type: 'washFail' }
   | { type: 'washDone' }
+  | { type: 'search'; id: string }
+  | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
 
 export function initialState(seed: number): StoryState {
@@ -95,6 +97,16 @@ export function reducer(s: StoryState, a: Action): StoryState {
       return { ...s, minutes: s.minutes + 1, line: S.story.washFail }
     case 'washDone':
       return { ...s, hygiene: clamp100(s.hygiene + 20), tasks: { ...s.tasks, washed: true }, overlay: null }
+    case 'search': {
+      if (s.tasks.keys || s.searched.includes(a.id)) return s
+      const searched = [...s.searched, a.id]
+      const minutes = s.minutes + 1
+      if (a.id === s.keySpot) return { ...s, minutes, searched, tasks: { ...s.tasks, keys: true }, line: S.story.keysFound }
+      const lines = S.story.keysNotHere
+      return { ...s, minutes, searched, line: lines[(searched.length - 1) % lines.length] }
+    }
+    case 'clearLine':
+      return { ...s, line: null }
     case 'restart':
       return initialState(a.seed)
   }

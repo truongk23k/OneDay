@@ -338,3 +338,120 @@ body {
     font-size: 15px;
   }
 }
+
+/* ---------- HUD trong phòng ---------- */
+.hud-clock {
+  position: absolute;
+  z-index: 30;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px 6px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, 0.7);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hud-time {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-weather {
+  font-size: 18px;
+}
+
+.hud-deadlines {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.hud-tasks {
+  position: absolute;
+  z-index: 30;
+  top: max(34px, calc(env(safe-area-inset-top) + 26px));
+  left: max(12px, env(safe-area-inset-left));
+  margin: 0;
+  padding: 8px 12px;
+  list-style: none;
+  border-radius: 12px;
+  background: rgba(20, 22, 28, 0.6);
+  font-size: 13px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+.hud-tasks .tick {
+  display: inline-block;
+  width: 18px;
+  opacity: 0.8;
+}
+
+.hud-tasks li.done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.hud-tasks li.done .tick {
+  color: #7be08a;
+  opacity: 1;
+}
+
+.toast {
+  position: absolute;
+  z-index: 35;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(520px, 80vw);
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(20, 22, 28, 0.85);
+  color: #ffd27a;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hud-actions {
+  position: absolute;
+  z-index: 30;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+/* Trên điện thoại: nút tương tác to ở bên phải, tránh vùng joystick bên trái. */
+.hud-actions.touch {
+  left: auto;
+  right: max(18px, env(safe-area-inset-right));
+  transform: none;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(226, 87, 76, 0.92);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.hud-actions.touch .btn-action {
+  min-height: 56px;
+  padding: 12px 18px;
+  font-size: 17px;
+  border-radius: 28px;
+}
+
+.btn-action kbd {
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  font: inherit;
+  font-size: 13px;
+}

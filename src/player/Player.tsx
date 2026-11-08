@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
 import { CHARACTER_HEIGHT, COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
 import { useGame } from '../store'
+import { player } from '../story/interact'
 import { useStory } from '../story/store'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
@@ -104,6 +105,8 @@ export function Player() {
       }
     }
 
+    player.x = s.x
+    player.z = s.z
     body.current?.position.set(s.x, 0, s.z)
     if (body.current) body.current.rotation.y = s.facing
 

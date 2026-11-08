@@ -68,3 +68,15 @@ describe('store', () => {
     expect(useStory.getState().s.minutes).toBe(450)
   })
 })
+
+test('search finds keys only at keySpot, costs a minute, and each spot once', () => {
+  const s = s0()
+  const wrong = ['bed', 'wardrobe', 'fridge', 'deskMine', 'kitchen', 'shelf'].find((k) => k !== s.keySpot)!
+  const a = reducer(s, { type: 'search', id: wrong })
+  expect(a.tasks.keys).toBe(false)
+  expect(a.minutes).toBe(451)
+  expect(reducer(a, { type: 'search', id: wrong })).toBe(a)
+  const b = reducer(a, { type: 'search', id: s.keySpot })
+  expect(b.tasks.keys).toBe(true)
+  expect(b.line).toBe('Thấy chìa khóa rồi! 🔑')
+})
