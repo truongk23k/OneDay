@@ -34,9 +34,6 @@ export const WALLS: Box[] = [
 // Ô khoét chỉ để vẽ; va chạm vẫn dùng nguyên tường.
 export const WINDOW: Opening = { wall: 'wallW', axis: 'z', min: 3.5, max: 4.3, minY: 1.35, maxY: 2.25 }
 
-// Dầm trần phía trên tường thấp của bếp (chỉ để vẽ).
-export const KITCHEN_BEAM = { minX: 0, maxX: 1.75, minY: 2.75, maxY: 3.0, minZ: 1.7, maxZ: 1.8 }
-
 const L = S.labels
 
 export const FURNITURE: Furniture[] = [
