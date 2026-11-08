@@ -1,4 +1,4 @@
-import { COLLIDERS, FURNITURE, HELMETS, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
+import { CHARACTER_HEIGHT, COLLIDERS, FURNITURE, HELMETS, PULLUP_BAR, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
 
 const R = 0.25
 
@@ -71,7 +71,7 @@ test.each([
   ['lavabo front', 3.75, 0.7],
   ['wardrobe front', 0.95, 5.4],
   ['bed side', 2.95, 5.2],
-  ['fridge front', 2.75, 1.85],
+  ['fridge front', 2.7, 1.95],
   ['deskMine side', 3.9, 2.8],
   ['mirror front', 5.2, 3.9],
   ['main door front', 2.45, 0.4],
@@ -196,4 +196,22 @@ test('the shelf is 2/3 as wide as the mirror', () => {
 test('the shelf is shallow: sticks out at most 0.2 m from the wall', () => {
   const s = get('shelf')
   expect(s.maxX - s.minX).toBeLessThanOrEqual(0.2)
+})
+
+test('a pull-up bar spans the passage mouth from the pillar to the wall beside the fridge', () => {
+  const pillar = wall('kitchenPillar')
+  const side = wall('bathWallW2')
+  expect(PULLUP_BAR.x0).toBeCloseTo(pillar.maxX)
+  expect(PULLUP_BAR.x1).toBeCloseTo(side.minX)
+  // Bám vào cả cột lẫn tường.
+  expect(PULLUP_BAR.z).toBeGreaterThanOrEqual(pillar.minZ)
+  expect(PULLUP_BAR.z).toBeLessThanOrEqual(pillar.maxZ)
+  expect(PULLUP_BAR.z).toBeGreaterThanOrEqual(side.minZ)
+  expect(PULLUP_BAR.z).toBeLessThanOrEqual(side.maxZ)
+})
+
+test('the pull-up bar hangs about 1.65 times the character height, just under the door top', () => {
+  expect(PULLUP_BAR.y).toBeCloseTo(1.65 * CHARACTER_HEIGHT)
+  expect(PULLUP_BAR.y).toBeLessThan(get('door').height)
+  expect(PULLUP_BAR.radius).toBeLessThanOrEqual(0.03)
 })

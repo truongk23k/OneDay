@@ -8,6 +8,9 @@ export type Furniture = Box & { label: string }
 
 export const ROOM = { width: 5.6, depth: 6.4, height: 3.0 }
 
+// Nhân vật cao ngang tủ lạnh.
+export const CHARACTER_HEIGHT = 1.3
+
 const box = (id: string, minX: number, maxX: number, minZ: number, maxZ: number, height: number): Box => ({
   id,
   minX,
@@ -27,12 +30,15 @@ export const WALLS: Box[] = [
   box('kitchenPillar', 1.75, 1.95, 1.65, 1.85, 3.0),
   // Nhà vệ sinh sát cạnh cửa chính, kéo tới tường đông; cửa vào nằm trong lối đi.
   box('bathWallW1', 2.95, 3.05, 0, 0.15, 3.0),
-  box('bathWallW2', 2.95, 3.05, 0.85, 1.55, 3.0),
+  box('bathWallW2', 2.95, 3.05, 0.85, 1.7, 3.0),
   box('bathWallS', 3.05, 5.6, 1.45, 1.55, 3.0),
 ]
 
 // Ô khoét chỉ để vẽ; va chạm vẫn dùng nguyên tường.
 export const WINDOW: Opening = { wall: 'wallW', axis: 'z', min: 3.5, max: 4.3, minY: 1.35, maxY: 2.25 }
+
+// xà đơn màu đen ngang miệng lối đi, từ cột bếp sang tường cạnh tủ lạnh; cao khoảng 1.65 lần người để nhảy lên đu.
+export const PULLUP_BAR = { x0: 1.95, x1: 2.95, y: 1.65 * CHARACTER_HEIGHT, z: 1.675, radius: 0.02 }
 
 const L = S.labels
 

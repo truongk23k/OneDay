@@ -1,6 +1,6 @@
 import { Html } from '@react-three/drei'
 import type { CSSProperties } from 'react'
-import { FURNITURE, HELMETS, ROOM, WALLS, WINDOW, type Box } from './layout'
+import { FURNITURE, HELMETS, PULLUP_BAR, ROOM, WALLS, WINDOW, type Box } from './layout'
 import { splitWall, type Block, type Opening } from './openings'
 
 const COLORS: Record<string, string> = {
@@ -130,6 +130,10 @@ export function Room() {
         <Block3 key={f.id} b={toBlock(f)} color={COLORS[f.id] ?? COLORS.furniture} />
       ))}
       <Window />
+      <mesh position={[(PULLUP_BAR.x0 + PULLUP_BAR.x1) / 2, PULLUP_BAR.y, PULLUP_BAR.z]} rotation-z={Math.PI / 2}>
+        <cylinderGeometry args={[PULLUP_BAR.radius, PULLUP_BAR.radius, PULLUP_BAR.x1 - PULLUP_BAR.x0, 10]} />
+        <meshStandardMaterial color="#141414" />
+      </mesh>
 
       {/* 2 mũ bảo hiểm treo trên cửa */}
       {HELMETS.map((h) => (

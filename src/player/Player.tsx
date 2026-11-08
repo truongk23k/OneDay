@@ -1,16 +1,15 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
-import { COLLIDERS, ROOM, SPAWN } from '../room/layout'
+import { CHARACTER_HEIGHT, COLLIDERS, ROOM, SPAWN } from '../room/layout'
 import { useGame } from '../store'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
 
 const RADIUS = 0.25
-// Nhân vật cao ngang tủ lạnh (1.3 m).
 const BODY_RADIUS = 0.2
-const BODY_HEIGHT = 1.3
+const BODY_HEIGHT = CHARACTER_HEIGHT
 const SPEED = 2.2
 const CAM_DIST = 2.0
 const LOOK_HEIGHT = 1.1
