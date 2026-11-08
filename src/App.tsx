@@ -6,7 +6,9 @@ import { Player } from './player/Player'
 import { Room } from './room/Room'
 import { StoryTicker } from './story/StoryTicker'
 import { S } from './strings'
+import { AlarmScreen } from './ui/AlarmScreen'
 import { DebugOverlay, DebugProbe } from './ui/DebugOverlay'
+import { EndCard } from './ui/EndCard'
 import { HelpPanel } from './ui/HelpPanel'
 import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
@@ -42,6 +44,8 @@ export default function App() {
       {isTouch && <TouchControls />}
       <div className="title">{S.title}</div>
       {debug && <DebugOverlay quality={quality} />}
+      <AlarmScreen />
+      <EndCard />
       <HelpPanel isTouch={isTouch} />
       <RotatePrompt />
     </>

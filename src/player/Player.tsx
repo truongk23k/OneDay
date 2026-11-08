@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
 import { CHARACTER_HEIGHT, COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
 import { useGame } from '../store'
+import { useStory } from '../story/store'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
@@ -77,7 +78,9 @@ export function Player() {
 
   useFrame(({ camera }, rawDt) => {
     const s = state.current
-    const paused = useGame.getState().paused
+    const st = useStory.getState().s
+    // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ, điện thoại…).
+    const paused = useGame.getState().paused || st.phase !== 'room' || st.overlay !== null
 
     if (paused) {
       input.look.dx = 0

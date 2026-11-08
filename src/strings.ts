@@ -17,6 +17,18 @@ export const S = {
     sceneTitle: 'Màn này',
     scene: 'Bản thử phòng trọ: đi một vòng xem đồ đạc đã đúng chỗ chưa. Nhiệm vụ sẽ có ở bản sau.',
   },
+  alarm: {
+    label: 'Báo thức',
+    snooze: 'Báo lại 5 phút',
+    wake: 'Dậy',
+    sun: 'Hôm nay trời nắng ☀️',
+    rain: 'Hôm nay trời mưa 🌧️',
+  },
+  end: {
+    oversleptTitle: 'Ngủ quên!',
+    oversleptBody: 'Anh ngủ một mạch tới trưa. Mở mắt ra thấy 12 cuộc gọi nhỡ từ Em ❤️…',
+    restart: 'Chơi lại',
+  },
   story: {
     snooze: ['5 phút nữa thôi…', 'Thêm 5 phút, thề luôn…', 'Chăn ấm quá…', 'Mai đi làm sớm bù…', 'Ngủ nốt lần này thôi…', 'Ơ… mấy giờ rồi nhỉ…'],
     wrongTube: 'Ối, sữa rửa mặt! Phì phì… mất 2 phút súc miệng.',
