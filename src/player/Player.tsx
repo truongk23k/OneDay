@@ -6,7 +6,7 @@ import { useGame } from '../store'
 import { player } from '../story/interact'
 import { itemById } from '../story/outfit'
 import { useStory } from '../story/store'
-import { Character } from './Character'
+import { Character, type Motion } from './Character'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
@@ -30,6 +30,7 @@ export function Player() {
   const state = useRef({ x: SPAWN.x, z: SPAWN.z, yaw: SPAWN.yaw, pitch: 0.45, facing: SPAWN.yaw })
   const gl = useThree((s) => s.gl)
   const outfit = useStory((st) => st.s.outfit)
+  const motion = useRef<Motion>({ speed: 0 })
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => keys.down(e.code)
@@ -84,6 +85,7 @@ export function Player() {
     // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ, điện thoại…).
     const paused = useGame.getState().paused || st.phase !== 'room' || st.overlay !== null
 
+    motion.current.speed = 0
     if (paused) {
       input.look.dx = 0
       input.look.dy = 0
@@ -98,6 +100,7 @@ export function Player() {
       const v = moveVector(k.x || k.y ? k : input.move, s.yaw)
       const speed = Math.hypot(v.x, v.z)
       if (speed > 0.01) {
+        motion.current.speed = speed
         const next = resolveCircleBoxes({ x: s.x + v.x * SPEED * dt, z: s.z + v.z * SPEED * dt }, RADIUS, COLLIDERS)
         s.x = next.x
         s.z = next.z
@@ -125,6 +128,7 @@ export function Player() {
         top={itemById(outfit.top).color}
         bottom={itemById(outfit.bottom).color}
         shoes={itemById(outfit.shoes).color}
+        motion={motion}
       />
     </group>
   )
