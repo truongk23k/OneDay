@@ -21,7 +21,7 @@ const street = (over: Partial<StoryState> = {}): StoryState => ({
 describe('arriving at stops', () => {
   const at = (m: { x: number; z: number }, speed = 0) => ({ ...newBike(m.x + 1, m.z, 0), speed })
 
-  test('stopping by Em’s house picks her up; driving past does not', () => {
+  test('stopping by Em’s house puts Anh at her door; driving past does not', () => {
     expect(arrivedAt('toEm', at(MARKERS.emHouse))).toBe('pickup')
     expect(arrivedAt('toEm', at(MARKERS.emHouse, 6))).toBeNull()
     expect(arrivedAt('toEm', at(MARKERS.emOffice))).toBeNull()

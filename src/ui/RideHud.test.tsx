@@ -5,12 +5,15 @@ import { rideInput, useRide } from '../ride/store'
 import { lightState } from '../ride/traffic'
 import { initialState } from '../story/state'
 import { useStory } from '../story/store'
+import { useGame } from '../store'
 import { RideHud } from './RideHud'
 
 beforeEach(() => {
   useStory.setState({ s: { ...initialState(1), phase: 'street', stage: 'toEm', minutes: 480 } })
   useRide.getState().reset()
   Object.assign(rideInput, { throttle: 0, brake: 0, steer: 0 })
+  useGame.getState().setMapOpen(false)
+  useGame.getState().setHelpOpen(false)
 })
 
 test('shows the clock and where to go next', () => {
@@ -54,4 +57,36 @@ test('warns about the light at the next crossing', () => {
 test('no light warning on an open road', () => {
   render(<RideHud isTouch={false} />)
   expect(screen.queryByText(/^Đèn /)).toBeNull()
+})
+
+test('at Em’s door the HUD offers a call, then shows the phone ringing', async () => {
+  useRide.setState({ bike: newBike(300, -100, 0), atEmDoor: true })
+  render(<RideHud isTouch={true} />)
+  fireEvent.click(screen.getByRole('button', { name: /Gọi Em/ }))
+  expect(useRide.getState().em).toBe('ringing')
+  expect(await screen.findByText('Đang gọi Em ❤️…')).toBeVisible()
+  expect(screen.queryByRole('button', { name: /Gọi Em/ })).toBeNull()
+})
+
+test('the minimap opens a big map that pauses the ride, and closes again', () => {
+  render(<RideHud isTouch={false} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Bản đồ' }))
+  expect(useGame.getState().paused).toBe(true)
+  expect(screen.getByRole('dialog', { name: 'Bản đồ' })).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Đóng' }))
+  expect(useGame.getState().paused).toBe(false)
+})
+
+test('leaving the street with the map open does not leave the game paused', () => {
+  const { unmount } = render(<RideHud isTouch={false} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Bản đồ' }))
+  unmount()
+  expect(useGame.getState().paused).toBe(false)
+})
+
+test('inside the stop ring the arrow becomes a pin instead of spinning', () => {
+  useRide.setState({ bike: newBike(301, -99, -Math.PI / 2) })
+  render(<RideHud isTouch={false} />)
+  expect(screen.getByText('📍')).toBeVisible()
+  expect(screen.queryByText('▲')).toBeNull()
 })

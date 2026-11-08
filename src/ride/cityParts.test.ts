@@ -1,6 +1,7 @@
 import { groupParts, partBounds } from '../room/parts'
-import { ROADS_X, ROADS_Z, cityBounds } from './city'
+import { POTHOLES, ROADS_X, ROADS_Z, cityBounds } from './city'
 import { buildCityParts } from './cityParts'
+import { EM_DOOR } from './store'
 
 const parts = buildCityParts()
 
@@ -49,5 +50,22 @@ test('the outer edge of the map is lined with houses, not bare ground', () => {
   for (const z of [-50, -150]) {
     expect(covered(b.minX - 2, z), `west ${z}`).toBe(true)
     expect(covered(b.maxX + 2, z), `east ${z}`).toBe(true)
+  }
+})
+
+test('Em’s pink house is the one she walks out of, on the south side of her street', () => {
+  const pink = parts.filter((p) => p.color === '#f4a6c0').map(partBounds)
+  expect(pink.length).toBeGreaterThan(0)
+  for (const b of pink) expect(b.minZ).toBeGreaterThan(EM_DOOR.z - 0.5)
+  expect(pink.some((b) => b.minX < EM_DOOR.x && b.maxX > EM_DOOR.x)).toBe(true)
+})
+
+test('every pothole is drawn on the road, so it can be dodged', () => {
+  for (const h of POTHOLES) {
+    const drawn = parts.some((p) => {
+      const b = partBounds(p)
+      return b.maxY < 0.1 && b.maxY > 0.02 && h.x > b.minX && h.x < b.maxX && h.z > b.minZ && h.z < b.maxZ && b.maxX - b.minX < 3
+    })
+    expect(drawn, JSON.stringify(h)).toBe(true)
   }
 })

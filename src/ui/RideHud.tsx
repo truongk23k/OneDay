@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { LIGHTS, ROAD_HALF } from '../ride/city'
-import { targetFor } from '../ride/rules'
+import { nextTurn, routeTo, type Route } from '../ride/nav'
+import { STOP_RADIUS, targetFor } from '../ride/rules'
 import { rideInput, useRide } from '../ride/store'
 import { axisOf, lightState, type LightColor } from '../ride/traffic'
 import { format } from '../story/clock'
+import type { BikeState } from '../ride/bike'
 import type { Stage } from '../story/state'
+import { useGame } from '../store'
 import { useStory } from '../story/store'
 import { S } from '../strings'
+import { RideMap } from './RideMap'
 
 type Pedal = 'left' | 'right' | 'gas' | 'brake'
 
@@ -65,7 +69,7 @@ function Pedals() {
   )
 }
 
-type Nav = { kmh: number; dist: number; turn: number; light: LightColor | null }
+type Nav = { kmh: number; dist: number; turn: number; light: LightColor | null; route: Route | null; bike: BikeState }
 
 const LIGHT_WARN = 40
 
@@ -88,18 +92,18 @@ function lightAhead(b: { x: number; z: number; heading: number }, time: number):
   return color
 }
 
-// Hướng tới điểm hẹn so với đầu xe (radian, dương = bên phải màn hình).
+// Đường đi tới điểm hẹn theo phố; mũi tên chỉ góc rẽ kế tiếp so với đầu xe (radian, dương = bên phải màn hình).
 function navFor(stage: Stage): Nav {
   const { bike: b, time } = useRide.getState()
   const t = targetFor(stage)
   const kmh = Math.round(Math.abs(b.speed) * 3.6)
   const light = lightAhead(b, time)
-  if (!t) return { kmh, dist: 0, turn: 0, light }
-  const dx = t.x - b.x
-  const dz = t.z - b.z
-  let rel = Math.atan2(-dx, -dz) - b.heading
+  if (!t) return { kmh, dist: 0, turn: 0, light, route: null, bike: b }
+  const route = routeTo(b, t)
+  const next = nextTurn(route)
+  let rel = Math.atan2(-(next.x - b.x), -(next.z - b.z)) - b.heading
   rel = Math.atan2(Math.sin(rel), Math.cos(rel))
-  return { kmh, dist: Math.round(Math.hypot(dx, dz)), turn: -rel, light }
+  return { kmh, dist: Math.round(route.length), turn: -rel, light, route, bike: b }
 }
 
 function useNav(stage: Stage) {
@@ -132,8 +136,26 @@ export function RideHud({ isTouch }: { isTouch: boolean }) {
   const mood = useStory((st) => Math.round(st.s.mood))
   const overlay = useStory((st) => st.s.overlay)
   const nav = useNav(stage)
+  const atEmDoor = useRide((r) => r.atEmDoor)
+  const em = useRide((r) => r.em)
+  const canCall = phase === 'street' && stage === 'toEm' && atEmDoor && em === 'home'
+
+  // Máy tính: E hoặc Space để gọi Em khi đã đứng trước cửa.
+  useEffect(() => {
+    if (!canCall) return
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.code !== 'KeyE' && e.code !== 'Space') || e.repeat || useGame.getState().paused) return
+      e.preventDefault()
+      useRide.getState().callEm()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [canCall])
+
   if (phase !== 'street' || stage === 'done') return null
   const stop = stage === 'toEm' || stage === 'withEm' || stage === 'sprint' ? stage : null
+  const waitingForEm = stage === 'toEm' && em !== 'home'
+  const hint = waitingForEm ? null : nav.dist < 12 && !canCall ? (stage === 'toEm' ? S.ride.stopAtEm : S.ride.stopHint) : null
   return (
     <>
       <div className="hud-clock">
@@ -144,9 +166,15 @@ export function RideHud({ isTouch }: { isTouch: boolean }) {
       </div>
       {stop && (
         <div className="ride-nav">
-          <span className="ride-arrow" style={{ transform: `rotate(${nav.turn}rad)` }} aria-hidden>
-            ▲
-          </span>
+          {nav.dist <= STOP_RADIUS + 2 ? (
+            <span className="ride-arrow" aria-hidden>
+              📍
+            </span>
+          ) : (
+            <span className="ride-arrow" style={{ transform: `rotate(${nav.turn}rad)` }} aria-hidden>
+              ▲
+            </span>
+          )}
           <div>
             <div className="ride-stop">{S.ride.stops[stop]}</div>
             <div className="ride-dist">
@@ -161,7 +189,22 @@ export function RideHud({ isTouch }: { isTouch: boolean }) {
           {S.ride.light[nav.light]}
         </div>
       )}
-      {nav.dist < 12 && <div className="ride-stop-hint">{S.ride.stopHint}</div>}
+      {hint && <div className="ride-stop-hint">{hint}</div>}
+      {canCall && (
+        <button className="btn ride-call" onClick={() => useRide.getState().callEm()}>
+          {!isTouch && <kbd>{S.hud.pressE}</kbd>}📞 {S.ride.call}
+        </button>
+      )}
+      {em === 'ringing' && stage === 'toEm' && (
+        <div className="ride-calling">
+          <span className="ride-calling-icon" aria-hidden>
+            📞
+          </span>
+          {S.ride.calling}
+        </div>
+      )}
+      {em === 'coming' && stage === 'toEm' && <div className="ride-stop-hint">{S.ride.coming}</div>}
+      <RideMap bike={nav.bike} route={nav.route} stage={stage} />
       {stage === 'withEm' && (
         <div className="ride-mood" aria-label={S.end.mood}>
           <span aria-hidden>❤️</span>

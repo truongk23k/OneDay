@@ -1288,3 +1288,168 @@ body {
   background: #2dff6a;
   box-shadow: 0 0 10px #2dff6a;
 }
+
+/* Gọi Em */
+.ride-call {
+  position: absolute;
+  z-index: 33;
+  left: 50%;
+  bottom: max(70px, calc(env(safe-area-inset-bottom) + 62px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 12px 24px;
+  border-radius: 28px;
+  background: #2fbf5b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-size: 18px;
+  animation: call-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes call-pulse {
+  50% {
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+.ride-calling {
+  position: absolute;
+  z-index: 33;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 26px;
+  border-radius: 18px;
+  background: rgba(20, 22, 28, 0.88);
+  font-size: 18px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.ride-calling-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #2fbf5b;
+  font-size: 28px;
+  animation: ring 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes ring {
+  from {
+    transform: rotate(-14deg);
+  }
+  to {
+    transform: rotate(14deg);
+  }
+}
+
+/* Bản đồ */
+.ride-minimap {
+  position: absolute;
+  z-index: 31;
+  top: max(60px, calc(env(safe-area-inset-top) + 52px));
+  right: max(10px, env(safe-area-inset-right));
+  width: 176px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.map-target {
+  animation: map-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes map-pulse {
+  to {
+    opacity: 0.25;
+  }
+}
+
+.map-card {
+  width: min(680px, 100%);
+}
+
+.map-card .map-svg {
+  border-radius: 10px;
+}
+
+.map-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #fff;
+  stroke: #1d1f24;
+  stroke-width: 2.4px;
+  paint-order: stroke;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.map-legend .swatch {
+  display: inline-block;
+  width: 18px;
+  height: 6px;
+  margin-right: 4px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.swatch.route {
+  background: #ffd23f;
+}
+
+.swatch.works {
+  background: #f07b1d;
+}
+
+.swatch.alley {
+  background: #c9b98f;
+}
+
+@media (max-height: 450px) {
+  .ride-minimap {
+    width: 150px;
+  }
+
+  .map-card {
+    padding: 10px 14px;
+  }
+
+  .map-card h2 {
+    display: none;
+  }
+
+  .map-card .map-svg {
+    max-height: calc(100vh - 120px);
+  }
+
+  .map-card .btn-block {
+    margin-top: 8px;
+    min-height: 40px;
+    padding: 8px;
+  }
+}

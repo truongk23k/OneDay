@@ -138,7 +138,14 @@ function aheadGap(p: VehiclePose, rel: [number, number], reach: number, lateral:
   return Math.max(0, ahead - reach)
 }
 
-export function stepTraffic(cars: Vehicle[], dt: number, t: number, bike: { x: number; z: number } | null): Vehicle[] {
+// bike: xe của Anh; walkers: người đang băng qua đường (Em đi ra xe) — xe cộ dừng chờ cả hai.
+export function stepTraffic(
+  cars: Vehicle[],
+  dt: number,
+  t: number,
+  bike: { x: number; z: number } | null,
+  walkers: { x: number; z: number }[] = [],
+): Vehicle[] {
   const poses = cars.map(poseOf)
   return cars.map((v, i) => {
     const p = poses[i]
@@ -151,7 +158,8 @@ export function stepTraffic(cars: Vehicle[], dt: number, t: number, bike: { x: n
       const other = VEHICLE[o.kind]
       adv = Math.min(adv, aheadGap(p, [q.x - p.x, q.z - p.z], size.l / 2 + other.l / 2 + 1.5, (size.w + other.w) / 2 + 0.3))
     })
-    if (bike) adv = Math.min(adv, aheadGap(p, [bike.x - p.x, bike.z - p.z], size.l / 2 + BIKE_R + 1.2, size.w / 2 + BIKE_R + 0.3))
+    for (const o of bike ? [bike, ...walkers] : walkers)
+      adv = Math.min(adv, aheadGap(p, [o.x - p.x, o.z - p.z], size.l / 2 + BIKE_R + 1.2, size.w / 2 + BIKE_R + 0.3))
     return adv > 0 ? { ...v, s: wrap(v.s + adv, LOOPS[v.loop].length) } : v
   })
 }

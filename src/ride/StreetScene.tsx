@@ -1,12 +1,10 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import type { Group, PerspectiveCamera } from 'three'
-import type { Motion } from '../player/Character'
 import { useKeys } from '../player/useKeys'
 import { Batched } from '../room/Batched'
 import { useStory } from '../story/store'
-import { EmWaiting, Riders, Scooter } from './Bike3D'
-import { MARKERS } from './city'
+import { EmWalker, Riders, Scooter } from './Bike3D'
 import { buildCityParts } from './cityParts'
 import { Rain } from './Rain'
 import { targetFor } from './rules'
@@ -50,7 +48,6 @@ export default function StreetScene() {
   const helmets = useStory((st) => st.s.tasks.helmets)
   const weather = useStory((st) => st.s.weather)
   const bikeRef = useRef<Group>(null)
-  const emWait = useRef<Motion>({ speed: 0, pose: 'none' })
   const lean = useRef(0)
   const placed = useRef(false)
   const camera = useThree((st) => st.camera) as PerspectiveCamera
@@ -58,7 +55,6 @@ export default function StreetScene() {
 
   // Ngoài phố cần nhìn xa hơn trong phòng; trả lại như cũ khi về phòng (chơi lại).
   useEffect(() => {
-    useRide.getState().reset()
     const { near, far, fov } = camera
     camera.near = 0.1
     camera.far = 260
@@ -108,7 +104,7 @@ export default function StreetScene() {
       <Traffic />
       {weather === 'rain' && <Rain />}
       <TargetMarker />
-      {stage === 'toEm' && <EmWaiting position={[MARKERS.emHouse.x, 0.12, MARKERS.emHouse.z + 5.6]} facing={0} motion={emWait} />}
+      {stage === 'toEm' && <EmWalker />}
       <group ref={bikeRef}>
         <Scooter />
         <Riders outfit={outfit} helmetsTaken={helmets} emAboard={stage === 'withEm'} />

@@ -1,10 +1,11 @@
+import { keys } from '../player/input'
 import { useGame } from '../store'
-import { initialState, type StoryState } from '../story/state'
+import { initialState, reducer, type StoryState } from '../story/state'
 import { useStory } from '../story/store'
 import { newBike } from './bike'
 import { LIGHTS, MARKERS, POTHOLES } from './city'
 import { LIGHT_CYCLE, lightState, newTraffic, poseOf, type Vehicle } from './traffic'
-import { rideInput, stepRide, useRide } from './store'
+import { EM_DOOR, rideInput, stepRide, useRide } from './store'
 
 const street = (over: Partial<StoryState> = {}) =>
   useStory.setState({
@@ -93,13 +94,61 @@ test('riding into a car is a crash', () => {
   expect(useStory.getState().s.mood).toBe(50)
 })
 
-test('stopping at Em’s house picks her up, once', () => {
+const runFor = (seconds: number) => {
+  const t0 = useRide.getState().time
+  for (let i = 0; i < seconds * 60; i++) stepRide(1 / 60, t0 + i / 60)
+}
+
+test('stopping at Em’s house does not pick her up by itself — Anh calls her', () => {
   street()
   useRide.setState({ bike: newBike(MARKERS.emHouse.x, MARKERS.emHouse.z, 0) })
-  stepRide(1 / 60, 0)
+  runFor(3)
+  expect(useStory.getState().s.stage).toBe('toEm')
+  expect(useRide.getState().atEmDoor).toBe(true)
+  expect(useRide.getState().em).toBe('home')
+})
+
+test('calling only works when stopped at her door', () => {
+  street()
+  expect(useRide.getState().callEm()).toBe(false)
+  expect(useRide.getState().em).toBe('home')
+})
+
+test('after the call Em comes out, walks to the bike and gets on, once', () => {
+  street()
+  useRide.setState({ bike: newBike(MARKERS.emHouse.x, MARKERS.emHouse.z, 0) })
+  runFor(0.1)
+  const before = useStory.getState().s
+  expect(useRide.getState().callEm()).toBe(true)
+  runFor(1)
+  expect(useRide.getState().em).toBe('ringing')
+  runFor(12)
+  expect(useRide.getState().em).toBe('aboard')
   expect(useStory.getState().s.stage).toBe('withEm')
-  stepRide(1 / 60, 0.1)
-  expect(useStory.getState().s.stage).toBe('withEm')
+  expect(useStory.getState().s.mood).toBe(reducer(before, { type: 'pickup' }).mood)
+})
+
+test('if Anh rides off after calling, Em waits at the kerb', () => {
+  street()
+  useRide.setState({ bike: newBike(MARKERS.emHouse.x, MARKERS.emHouse.z, 0) })
+  runFor(0.1)
+  useRide.getState().callEm()
+  useRide.setState({ bike: newBike(MARKERS.emHouse.x - 40, MARKERS.emHouse.z, 0) })
+  runFor(12)
+  const { em, emPos } = useRide.getState()
+  expect(em).toBe('coming')
+  expect(useStory.getState().s.stage).toBe('toEm')
+  expect(Math.hypot(emPos.x - EM_DOOR.x, emPos.z - EM_DOOR.z)).toBeLessThan(3.5)
+})
+
+test('pausing holds the phone ringing', () => {
+  street()
+  useRide.setState({ bike: newBike(MARKERS.emHouse.x, MARKERS.emHouse.z, 0) })
+  runFor(0.1)
+  useRide.getState().callEm()
+  useGame.getState().setHelpOpen(true)
+  runFor(10)
+  expect(useRide.getState().em).toBe('ringing')
 })
 
 test('riding over a pothole fast with Em is felt once', () => {
@@ -109,4 +158,36 @@ test('riding over a pothole fast with Em is felt once', () => {
   rideInput.throttle = 1
   for (let i = 0; i < 40; i++) stepRide(1 / 60, i / 60)
   expect(useStory.getState().s.mood).toBe(55)
+})
+
+describe('every ride starts fresh', () => {
+  const dirty = () => {
+    useRide.setState({ bike: newBike(0, -150, 0), traffic: [], time: 99, em: 'aboard', atEmDoor: true })
+    rideInput.throttle = 1
+    keys.down('KeyW')
+  }
+  const expectFresh = () => {
+    const r = useRide.getState()
+    expect(r.bike).toEqual(newBike(MARKERS.home.x, MARKERS.home.z, MARKERS.home.heading))
+    expect(r.traffic).toEqual(newTraffic())
+    expect(r.time).toBe(0)
+    expect(r.em).toBe('home')
+    expect(rideInput.throttle).toBe(0)
+    expect(keys.vector().y).toBe(0)
+  }
+
+  test('leaving the room resets the bike, traffic, Em and held keys before the street draws', () => {
+    useStory.setState({ s: { ...initialState(1), phase: 'room', tasks: { ...initialState(1).tasks, keys: true } } })
+    dirty()
+    useStory.getState().dispatch({ type: 'leave' })
+    expect(useStory.getState().s.phase).toBe('street')
+    expectFresh()
+  })
+
+  test('restart from the street resets the ride too', () => {
+    street({ stage: 'sprint' })
+    dirty()
+    useStory.getState().dispatch({ type: 'restart', seed: 3 })
+    expectFresh()
+  })
 })

@@ -1,9 +1,13 @@
-import { useMemo, useRef, type MutableRefObject } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useMemo, useRef } from 'react'
+import type { Group } from 'three'
 import { Character, type Motion } from '../player/Character'
-import { PartsMesh } from '../room/Batched'
+import { Batched } from '../room/Batched'
 import type { Part, V3 } from '../room/parts'
 import { itemById } from '../story/outfit'
 import type { Outfit } from '../story/state'
+import { MARKERS, ROAD_HALF } from './city'
+import { useRide } from './store'
 
 // Xe tay ga đen nhám kiểu AB 2026 (không logo, không chữ). Đầu xe hướng về -z.
 const BLACK = '#1d1e21'
@@ -41,7 +45,8 @@ const EM_LOOK = { top: '#f7f3ee', bottom: '#2c3442', shoes: '#d9a6a0' }
 const RAINCOAT = '#f2c230'
 
 export function Scooter() {
-  return <PartsMesh parts={SCOOTER} />
+  // Gộp theo chất liệu để đèn pha/đèn hậu phát sáng và vành xe ánh kim.
+  return <Batched parts={SCOOTER} />
 }
 
 // Anh cầm lái (và Em ngồi sau nếu đã đón) trên xe.
@@ -70,10 +75,29 @@ export function Riders({ outfit, helmetsTaken, emAboard }: { outfit: Outfit; hel
   )
 }
 
-// Em đứng đợi trước nhà (vẫy tay nhẹ).
-export function EmWaiting({ position, facing, motion }: { position: V3; facing: number; motion: MutableRefObject<Motion> }) {
+// Em: ở trong nhà tới khi Anh gọi, rồi mở cửa đi ra xe (hoặc ra mép vỉa hè đứng chờ).
+export function EmWalker() {
+  const group = useRef<Group>(null)
+  const motion = useRef<Motion>({ speed: 0, pose: 'none' })
+  const last = useRef({ x: 0, z: 0 })
+  useFrame(() => {
+    const g = group.current
+    if (!g) return
+    const { em, emPos } = useRide.getState()
+    g.visible = em === 'coming'
+    const dx = emPos.x - last.current.x
+    const dz = emPos.z - last.current.z
+    const step = Math.hypot(dx, dz)
+    const moving = step > 1e-4 && step < 1
+    if (moving) g.rotation.y = Math.atan2(-dx, -dz)
+    // 1 = dáng đi bộ của Character.
+    motion.current.speed = moving ? 1 : 0
+    const onRoad = Math.abs(emPos.z - MARKERS.emHouse.z) < ROAD_HALF
+    g.position.set(emPos.x, onRoad ? 0.02 : 0.12, emPos.z)
+    last.current = { x: emPos.x, z: emPos.z }
+  })
   return (
-    <group position={position} rotation-y={facing}>
+    <group ref={group} visible={false}>
       <Character {...EM_LOOK} variant="em" motion={motion} />
     </group>
   )

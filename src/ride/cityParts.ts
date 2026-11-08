@@ -1,7 +1,7 @@
 import type { Box } from '../room/layout'
 import type { Mat, Part } from '../room/parts'
 import { mulberry32 } from '../story/rng'
-import { BARRIERS, LIGHTS, MARKERS, ROADS_X, ROADS_Z, ROAD_HALF, SIDEWALK, blockBoxes, cityBounds } from './city'
+import { BARRIERS, LIGHTS, MARKERS, POTHOLES, ROADS_X, ROADS_Z, ROAD_HALF, SIDEWALK, blockBoxes, cityBounds } from './city'
 
 // Khu phố low-poly kiểu Việt Nam dựng bằng mảnh (gộp theo chất liệu như trong phòng).
 const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, color: string, mat?: Mat): Part => ({
@@ -112,9 +112,9 @@ function houseRow(p: Part[], e: Edge, depth: number, rnd: () => number) {
     const w = Math.min(end - t, 3.8 + rnd() * 1.6)
     const h = 7 + Math.floor(rnd() * 3) * 3.2 + rnd() * 1.2
     const color = FACADES[Math.floor(rnd() * FACADES.length)]
-    // Nhà Em: màu hồng nổi bật, ngay trước chỗ hẹn đón.
-    const mid = t + w / 2
-    const em = along === 'x' && Math.abs(mid - MARKERS.emHouse.x) < 2.6 && Math.abs(e.z0 - MARKERS.emHouse.z) < 8
+    // Nhà Em: căn màu hồng phía nam con phố, ngay sau cửa Em bước ra.
+    const dz = e.z0 - MARKERS.emHouse.z
+    const em = along === 'x' && t < MARKERS.emHouse.x && t + w > MARKERS.emHouse.x && dz > 0 && dz < 8
     tubeHouse(p, e, t, t + w, depth, h, color, rnd, em ? '#f4a6c0' : undefined)
     t += w
   }
@@ -189,6 +189,16 @@ function trees(p: Part[]) {
   }
 }
 
+// Ổ gà: vành nhựa sáng + lòng tối, đủ rõ để kịp lách.
+function potholes(p: Part[]) {
+  for (const h of POTHOLES) {
+    p.push(
+      { kind: 'cyl', rTop: 1.05, rBottom: 1.05, h: 0.012, seg: 9, pos: [h.x, 0.03, h.z], color: '#6b6c70' },
+      { kind: 'cyl', rTop: 0.85, rBottom: 0.85, h: 0.012, seg: 9, pos: [h.x, 0.04, h.z], rot: [0, 0.4, 0], color: '#141516' },
+    )
+  }
+}
+
 // Rào sửa đường sọc cam trắng, cọc tiêu, đống cát.
 function roadworks(p: Part[]) {
   for (const b of BARRIERS) {
@@ -233,6 +243,7 @@ export function buildCityParts(): Part[] {
   powerLines(p, rnd)
   trees(p)
   roadworks(p)
+  potholes(p)
   lightPoles(p)
   streetLife(p)
   outerRows(p, rnd)

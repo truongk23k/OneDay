@@ -65,3 +65,28 @@ test('gentle braking at low speed is not a hard brake', () => {
   const { events } = run({ ...newBike(0, 0, 0), speed: 4 }, BRAKE, 1)
   expect(events).not.toContain('hardBrake')
 })
+
+test('quick taps of the brake at speed are not hard brakes', () => {
+  let s: BikeState = { ...newBike(0, 0, 0), speed: 12 }
+  const events: string[] = []
+  for (let i = 0; i < 3; i++) {
+    const tap = run(s, BRAKE, 0.3)
+    const gap = run(tap.s, IDLE, 0.3)
+    events.push(...tap.events, ...gap.events)
+    s = gap.s
+  }
+  expect(events).not.toContain('hardBrake')
+  expect(s.speed).toBeLessThan(9)
+})
+
+test('braking to a stop from a moderate speed is not a hard brake', () => {
+  const { s, events } = run({ ...newBike(0, 0, 0), speed: 6.5 }, BRAKE, 1.5)
+  expect(s.speed).toBeLessThanOrEqual(0.01)
+  expect(events).not.toContain('hardBrake')
+})
+
+test('the brake bites harder the longer it is held', () => {
+  const first = run({ ...newBike(0, 0, 0), speed: 12 }, BRAKE, 0.2).s
+  const later = run(first, BRAKE, 0.2).s
+  expect(12 - first.speed).toBeLessThan(first.speed - later.speed)
+})
