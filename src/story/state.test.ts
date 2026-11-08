@@ -42,7 +42,7 @@ test('the clock only runs in the room', () => {
 })
 
 test('hygiene is capped at 100', () => {
-  let s = { ...s0(), hygiene: 90 }
+  let s: StoryState = { ...s0(), hygiene: 90 }
   s = reducer(s, { type: 'brushDone' })
   expect(s.hygiene).toBe(100)
 })
