@@ -1,6 +1,6 @@
 import { S } from '../strings'
 import { GAME_START, advance } from './clock'
-import { outfitVerdict } from './outfit'
+import { HINTS, outfitVerdict } from './outfit'
 import { mulberry32, pick } from './rng'
 
 export type Phase = 'alarm' | 'room' | 'left' | 'overslept'
@@ -34,6 +34,7 @@ export type StoryState = {
   outfit: Outfit
   keySpot: string
   pasteFirst: boolean
+  hint: number
   searched: string[]
   line: string | null
 }
@@ -51,6 +52,7 @@ export type Action =
   | { type: 'search'; id: string }
   | { type: 'dress'; outfit: Outfit }
   | { type: 'toilet' }
+  | { type: 'junk'; id: string }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
 
@@ -69,6 +71,7 @@ export function initialState(seed: number): StoryState {
     outfit: PYJAMAS,
     keySpot: pick(KEY_SPOTS, rnd),
     pasteFirst: rnd() < 0.5,
+    hint: Math.floor(rnd() * HINTS.length),
     searched: [],
     line: null,
   }
@@ -110,12 +113,26 @@ export function reducer(s: StoryState, a: Action): StoryState {
     }
     case 'dress': {
       // Lần đầu mặc đồ tử tế thì thơm tho hơn; mặc đồ "thảm họa" thì không.
-      const bonus = !s.tasks.dressed && !outfitVerdict(a.outfit, s.weather).disaster ? 15 : 0
-      return { ...s, outfit: a.outfit, tasks: { ...s.tasks, dressed: true }, hygiene: clamp100(s.hygiene + bonus), overlay: null }
+      const first = !s.tasks.dressed
+      const bonus = first && !outfitVerdict(a.outfit, s.weather).disaster ? 15 : 0
+      // Mặc đúng ý Em ngay lần đầu thì Em vui hơn.
+      const moodUp = first && HINTS[s.hint].match(a.outfit) ? 10 : 0
+      return {
+        ...s,
+        outfit: a.outfit,
+        tasks: { ...s.tasks, dressed: true },
+        hygiene: clamp100(s.hygiene + bonus),
+        mood: clamp100(s.mood + moodUp),
+        overlay: null,
+      }
     }
     case 'toilet': {
       const lines = S.story.toilet
       return { ...s, minutes: s.minutes + 2, line: lines[Math.floor(s.minutes) % lines.length] }
+    }
+    case 'junk': {
+      const line = S.wardrobe.junkLines[a.id as keyof typeof S.wardrobe.junkLines] ?? null
+      return { ...s, minutes: s.minutes + 0.5, line }
     }
     case 'clearLine':
       return { ...s, line: null }
