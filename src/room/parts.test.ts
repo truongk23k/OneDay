@@ -38,7 +38,7 @@ test('groupParts groups by material only, whatever the colour', () => {
 test('the bed has a thick mattress on the wooden frame, with the bamboo mat on top', () => {
   const bed = FURNITURE.find((f) => f.id === 'bed')!
   const parts = furnitureParts(bed)
-  const mattress = parts.find((p) => p.color === '#eeeae2' && p.kind === 'box')
+  const mattress = parts.find((p) => p.color === '#dfe6ee' && p.kind === 'box')
   expect(mattress).toBeDefined()
   const m = partBounds(mattress!)
   expect(m.maxY - m.minY).toBeGreaterThanOrEqual(0.15)
@@ -49,4 +49,15 @@ test('the bed has a thick mattress on the wooden frame, with the bamboo mat on t
 test('the mirror frame leaves the glass to the live reflector (no static glass parts)', () => {
   const mirror = FURNITURE.find((f) => f.id === 'mirror')!
   expect(furnitureParts(mirror).some((p) => p.mat === 'metal')).toBe(false)
+})
+
+test('the bathroom has a mirror above the lavabo and a shower on the opposite wall', () => {
+  const lav = FURNITURE.find((f) => f.id === 'lavabo')!
+  const parts = furnitureParts(lav)
+  const mirror = parts.find((p) => p.color === '#dfe7ea')
+  expect(mirror).toBeDefined()
+  expect(partBounds(mirror!).minY).toBeGreaterThan(lav.height)
+  const showerHead = parts.find((p) => p.color === '#c7ccd1' && p.kind === 'cyl' && p.pos[1] > 1.9)
+  expect(showerHead).toBeDefined()
+  expect(showerHead!.pos[2]).toBeGreaterThan(1.2)
 })

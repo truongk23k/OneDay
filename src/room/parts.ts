@@ -318,12 +318,13 @@ function wardrobe(b: Box): Part[] {
 }
 
 function bed(b: Box): Part[] {
-  // Khung gỗ thấp, đệm dày 17 cm, chiếu trúc trải trên đệm.
-  const frameTop = 0.25
+  // Khung gỗ thấp, đệm dày 20 cm, chiếu trúc trải trên đệm.
+  const frameTop = 0.22
   const top = 0.42
   const p: Part[] = [
     box(b.minX, b.maxX, 0, frameTop, b.minZ, b.maxZ, C.wood),
-    box(b.minX + 0.04, b.maxX - 0.02, frameTop, top, b.minZ + 0.04, b.maxZ - 0.06, '#eeeae2'),
+    box(b.minX + 0.04, b.maxX - 0.02, frameTop, top, b.minZ + 0.04, b.maxZ - 0.06, '#dfe6ee'),
+    box(b.minX + 0.035, b.maxX - 0.015, top - 0.03, top - 0.015, b.minZ + 0.035, b.maxZ - 0.055, '#b9c6d6'),
     box(b.minX + 0.06, b.maxX - 0.04, top, top + 0.02, b.minZ + 0.06, b.maxZ - 0.08, C.bamboo),
     // Đầu giường gỗ dọc tường nam + đệm đen tựa tường đông
     box(b.minX, b.maxX, frameTop, 0.95, b.maxZ - 0.05, b.maxZ, C.wood),
@@ -346,6 +347,14 @@ function lavabo(b: Box): Part[] {
     box(b.minX, b.maxX, 0.7, b.height, b.minZ, b.maxZ, C.white),
     box(b.minX + 0.06, b.maxX - 0.06, b.height - 0.005, b.height + 0.002, b.minZ + 0.06, b.maxZ - 0.05, '#d8dcdf'),
     cyl(cx, b.height, b.height + 0.15, b.minZ + 0.04, 0.015, C.steel, { mat: 'metal' }),
+    // Gương viền trắng phía trên lavabo
+    box(b.minX + 0.02, b.maxX - 0.02, 1.12, 1.68, 0, 0.02, C.white),
+    box(b.minX + 0.05, b.maxX - 0.05, 1.15, 1.65, 0.02, 0.025, '#dfe7ea', 'metal'),
+    // Vòi hoa sen trên tường đối diện (tường nam nhà vệ sinh)
+    cyl(cx, 0.95, 2.0, 1.42, 0.014, C.steel, { mat: 'metal' }),
+    box(cx - 0.07, cx + 0.07, 0.95, 1.07, 1.39, 1.45, C.steel, 'metal'),
+    { kind: 'cyl', rTop: 0.075, rBottom: 0.05, h: 0.05, seg: 14, pos: [cx, 2.02, 1.33], rot: [-1.1, 0, 0], color: '#c7ccd1', mat: 'metal' },
+    { kind: 'cyl', rTop: 0.012, rBottom: 0.012, h: 0.1, pos: [cx, 2.0, 1.38], rot: [Math.PI / 2, 0, 0], color: C.steel, mat: 'metal' },
     // Khăn đen treo trên tường nam nhà vệ sinh
     box(4.4, 4.8, 1.2, 1.75, 1.42, 1.445, '#1b1b1e'),
     box(4.35, 4.85, 1.74, 1.77, 1.41, 1.445, C.steel, 'metal'),
