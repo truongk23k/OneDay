@@ -1,5 +1,6 @@
 import { S } from '../strings'
 import { GAME_START, advance } from './clock'
+import { chatReply, chatSeen, chatTick, newChat, type ChatState } from './chat'
 import { HINTS, outfitVerdict } from './outfit'
 import { mulberry32, pick } from './rng'
 
@@ -36,6 +37,7 @@ export type StoryState = {
   pasteFirst: boolean
   hint: number
   searched: string[]
+  chat: ChatState
   line: string | null
 }
 
@@ -53,6 +55,8 @@ export type Action =
   | { type: 'dress'; outfit: Outfit }
   | { type: 'toilet' }
   | { type: 'junk'; id: string }
+  | { type: 'chatReply'; index: number }
+  | { type: 'chatSeen' }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
 
@@ -73,9 +77,12 @@ export function initialState(seed: number): StoryState {
     pasteFirst: rnd() < 0.5,
     hint: Math.floor(rnd() * HINTS.length),
     searched: [],
+    chat: newChat(),
     line: null,
   }
 }
+
+const hintText = (s: StoryState) => S.wardrobe.hints[HINTS[s.hint].id]
 
 const clamp100 = (v: number) => Math.max(0, Math.min(100, v))
 
@@ -89,8 +96,20 @@ export function reducer(s: StoryState, a: Action): StoryState {
       const line = S.story.snooze[s.snoozes % S.story.snooze.length]
       return { ...s, minutes, snoozes: s.snoozes + 1, line, phase: minutes >= OVERSLEEP_AT ? 'overslept' : 'alarm' }
     }
-    case 'tick':
-      return s.phase === 'room' ? { ...s, minutes: advance(s.minutes, a.realDt) } : s
+    case 'tick': {
+      if (s.phase !== 'room') return s
+      const minutes = advance(s.minutes, a.realDt)
+      const { chat, moodDelta } = chatTick(s.chat, minutes, hintText(s))
+      return chat === s.chat ? { ...s, minutes } : { ...s, minutes, chat, mood: clamp100(s.mood + moodDelta) }
+    }
+    case 'chatReply': {
+      const r = chatReply(s.chat, a.index)
+      if (r.chat === s.chat) return s
+      const texted = s.tasks.texted || r.beatId === 'when'
+      return { ...s, chat: r.chat, mood: clamp100(s.mood + r.moodDelta), tasks: { ...s.tasks, texted } }
+    }
+    case 'chatSeen':
+      return { ...s, chat: chatSeen(s.chat) }
     case 'open':
       return { ...s, overlay: a.overlay }
     case 'close':

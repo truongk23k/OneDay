@@ -6,6 +6,7 @@ import { actionsFor, nearestInteractable, player, type Option } from '../story/i
 import type { Tasks } from '../story/state'
 import { useStory } from '../story/store'
 import { S } from '../strings'
+import { PhoneButton } from './Phone'
 
 export function Clock() {
   const minute = useStory((st) => Math.floor(st.s.minutes))
@@ -120,6 +121,7 @@ export function Hud({ isTouch }: { isTouch: boolean }) {
       <Clock />
       <Checklist />
       <Toast />
+      <PhoneButton />
       {overlay === null && <InteractPrompt targetId={targetId} isTouch={isTouch} />}
     </>
   )

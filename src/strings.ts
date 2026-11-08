@@ -120,6 +120,41 @@ export const S = {
       honeycomb: 'Dép tổ ong… thôi em không nói nữa 🙄',
     },
   },
+  chat: {
+    contact: 'Em ❤️',
+    online: 'đang hoạt động',
+    phone: 'Điện thoại',
+    wake: {
+      msg: 'Dậy chưa anh? 😴',
+      replies: [
+        { text: 'Dậy rồi nè, chào buổi sáng em ☀️', mood: 8, answer: 'Ngoan ghê 😚' },
+        { text: 'Ừ', mood: -3, answer: 'Ừ là sao 😑' },
+        { text: '5 phút nữa…', mood: -6, answer: 'ANH!!! 😤' },
+      ],
+    },
+    hint: {
+      replies: [
+        { text: 'Ok em, chiều em hết 😘', mood: 6, answer: 'Hihi 🥰' },
+        { text: 'Để anh xem đã', mood: 0, answer: 'Nhanh lên đó 🙄' },
+        { text: 'Anh mặc gì kệ anh chứ', mood: -8, answer: 'Ok 🙂' },
+      ],
+    },
+    when: {
+      msg: 'Mấy giờ anh qua đón em?',
+      replies: [
+        { text: '8 giờ anh có mặt 🛵', mood: 5, answer: 'Chuẩn chưa đó 🤨' },
+        { text: 'Tầm 8h10 nha', mood: 0, answer: 'Muộn thế, em trễ mất 😟' },
+        { text: 'Em tự đi được không 😅', mood: -12, answer: '…' },
+      ],
+    },
+    helmet: {
+      msg: 'Nhớ mang mũ cho em nha 🪖',
+      replies: [
+        { text: 'Nhớ rồi mà ❤️', mood: 4, answer: '❤️' },
+        { text: 'Mũ gì cơ?', mood: -5, answer: 'Mũ bảo hiểm chứ mũ gì 🙄' },
+      ],
+    },
+  },
   story: {
     snooze: ['5 phút nữa thôi…', 'Thêm 5 phút, thề luôn…', 'Chăn ấm quá…', 'Mai đi làm sớm bù…', 'Ngủ nốt lần này thôi…', 'Ơ… mấy giờ rồi nhỉ…'],
     wrongTube: 'Ối, sữa rửa mặt! Phì phì… mất 2 phút súc miệng.',

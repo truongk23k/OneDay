@@ -14,6 +14,7 @@ import { EndCard } from './ui/EndCard'
 import { HelpPanel } from './ui/HelpPanel'
 import { Hud } from './ui/Hud'
 import { PendingOverlay } from './ui/PendingOverlay'
+import { Phone } from './ui/Phone'
 import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
 import { Wardrobe } from './ui/Wardrobe'
@@ -57,6 +58,7 @@ export default function App() {
       <BrushGame isTouch={isTouch} />
       <WashGame />
       <Wardrobe />
+      <Phone />
       <PendingOverlay />
       <EndCard />
       <HelpPanel isTouch={isTouch} />
