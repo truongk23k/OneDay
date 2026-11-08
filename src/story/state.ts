@@ -1,5 +1,6 @@
 import { S } from '../strings'
 import { GAME_START, advance } from './clock'
+import { outfitVerdict } from './outfit'
 import { mulberry32, pick } from './rng'
 
 export type Phase = 'alarm' | 'room' | 'left' | 'overslept'
@@ -48,6 +49,7 @@ export type Action =
   | { type: 'washFail' }
   | { type: 'washDone' }
   | { type: 'search'; id: string }
+  | { type: 'dress'; outfit: Outfit }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
 
@@ -104,6 +106,11 @@ export function reducer(s: StoryState, a: Action): StoryState {
       if (a.id === s.keySpot) return { ...s, minutes, searched, tasks: { ...s.tasks, keys: true }, line: S.story.keysFound }
       const lines = S.story.keysNotHere
       return { ...s, minutes, searched, line: lines[(searched.length - 1) % lines.length] }
+    }
+    case 'dress': {
+      // Lần đầu mặc đồ tử tế thì thơm tho hơn; mặc đồ "thảm họa" thì không.
+      const bonus = !s.tasks.dressed && !outfitVerdict(a.outfit, s.weather).disaster ? 15 : 0
+      return { ...s, outfit: a.outfit, tasks: { ...s.tasks, dressed: true }, hygiene: clamp100(s.hygiene + bonus), overlay: null }
     }
     case 'clearLine':
       return { ...s, line: null }

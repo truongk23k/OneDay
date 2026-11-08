@@ -1,17 +1,17 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
-import { CHARACTER_HEIGHT, COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
+import { COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
 import { useGame } from '../store'
 import { player } from '../story/interact'
+import { itemById } from '../story/outfit'
 import { useStory } from '../story/store'
+import { Character } from './Character'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
 
 const RADIUS = 0.25
-const BODY_RADIUS = 0.2
-const BODY_HEIGHT = CHARACTER_HEIGHT
 const SPEED = 2.2
 const CAM_DIST = 2.0
 const LOOK_HEIGHT = 1.1
@@ -29,6 +29,7 @@ export function Player() {
   const body = useRef<Group>(null)
   const state = useRef({ x: SPAWN.x, z: SPAWN.z, yaw: SPAWN.yaw, pitch: 0.45, facing: SPAWN.yaw })
   const gl = useThree((s) => s.gl)
+  const outfit = useStory((st) => st.s.outfit)
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => keys.down(e.code)
@@ -120,15 +121,11 @@ export function Player() {
 
   return (
     <group ref={body}>
-      <mesh position={[0, BODY_HEIGHT / 2, 0]}>
-        <capsuleGeometry args={[BODY_RADIUS, BODY_HEIGHT - 2 * BODY_RADIUS, 4, 12]} />
-        <meshStandardMaterial color="#d23c3c" />
-      </mesh>
-      {/* Mũi chỉ hướng mặt nhân vật (về -z khi quay 0). */}
-      <mesh position={[0, BODY_HEIGHT - 0.25, -0.22]} rotation-x={-Math.PI / 2}>
-        <coneGeometry args={[0.08, 0.18, 10]} />
-        <meshStandardMaterial color="#f1c27d" />
-      </mesh>
+      <Character
+        top={itemById(outfit.top).color}
+        bottom={itemById(outfit.bottom).color}
+        shoes={itemById(outfit.shoes).color}
+      />
     </group>
   )
 }

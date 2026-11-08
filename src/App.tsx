@@ -15,6 +15,7 @@ import { Hud } from './ui/Hud'
 import { PendingOverlay } from './ui/PendingOverlay'
 import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
+import { Wardrobe } from './ui/Wardrobe'
 import { WashGame } from './ui/WashGame'
 
 type NavigatorInfo = Navigator & { deviceMemory?: number }
@@ -52,6 +53,7 @@ export default function App() {
       <AlarmScreen />
       <BrushGame isTouch={isTouch} />
       <WashGame />
+      <Wardrobe />
       <PendingOverlay />
       <EndCard />
       <HelpPanel isTouch={isTouch} />
