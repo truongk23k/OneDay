@@ -9,12 +9,19 @@ const TASK_KEYS: (keyof Tasks)[] = ['brushed', 'washed', 'dressed', 'texted', 'k
 export function EndCard() {
   const s = useStory((st) => st.s)
   const dispatch = useStory((st) => st.dispatch)
-  if (s.phase !== 'overslept' && s.phase !== 'left') return null
+  if (s.phase !== 'overslept' && s.phase !== 'left' && s.phase !== 'street') return null
   const restart = () => dispatch({ type: 'restart', seed: newSeed() })
   return (
     <div className="overlay-backdrop">
       <div className="card end-card">
-        {s.phase === 'overslept' ? (
+        {s.phase === 'street' ? (
+          <>
+            <h2>
+              {S.end.leftTitle} <span className="end-time">{format(s.minutes)}</span>
+            </h2>
+            <p>{S.end.leftNote}</p>
+          </>
+        ) : s.phase === 'overslept' ? (
           <>
             <h2>{S.end.oversleptTitle}</h2>
             <p>{S.end.oversleptBody}</p>

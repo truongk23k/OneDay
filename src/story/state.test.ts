@@ -1,4 +1,5 @@
 import { useGame } from '../store'
+import { STREET_SPEED } from './clock'
 import { initialState, reducer, type StoryState } from './state'
 import { useStory } from './store'
 
@@ -99,10 +100,11 @@ describe('leaving the room', () => {
     expect(s.line).toMatch(/chìa khóa/i)
   })
 
-  test('leaving with the keys ends the room part', () => {
+  test('leaving with the keys goes out to the street, on the way to Em', () => {
     const base = s0()
     const s = reducer({ ...base, tasks: { ...base.tasks, keys: true } }, { type: 'leave' })
-    expect(s.phase).toBe('left')
+    expect(s.phase).toBe('street')
+    expect(s.stage).toBe('toEm')
   })
 })
 
@@ -151,5 +153,38 @@ describe('toilet and kitchen', () => {
     const s = reducer(s0(), { type: 'cook' })
     expect(s.minutes).toBe(453)
     expect(s.line).toMatch(/mì/i)
+  })
+})
+
+describe('street clock and stages', () => {
+  const street = (): StoryState => ({ ...s0(), phase: 'street', stage: 'toEm' })
+
+  test('the street clock runs faster than the room clock', () => {
+    expect(STREET_SPEED).toBeGreaterThan(8.5)
+    expect(reducer(street(), { type: 'tick', realDt: 60 }).minutes).toBeCloseTo(450 + STREET_SPEED)
+  })
+
+  test('Em does not text while Anh is riding', () => {
+    const s = reducer({ ...street(), minutes: 452.9 }, { type: 'tick', realDt: 10 })
+    expect(s.chat.log).toHaveLength(0)
+  })
+
+  test('stages advance once and in order: toEm → withEm → sprint → done', () => {
+    let s = street()
+    s = reducer(s, { type: 'stage', to: 'sprint' })
+    expect(s.stage).toBe('toEm')
+    s = reducer(s, { type: 'stage', to: 'withEm' })
+    expect(s.stage).toBe('withEm')
+    s = reducer(s, { type: 'stage', to: 'withEm' })
+    expect(s.stage).toBe('withEm')
+    s = reducer(s, { type: 'stage', to: 'sprint' })
+    s = reducer(s, { type: 'stage', to: 'done' })
+    expect(s.stage).toBe('done')
+  })
+
+  test('restart from the street returns to the alarm', () => {
+    const s = reducer({ ...street(), stage: 'withEm' }, { type: 'restart', seed: 3 })
+    expect(s.phase).toBe('alarm')
+    expect(s.stage).toBe('toEm')
   })
 })

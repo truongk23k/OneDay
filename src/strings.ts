@@ -19,6 +19,7 @@ export const S = {
       alarm: 'Báo thức đang reo. Dậy ngay, hay ngủ thêm 5 phút? Ngủ tới 8:00 là trễ hết.',
       room: 'Làm các việc trong danh sách: đánh răng, rửa mặt, chọn đồ, nhắn tin cho Em, tìm chìa khóa xe, lấy mũ bảo hiểm. Đứng gần đồ vật sẽ hiện nút để dùng. Xong thì ra cửa — Em cần tới chỗ làm trước 8:25!',
       left: 'Hết phần trong phòng. Bấm "Chơi lại" để thử nhanh hơn.',
+      street: 'Chạy xe theo mũi tên: đón Em, chở Em tới chỗ làm trước 8:25 (đừng phanh gấp, tránh ổ gà), rồi phóng về công ty trước 8:30. Máy tính: W ga, S phanh, A/D rẽ. Điện thoại: nút rẽ bên trái, Ga/Phanh bên phải.',
       overslept: 'Ngủ quên mất rồi. Bấm "Chơi lại" và đừng báo lại nhiều quá nhé.',
     },
   },

@@ -1,10 +1,13 @@
 import { S } from '../strings'
-import { GAME_START, advance } from './clock'
+import { GAME_START, STREET_SPEED, advance } from './clock'
 import { chatReply, chatSeen, chatTick, newChat, type ChatState } from './chat'
 import { HINTS, outfitVerdict } from './outfit'
 import { mulberry32, pick } from './rng'
 
-export type Phase = 'alarm' | 'room' | 'left' | 'overslept'
+export type Phase = 'alarm' | 'room' | 'street' | 'left' | 'overslept'
+// Ngoài đường: đi đón Em (Màn 3) → chở Em đi làm (Màn 4) → nước rút một mình (Màn 5) → tới công ty.
+export type Stage = 'toEm' | 'withEm' | 'sprint' | 'done'
+const STAGE_ORDER: Stage[] = ['toEm', 'withEm', 'sprint', 'done']
 export type Overlay = null | 'brush' | 'wash' | 'wardrobe' | 'phone' | 'door'
 export type Weather = 'sun' | 'rain'
 export type Outfit = { top: string; bottom: string; shoes: string; raincoat: boolean }
@@ -25,6 +28,7 @@ export type Tasks = {
 export type StoryState = {
   seed: number
   phase: Phase
+  stage: Stage
   overlay: Overlay
   minutes: number
   snoozes: number
@@ -59,6 +63,7 @@ export type Action =
   | { type: 'takeHelmets'; n: 1 | 2 }
   | { type: 'leave' }
   | { type: 'say'; line: string }
+  | { type: 'stage'; to: Stage }
   | { type: 'drink' }
   | { type: 'pullup' }
   | { type: 'pee' }
@@ -78,6 +83,7 @@ export function initialState(seed: number): StoryState {
   return {
     seed,
     phase: 'alarm',
+    stage: 'toEm',
     overlay: null,
     minutes: GAME_START,
     snoozes: 0,
@@ -110,6 +116,7 @@ export function reducer(s: StoryState, a: Action): StoryState {
       return { ...s, minutes, snoozes: s.snoozes + 1, line, phase: minutes >= OVERSLEEP_AT ? 'overslept' : 'alarm' }
     }
     case 'tick': {
+      if (s.phase === 'street') return { ...s, minutes: advance(s.minutes, a.realDt, STREET_SPEED) }
       if (s.phase !== 'room') return s
       const minutes = advance(s.minutes, a.realDt)
       const { chat, moodDelta } = chatTick(s.chat, minutes, hintText(s))
@@ -170,7 +177,12 @@ export function reducer(s: StoryState, a: Action): StoryState {
       return { ...s, tasks: { ...s.tasks, helmets: a.n }, line: a.n === 2 ? S.story.helmets : S.story.helmetOne }
     case 'leave':
       if (!s.tasks.keys) return { ...s, line: S.story.needKeys }
-      return { ...s, phase: 'left', overlay: null, line: null }
+      return { ...s, phase: 'street', stage: 'toEm', overlay: null, line: null }
+    case 'stage': {
+      // Chỉ được đi tiếp đúng một bước theo thứ tự.
+      const next = STAGE_ORDER[STAGE_ORDER.indexOf(s.stage) + 1]
+      return s.phase === 'street' && a.to === next ? { ...s, stage: a.to } : s
+    }
     case 'pee':
       return { ...s, minutes: s.minutes + 1, line: S.story.pee }
     case 'poop': {
