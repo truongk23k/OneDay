@@ -1,0 +1,101 @@
+import { S } from '../strings'
+import { GAME_START, advance } from './clock'
+import { mulberry32, pick } from './rng'
+
+export type Phase = 'alarm' | 'room' | 'left' | 'overslept'
+export type Overlay = null | 'brush' | 'wash' | 'wardrobe' | 'phone' | 'door'
+export type Weather = 'sun' | 'rain'
+export type Outfit = { top: string; bottom: string; shoes: string; raincoat: boolean }
+
+export const KEY_SPOTS = ['bed', 'wardrobe', 'fridge', 'deskMine', 'kitchen', 'shelf'] as const
+export const PYJAMAS: Outfit = { top: 'pyjama', bottom: 'floral', shoes: 'honeycomb', raincoat: false }
+export const OVERSLEEP_AT = 480
+
+export type Tasks = {
+  brushed: boolean
+  washed: boolean
+  dressed: boolean
+  texted: boolean
+  keys: boolean
+  helmets: 0 | 1 | 2
+}
+
+export type StoryState = {
+  seed: number
+  phase: Phase
+  overlay: Overlay
+  minutes: number
+  snoozes: number
+  weather: Weather
+  hygiene: number
+  mood: number
+  tasks: Tasks
+  outfit: Outfit
+  keySpot: string
+  pasteFirst: boolean
+  searched: string[]
+  line: string | null
+}
+
+export type Action =
+  | { type: 'wake' }
+  | { type: 'snooze' }
+  | { type: 'tick'; realDt: number }
+  | { type: 'open'; overlay: Exclude<Overlay, null> }
+  | { type: 'close' }
+  | { type: 'wrongTube' }
+  | { type: 'brushDone' }
+  | { type: 'washFail' }
+  | { type: 'washDone' }
+  | { type: 'restart'; seed: number }
+
+export function initialState(seed: number): StoryState {
+  const rnd = mulberry32(seed)
+  return {
+    seed,
+    phase: 'alarm',
+    overlay: null,
+    minutes: GAME_START,
+    snoozes: 0,
+    weather: rnd() < 0.4 ? 'rain' : 'sun',
+    hygiene: 20,
+    mood: 60,
+    tasks: { brushed: false, washed: false, dressed: false, texted: false, keys: false, helmets: 0 },
+    outfit: PYJAMAS,
+    keySpot: pick(KEY_SPOTS, rnd),
+    pasteFirst: rnd() < 0.5,
+    searched: [],
+    line: null,
+  }
+}
+
+const clamp100 = (v: number) => Math.max(0, Math.min(100, v))
+
+export function reducer(s: StoryState, a: Action): StoryState {
+  switch (a.type) {
+    case 'wake':
+      return s.phase === 'alarm' ? { ...s, phase: 'room', line: null } : s
+    case 'snooze': {
+      if (s.phase !== 'alarm') return s
+      const minutes = s.minutes + 5
+      const line = S.story.snooze[s.snoozes % S.story.snooze.length]
+      return { ...s, minutes, snoozes: s.snoozes + 1, line, phase: minutes >= OVERSLEEP_AT ? 'overslept' : 'alarm' }
+    }
+    case 'tick':
+      return s.phase === 'room' ? { ...s, minutes: advance(s.minutes, a.realDt) } : s
+    case 'open':
+      return { ...s, overlay: a.overlay }
+    case 'close':
+      return { ...s, overlay: null }
+    case 'wrongTube':
+      return { ...s, minutes: s.minutes + 2, hygiene: clamp100(s.hygiene - 5), line: S.story.wrongTube }
+    case 'brushDone':
+      return { ...s, hygiene: clamp100(s.hygiene + 35), tasks: { ...s.tasks, brushed: true }, overlay: null }
+    case 'washFail':
+      return { ...s, minutes: s.minutes + 1, line: S.story.washFail }
+    case 'washDone':
+      return { ...s, hygiene: clamp100(s.hygiene + 20), tasks: { ...s.tasks, washed: true }, overlay: null }
+    case 'restart':
+      return initialState(a.seed)
+  }
+}

@@ -17,6 +17,11 @@ export const S = {
     sceneTitle: 'Màn này',
     scene: 'Bản thử phòng trọ: đi một vòng xem đồ đạc đã đúng chỗ chưa. Nhiệm vụ sẽ có ở bản sau.',
   },
+  story: {
+    snooze: ['5 phút nữa thôi…', 'Thêm 5 phút, thề luôn…', 'Chăn ấm quá…', 'Mai đi làm sớm bù…', 'Ngủ nốt lần này thôi…', 'Ơ… mấy giờ rồi nhỉ…'],
+    wrongTube: 'Ối, sữa rửa mặt! Phì phì… mất 2 phút súc miệng.',
+    washFail: 'Té nước ướt hết áo rồi, làm lại!',
+  },
   rotate: 'Xoay ngang điện thoại để chơi nhé',
   noWebGL:
     'Trình duyệt này chưa hỗ trợ đồ họa 3D (WebGL2). Bạn thử mở bằng Chrome hoặc Safari bản mới nhé.',

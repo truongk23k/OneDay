@@ -4,6 +4,7 @@ import { isDebug } from './debug'
 import { DPR_CAP, hasWebGL2, isTouchDevice, pickQuality } from './device'
 import { Player } from './player/Player'
 import { Room } from './room/Room'
+import { StoryTicker } from './story/StoryTicker'
 import { S } from './strings'
 import { DebugOverlay, DebugProbe } from './ui/DebugOverlay'
 import { HelpPanel } from './ui/HelpPanel'
@@ -35,6 +36,7 @@ export default function App() {
         <directionalLight position={[3, 6, 4]} intensity={1.2} />
         <Room />
         <Player />
+        <StoryTicker />
         {debug && <DebugProbe />}
       </Canvas>
       {isTouch && <TouchControls />}
