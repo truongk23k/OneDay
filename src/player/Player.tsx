@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { Group } from 'three'
 import { COLLIDERS, SPAWN, ceilingAt } from '../room/layout'
-import { dynamicColliders } from '../room/world'
+import { dynamicColliders, nowSeconds, useWorld } from '../room/world'
 import { useGame } from '../store'
 import { player } from '../story/interact'
 import { itemById } from '../story/outfit'
@@ -12,6 +12,7 @@ import { Character, type Motion } from './Character'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
+import { poseFor } from './pose'
 
 const RADIUS = 0.25
 const SPEED = 2.2
@@ -27,6 +28,10 @@ const TURN_RATE = 12
 const DRESS_SPOT = { x: 1.05, z: 5.0, facing: -Math.PI / 2 }
 const WARDROBE_CAM: [number, number, number] = [2.75, 1.05, 5.0]
 const WARDROBE_LOOK: [number, number, number] = [0.9, 0.85, 4.5]
+
+// Ghế ở bàn của Anh: ngồi quay về phía bàn (bắc); đứng dậy thì ra sau ghế.
+const CHAIR = { x: 4.6, z: 2.8 }
+const STAND_Z = 3.35
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
@@ -47,10 +52,12 @@ export function Player() {
   // Lượt chơi mới: Anh về chỗ cạnh giường, camera quay về hướng cửa.
   useEffect(() => {
     state.current = { x: SPAWN.x, z: SPAWN.z, yaw: SPAWN.yaw, pitch: 0.45, facing: SPAWN.yaw }
+    wasSitting.current = false
   }, [seed])
   const motion = useRef<Motion>({ speed: 0 })
   // 0 = camera theo Anh, 1 = camera đứng trước tủ quần áo đang mở.
   const wardrobeCam = useRef(0)
+  const wasSitting = useRef(false)
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => keys.down(e.code)
@@ -104,6 +111,8 @@ export function Player() {
     const st = useStory.getState().s
     // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ, điện thoại…).
     const paused = useGame.getState().paused || st.phase !== 'room' || st.overlay !== null
+    const world = useWorld.getState()
+    motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds() })
 
     motion.current.speed = 0
     if (paused) {
@@ -118,7 +127,17 @@ export function Player() {
 
       const k = keys.vector()
       const v = moveVector(k.x || k.y ? k : input.move, s.yaw)
-      const speed = Math.hypot(v.x, v.z)
+      const speed = world.sitting ? 0 : Math.hypot(v.x, v.z)
+      if (world.sitting) {
+        s.x = CHAIR.x
+        s.z = CHAIR.z
+        s.facing = 0
+        wasSitting.current = true
+      } else if (wasSitting.current) {
+        s.x = CHAIR.x
+        s.z = STAND_Z
+        wasSitting.current = false
+      }
       if (speed > 0.01) {
         const run = keys.sprinting() || input.sprint ? SPRINT : 1
         motion.current.speed = speed * run
@@ -131,6 +150,8 @@ export function Player() {
       }
     }
 
+    // Đánh răng, rửa mặt: quay mặt vào lavabo.
+    if (st.overlay === 'brush' || st.overlay === 'wash') s.facing = 0
     player.x = s.x
     player.z = s.z
     body.current?.position.set(s.x, 0, s.z)

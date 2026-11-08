@@ -40,3 +40,18 @@ test('reset puts the room back to morning: door open, taps off, lights on', () =
   expect(useWorld.getState().water).toEqual({ lavabo: false, sink: false, shower: false })
   expect(useWorld.getState().lightsOn).toBe(true)
 })
+
+test('the fridge opens and closes', () => {
+  useWorld.getState().toggleFridge()
+  expect(useWorld.getState().fridgeOpen).toBe(true)
+  useWorld.getState().toggleFridge()
+  expect(useWorld.getState().fridgeOpen).toBe(false)
+})
+
+test('Anh can sit down at his desk and stand up again; reset stands him up', () => {
+  useWorld.getState().setSitting(true)
+  expect(useWorld.getState().sitting).toBe(true)
+  useWorld.getState().reset()
+  expect(useWorld.getState().sitting).toBe(false)
+  expect(useWorld.getState().fridgeOpen).toBe(false)
+})

@@ -177,12 +177,17 @@ function fridge(b: Box, front: '+z' | '+x', sticker: string): Part[] {
   const p: Part[] = [box(b.minX, b.maxX, 0, b.height, b.minZ, b.maxZ, C.steel)]
   const split = b.height * 0.7
   if (front === '+z') {
+    // Thân lõm vào 5 cm ở ngăn dưới để thấy bên trong khi mở cánh (cánh dưới vẽ riêng, mở được).
     const z = b.maxZ
+    p[0] = box(b.minX, b.maxX, 0, b.height, b.minZ, z - 0.05, C.steel)
+    p.push(box(b.minX, b.minX + 0.02, 0, b.height, z - 0.05, z, C.steel), box(b.maxX - 0.02, b.maxX, 0, b.height, z - 0.05, z, C.steel))
+    p.push(box(b.minX, b.maxX, split - 0.01, b.height, z - 0.05, z, C.steel), box(b.minX, b.maxX, 0, 0.04, z - 0.05, z, C.steel))
+    p.push(box(b.minX + 0.02, b.maxX - 0.02, 0.04, split - 0.01, z - 0.052, z - 0.05, '#f4fbff', 'emit'))
+    for (const y of [0.32, 0.6]) p.push(box(b.minX + 0.02, b.maxX - 0.02, y, y + 0.01, z - 0.05, z - 0.005, '#dfe9ee'))
+    p.push(cyl(b.minX + 0.12, 0.33, 0.55, z - 0.025, 0.025, '#3fa9f5', { seg: 8 }), cyl(b.minX + 0.2, 0.33, 0.5, z - 0.025, 0.025, '#3fa9f5', { seg: 8 }))
+    p.push(box(b.minX + 0.3, b.maxX - 0.08, 0.61, 0.7, z - 0.045, z - 0.01, '#f2c14e'), ico(b.minX + 0.14, 0.66, z - 0.025, 0.04, '#e94e3c'))
     p.push(box(b.minX + 0.01, b.maxX - 0.01, split + 0.01, b.height - 0.02, z, z + 0.02, C.fridgeDoor))
-    p.push(box(b.minX + 0.01, b.maxX - 0.01, 0.04, split - 0.01, z, z + 0.02, C.fridgeDoor))
     p.push(box(b.minX + 0.08, b.maxX - 0.06, split + 0.08, b.height - 0.08, z + 0.02, z + 0.025, sticker))
-    p.push(box(b.minX + 0.08, b.maxX - 0.06, split - 0.45, split - 0.08, z + 0.02, z + 0.025, sticker))
-    p.push(box(b.minX + 0.03, b.minX + 0.05, split - 0.35, split - 0.05, z + 0.02, z + 0.05, '#6d7277'))
     p.push(box(b.minX + 0.03, b.minX + 0.05, split + 0.05, split + 0.2, z + 0.02, z + 0.05, '#6d7277'))
   } else {
     const x = b.maxX
@@ -549,6 +554,17 @@ function fixtureParts(): Part[] {
 
 export function buildRoomParts(openings: Opening[] = []): Part[] {
   return [...wallParts(openings), ...FURNITURE.flatMap(furnitureParts), ...windowParts(), ...decorParts(), ...fixtureParts()]
+}
+
+// Cánh dưới tủ lạnh của Anh theo tọa độ bản lề (mép phải, x = maxX): dài w về phía -x.
+export function fridgeDoorParts(b: Box): Part[] {
+  const split = b.height * 0.7
+  const w = b.maxX - b.minX - 0.02
+  return [
+    box(-w, 0, 0.04, split - 0.01, 0, 0.02, C.fridgeDoor),
+    box(-w + 0.07, -0.08, split - 0.45, split - 0.08, 0.02, 0.025, C.green),
+    box(-w + 0.02, -w + 0.04, split - 0.35, split - 0.05, 0.02, 0.05, '#6d7277'),
+  ]
 }
 
 // Mũ bảo hiểm còn treo trên cửa (lấy mũ nào thì mũ đó biến mất).

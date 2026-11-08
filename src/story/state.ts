@@ -59,6 +59,9 @@ export type Action =
   | { type: 'takeHelmets'; n: 1 | 2 }
   | { type: 'leave' }
   | { type: 'say'; line: string }
+  | { type: 'drink' }
+  | { type: 'browse' }
+  | { type: 'mail' }
   | { type: 'chatSeen' }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
@@ -161,6 +164,14 @@ export function reducer(s: StoryState, a: Action): StoryState {
     case 'leave':
       if (!s.tasks.keys) return { ...s, line: S.story.needKeys }
       return { ...s, phase: 'left', overlay: null, line: null }
+    case 'drink':
+      return { ...s, minutes: s.minutes + 1, line: S.story.drink }
+    case 'browse': {
+      const lines = S.story.browse
+      return { ...s, minutes: s.minutes + 3, line: lines[Math.floor(s.minutes) % lines.length] }
+    }
+    case 'mail':
+      return { ...s, minutes: s.minutes + 1, line: S.story.mail }
     case 'say':
       return { ...s, line: a.line }
     case 'clearLine':

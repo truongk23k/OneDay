@@ -4,11 +4,12 @@ import type { Group } from 'three'
 import { PartsMesh } from '../room/Batched'
 import { CHARACTER_HEIGHT } from '../room/layout'
 import type { Part, V3 } from '../room/parts'
+import type { Pose } from './pose'
 
 const SKIN = '#eab88f'
 const HAIR = '#18161a'
 
-export type Motion = { speed: number }
+export type Motion = { speed: number; pose?: Pose }
 
 type Props = { top: string; bottom: string; shoes: string; motion?: MutableRefObject<Motion> }
 
@@ -84,6 +85,8 @@ export function Character({ top, bottom, shoes, motion }: Props) {
   const head = useRef<Group>(null)
   const phase = useRef(0)
   const blend = useRef(0)
+  // Góc hiện tại của các khớp (lerp dần tới tư thế mục tiêu).
+  const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, head: 0, rootY: 0 })
 
   const leg = useMemo(() => legParts(bottom, shoes), [bottom, shoes])
   const armLeft = useMemo(() => armParts(-1, top), [top])
@@ -99,17 +102,45 @@ export function Character({ top, bottom, shoes, motion }: Props) {
     phase.current += dt * (4 + 7 * run) * (run > 0.02 ? 1 : 0)
     const s = Math.sin(phase.current)
     const swing = 0.65 * w + 0.35 * Math.max(0, run - 1)
-    if (legL.current) legL.current.rotation.x = s * swing
-    if (legR.current) legR.current.rotation.x = -s * swing
-    if (armL.current) armL.current.rotation.x = -s * swing * 0.8
-    if (armR.current) armR.current.rotation.x = s * swing * 0.8
     const t = state.clock.elapsedTime
-    if (root.current) root.current.position.y = Math.abs(s) * 0.035 * w
+    // Tư thế mặc định: đi bộ / đứng.
+    let tgt = { legL: s * swing, legR: -s * swing, armL: -s * swing * 0.8, armR: s * swing * 0.8, armRZ: 0, head: 0, rootY: Math.abs(s) * 0.035 * w }
+    switch (motion?.current.pose ?? 'none') {
+      case 'sit':
+        tgt = { legL: 1.45, legR: 1.45, armL: 1.15 + Math.sin(t * 17) * 0.06, armR: 1.15 + Math.sin(t * 17 + 1.6) * 0.06, armRZ: 0, head: 0.12, rootY: 0 }
+        break
+      case 'brush':
+        tgt = { legL: 0, legR: 0, armL: 0.15, armR: 2.25, armRZ: Math.sin(t * 22) * 0.28, head: 0, rootY: 0 }
+        break
+      case 'wash':
+        tgt = { legL: 0, legR: 0, armL: 1.9 + Math.sin(t * 9) * 0.25, armR: 1.9 + Math.sin(t * 9) * 0.25, armRZ: 0, head: 0.3, rootY: 0 }
+        break
+      case 'drink':
+        tgt = { legL: 0, legR: 0, armL: 0.1, armR: 2.6, armRZ: 0.2, head: -0.35, rootY: 0 }
+        break
+      case 'squat':
+        tgt = { legL: 1.2, legR: 1.2, armL: 0.5, armR: 0.5, armRZ: 0, head: 0.1, rootY: -0.28 }
+        break
+    }
+    const k = Math.min(1, dt * 12)
+    const cur = j.current
+    for (const key of Object.keys(cur) as (keyof typeof cur)[]) cur[key] += (tgt[key] - cur[key]) * k
+    if (legL.current) legL.current.rotation.x = cur.legL
+    if (legR.current) legR.current.rotation.x = cur.legR
+    if (armL.current) armL.current.rotation.x = cur.armL
+    if (armR.current) {
+      armR.current.rotation.x = cur.armR
+      armR.current.rotation.z = cur.armRZ
+    }
+    if (root.current) root.current.position.y = cur.rootY
     if (torso.current) {
       torso.current.scale.y = 1 + Math.sin(t * 2.2) * 0.012 * (1 - w)
       torso.current.rotation.y = s * 0.08 * w
     }
-    if (head.current) head.current.rotation.z = Math.sin(t * 1.3) * 0.03 * (1 - w)
+    if (head.current) {
+      head.current.rotation.z = Math.sin(t * 1.3) * 0.03 * (1 - w)
+      head.current.rotation.x = cur.head
+    }
   })
 
   return (

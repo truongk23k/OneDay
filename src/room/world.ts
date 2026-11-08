@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { Pose, Transient } from '../player/pose'
 import { BATH_DOOR, type Box } from './layout'
 
 const PLAYER_RADIUS = 0.25
@@ -13,12 +14,29 @@ type World = {
   toggleDoor: (player?: { x: number; z: number }) => boolean
   toggleWater: (tap: Tap) => void
   toggleLights: () => void
+  fridgeOpen: boolean
+  toggleFridge: () => void
+  // Anh đang ngồi ở bàn máy tính.
+  sitting: boolean
+  setSitting: (on: boolean) => void
+  // Động tác ngắn đang diễn (uống nước…), hết hạn theo đồng hồ thật (giây).
+  transient: Transient
+  play: (pose: Pose, seconds: number) => void
   reset: () => void
 }
 
 export const CLOSED_DOOR: Box = { id: 'bathDoorClosed', minX: 2.95, maxX: 3.05, minZ: BATH_DOOR.min, maxZ: BATH_DOOR.max, height: BATH_DOOR.maxY }
 
-const MORNING = { bathDoorOpen: true, water: { lavabo: false, sink: false, shower: false }, lightsOn: true }
+const MORNING = {
+  bathDoorOpen: true,
+  water: { lavabo: false, sink: false, shower: false },
+  lightsOn: true,
+  fridgeOpen: false,
+  sitting: false,
+  transient: null as Transient,
+}
+
+export const nowSeconds = () => performance.now() / 1000
 
 // Trạng thái đồ vật dùng được trong phòng (cửa, vòi nước, đèn) — không thuộc nhiệm vụ.
 export const useWorld = create<World>()((set, get) => ({
@@ -31,6 +49,9 @@ export const useWorld = create<World>()((set, get) => ({
   },
   toggleWater: (tap) => set((w) => ({ water: { ...w.water, [tap]: !w.water[tap] } })),
   toggleLights: () => set((w) => ({ lightsOn: !w.lightsOn })),
+  toggleFridge: () => set((w) => ({ fridgeOpen: !w.fridgeOpen })),
+  setSitting: (on) => set({ sitting: on }),
+  play: (pose, seconds) => set({ transient: { pose, until: nowSeconds() + seconds } }),
   reset: () => set({ ...MORNING, water: { ...MORNING.water } }),
 }))
 

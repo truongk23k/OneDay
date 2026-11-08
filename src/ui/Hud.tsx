@@ -48,16 +48,26 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
   const bathDoorOpen = useWorld((w) => w.bathDoorOpen)
   const water = useWorld((w) => w.water)
   const lightsOn = useWorld((w) => w.lightsOn)
-  const options = targetId ? actionsFor(targetId, { tasks, searched }, { bathDoorOpen, water, lightsOn }) : []
+  const fridgeOpen = useWorld((w) => w.fridgeOpen)
+  const sitting = useWorld((w) => w.sitting)
+  const options = targetId ? actionsFor(targetId, { tasks, searched }, { bathDoorOpen, water, lightsOn, fridgeOpen, sitting }) : []
 
   const run = (o: Option) => {
     const a = o.action
-    if (a.type !== 'world') return dispatch(a)
     const w = useWorld.getState()
+    if (a.type !== 'world') {
+      // Động tác đi kèm một số việc.
+      if (a.type === 'drink') w.play('drink', 1.6)
+      if (a.type === 'toilet') w.play('squat', 2.2)
+      return dispatch(a)
+    }
     if (a.do === 'door') {
       if (!w.toggleDoor(player)) dispatch({ type: 'say', line: S.story.doorBlocked })
     }
     else if (a.do === 'lights') w.toggleLights()
+    else if (a.do === 'fridge') w.toggleFridge()
+    else if (a.do === 'sit') w.setSitting(true)
+    else if (a.do === 'stand') w.setSitting(false)
     else w.toggleWater(a.do)
   }
 

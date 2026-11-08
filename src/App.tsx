@@ -6,6 +6,7 @@ import { Player } from './player/Player'
 import { Room } from './room/Room'
 import { WardrobeScene } from './room/WardrobeScene'
 import { StoryTicker } from './story/StoryTicker'
+import { useWorld } from './room/world'
 import { useStory } from './story/store'
 import { S } from './strings'
 import { AlarmScreen } from './ui/AlarmScreen'
@@ -36,7 +37,7 @@ function detect() {
 export default function App() {
   const [{ isTouch, quality, webgl, debug }] = useState(detect)
   // Chỉ khi có ?debug: mở store ra console để thử nhanh từng màn.
-  if (debug) (window as unknown as { __story: typeof useStory }).__story = useStory
+  if (debug) Object.assign(window, { __story: useStory, __world: useWorld })
 
   if (!webgl) return <div className="no-webgl">{S.noWebGL}</div>
 

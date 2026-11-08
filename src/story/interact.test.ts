@@ -32,9 +32,10 @@ test('the lavabo offers brushing and washing until each is done', () => {
 
 test('key spots offer a search until the keys are found or the spot was searched', () => {
   const s = room()
-  expect(actionsFor('fridge', s).map((o) => o.action)).toEqual([{ type: 'search', id: 'fridge' }])
-  expect(actionsFor('fridge', { ...s, searched: ['fridge'] })).toEqual([])
-  expect(actionsFor('fridge', { ...s, tasks: { ...s.tasks, keys: true } })).toEqual([])
+  const searches = (st: StoryState) => actionsFor('fridge', st).filter((o) => o.action.type === 'search').map((o) => o.action)
+  expect(searches(s)).toEqual([{ type: 'search', id: 'fridge' }])
+  expect(searches({ ...s, searched: ['fridge'] })).toEqual([])
+  expect(searches({ ...s, tasks: { ...s.tasks, keys: true } })).toEqual([])
 })
 
 test('the wardrobe offers clothes and a search', () => {
@@ -87,5 +88,20 @@ describe('bathroom door from inside', () => {
     expect(nearestInteractable({ x: 3.3, z: 0.75 })?.id).toBe('bathDoorIn')
     const world = { bathDoorOpen: false, water: { lavabo: false, sink: false, shower: false }, lightsOn: true }
     expect(actionsFor('bathDoorIn', room(), world).map((o) => o.label)).toEqual(['Mở cửa'])
+  })
+})
+
+describe('fridge and computer', () => {
+  const world = { bathDoorOpen: true, water: { lavabo: false, sink: false, shower: false }, lightsOn: true, fridgeOpen: false, sitting: false }
+  const labels = (id: string, w = world) => actionsFor(id, room(), w).map((o) => o.label)
+
+  test('the fridge opens; open, it offers a drink and closing', () => {
+    expect(labels('fridge')).toContain('Mở tủ lạnh')
+    expect(labels('fridge', { ...world, fridgeOpen: true })).toEqual(expect.arrayContaining(['Uống nước', 'Đóng tủ lạnh']))
+  })
+
+  test('at the desk Anh can sit; sitting, he can browse, check mail or stand up', () => {
+    expect(labels('deskMine')).toContain('Ngồi máy tính')
+    expect(labels('deskMine', { ...world, sitting: true })).toEqual(['Lướt mạng', 'Check mail công ty', 'Đứng dậy'])
   })
 })

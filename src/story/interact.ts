@@ -4,9 +4,15 @@ import { KEY_SPOTS, type Action, type StoryState } from './state'
 
 export type Target = { id: string; x: number; z: number }
 // Hành động với đồ vật (không phải nhiệm vụ): cửa, vòi nước, đèn.
-export type WorldAction = { type: 'world'; do: 'door' | 'lights' | Tap }
+export type WorldAction = { type: 'world'; do: 'door' | 'lights' | 'fridge' | 'sit' | 'stand' | Tap }
 export type Option = { label: string; action: Action | WorldAction }
-export type WorldView = { bathDoorOpen: boolean; water: Record<Tap, boolean>; lightsOn: boolean }
+export type WorldView = {
+  bathDoorOpen: boolean
+  water: Record<Tap, boolean>
+  lightsOn: boolean
+  fridgeOpen?: boolean
+  sitting?: boolean
+}
 
 const DEFAULT_WORLD: WorldView = { bathDoorOpen: true, water: { lavabo: false, sink: false, shower: false }, lightsOn: true }
 
@@ -60,6 +66,23 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
     o.push(tap('lavabo', w))
   }
   if (id === 'kitchen') o.push(tap('sink', w))
+  if (id === 'fridge') {
+    if (w.fridgeOpen) {
+      o.push({ label: S.options.drink, action: { type: 'drink' } })
+      o.push({ label: S.options.fridgeClose, action: { type: 'world', do: 'fridge' } })
+    } else o.push({ label: S.options.fridgeOpen, action: { type: 'world', do: 'fridge' } })
+  }
+  if (id === 'deskMine') {
+    // Đang ngồi thì chỉ còn việc trên máy tính và đứng dậy.
+    if (w.sitting) {
+      return [
+        { label: S.options.browse, action: { type: 'browse' } },
+        { label: S.options.mail, action: { type: 'mail' } },
+        { label: S.options.stand, action: { type: 'world', do: 'stand' } },
+      ]
+    }
+    o.push({ label: S.options.sit, action: { type: 'world', do: 'sit' } })
+  }
   if (id === 'shower') o.push(tap('shower', w))
   if (id === 'toilet') o.push({ label: S.options.toilet, action: { type: 'toilet' } })
   if (id === 'bathDoor' || id === 'bathDoorIn') o.push({ label: w.bathDoorOpen ? S.options.closeDoor : S.options.openDoor, action: { type: 'world', do: 'door' } })

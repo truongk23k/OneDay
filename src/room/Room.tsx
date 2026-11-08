@@ -8,7 +8,7 @@ import { Batched, PartsMesh } from './Batched'
 import { BATH_DOOR, BATH_LOFT, FURNITURE, ROOM, WINDOW } from './layout'
 import type { Opening } from './openings'
 import { useStory } from '../story/store'
-import { bathDoorLeafParts, buildRoomParts, helmetParts } from './parts'
+import { bathDoorLeafParts, buildRoomParts, fridgeDoorParts, helmetParts } from './parts'
 import { useWorld } from './world'
 
 const OPENINGS: Opening[] = [WINDOW, BATH_DOOR, BATH_LOFT]
@@ -66,6 +66,23 @@ function Helmets() {
   const parts = useMemo(() => helmetParts(2 - taken), [taken])
   if (!parts.length) return null
   return <PartsMesh parts={parts} />
+}
+
+// Cánh dưới tủ lạnh: bản lề mép phải, mở ra phía ngoài.
+function FridgeDoor() {
+  const f = FURNITURE.find((x) => x.id === 'fridge')!
+  const door = useRef<Group>(null)
+  const parts = useMemo(() => fridgeDoorParts(f), [f])
+  useFrame((_, dt) => {
+    if (!door.current) return
+    const target = useWorld.getState().fridgeOpen ? 1.75 : 0
+    door.current.rotation.y += (target - door.current.rotation.y) * Math.min(1, dt * 6)
+  })
+  return (
+    <group ref={door} position={[f.maxX - 0.01, 0, f.maxZ]}>
+      <PartsMesh parts={parts} />
+    </group>
+  )
 }
 
 const LEAF_OPEN = -1.4
@@ -205,6 +222,7 @@ export function Room({ showLabels = false, quality = 'medium' }: { showLabels?: 
       <Batched parts={parts} />
       <MirrorGlass quality={quality} />
       <BathDoorLeaf />
+      <FridgeDoor />
       <Helmets />
       <WindowGlass />
       <Water />
