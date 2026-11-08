@@ -1,4 +1,4 @@
-import { COLLIDERS, FURNITURE, HELMETS, PASSAGE_SOFFIT, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
+import { CEILING_BEAM, COLLIDERS, FURNITURE, HELMETS, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
 
 const R = 0.25
 
@@ -198,10 +198,11 @@ test('the shelf is shallow: sticks out at most 0.2 m from the wall', () => {
   expect(s.maxX - s.minX).toBeLessThanOrEqual(0.2)
 })
 
-test('a beam spans the passage from the pillar to the bathroom wall, above the door', () => {
-  expect(PASSAGE_SOFFIT.minX).toBeCloseTo(wall('kitchenPillar').maxX)
-  expect(PASSAGE_SOFFIT.maxX).toBeCloseTo(wall('bathWallW1').minX)
-  expect(PASSAGE_SOFFIT.maxZ).toBeCloseTo(wall('kitchenPillar').maxZ)
-  expect(PASSAGE_SOFFIT.minY).toBeGreaterThan(get('door').height + 0.3)
-  expect(PASSAGE_SOFFIT.maxY).toBe(ROOM.height)
+test('a ceiling beam runs from the pillar over the fridge to the east wall', () => {
+  expect(CEILING_BEAM.minX).toBeCloseTo(wall('kitchenPillar').maxX)
+  expect(CEILING_BEAM.maxX).toBe(ROOM.width)
+  expect(CEILING_BEAM.minZ).toBeCloseTo(wall('bathWallS').maxZ)
+  expect(CEILING_BEAM.maxZ).toBeLessThan(get('fridge').maxZ)
+  expect(CEILING_BEAM.minY).toBeGreaterThan(get('door').height + 0.3)
+  expect(CEILING_BEAM.maxY).toBe(ROOM.height)
 })
