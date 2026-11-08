@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useWorld } from '../room/world'
 import { useGame } from '../store'
 import { format } from '../story/clock'
-import { actionsFor, nearestInteractable, player } from '../story/interact'
+import { actionsFor, nearestInteractable, player, type Option } from '../story/interact'
 import type { Tasks } from '../story/state'
 import { useStory } from '../story/store'
 import { S } from '../strings'
@@ -43,7 +44,19 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
   const tasks = useStory((st) => st.s.tasks)
   const searched = useStory((st) => st.s.searched)
   const dispatch = useStory((st) => st.dispatch)
-  const options = targetId ? actionsFor(targetId, { tasks, searched }) : []
+  const bathDoorOpen = useWorld((w) => w.bathDoorOpen)
+  const water = useWorld((w) => w.water)
+  const lightsOn = useWorld((w) => w.lightsOn)
+  const options = targetId ? actionsFor(targetId, { tasks, searched }, { bathDoorOpen, water, lightsOn }) : []
+
+  const run = (o: Option) => {
+    const a = o.action
+    if (a.type !== 'world') return dispatch(a)
+    const w = useWorld.getState()
+    if (a.do === 'door') w.toggleDoor()
+    else if (a.do === 'lights') w.toggleLights()
+    else w.toggleWater(a.do)
+  }
 
   useEffect(() => {
     if (!options.length) return
@@ -51,17 +64,17 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
       if (e.code !== 'KeyE' && e.code !== 'Space') return
       if (useGame.getState().paused || useStory.getState().s.overlay) return
       e.preventDefault()
-      dispatch(options[0].action)
+      run(options[0])
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [options, dispatch])
+  })
 
   if (!options.length) return null
   return (
     <div className={isTouch ? 'hud-actions touch' : 'hud-actions'}>
       {options.map((o, i) => (
-        <button key={o.label} className="btn btn-action" onClick={() => dispatch(o.action)}>
+        <button key={o.label} className="btn btn-action" onClick={() => run(o)}>
           {!isTouch && i === 0 && <kbd>{S.hud.pressE}</kbd>}
           {o.label}
         </button>

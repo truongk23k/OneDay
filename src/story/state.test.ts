@@ -80,3 +80,9 @@ test('search finds keys only at keySpot, costs a minute, and each spot once', ()
   expect(b.tasks.keys).toBe(true)
   expect(b.line).toBe('Thấy chìa khóa rồi! 🔑')
 })
+
+test('going to the toilet takes 2 minutes and says something', () => {
+  const s = reducer(s0(), { type: 'toilet' })
+  expect(s.minutes).toBe(452)
+  expect(s.line).toBeTruthy()
+})

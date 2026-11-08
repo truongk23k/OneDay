@@ -84,6 +84,43 @@ function BathDoorLeaf() {
   )
 }
 
+// Nước chảy khi vặn vòi lavabo, vòi bồn rửa bếp, vòi sen.
+function Water() {
+  const water = useWorld((w) => w.water)
+  return (
+    <>
+      {water.lavabo && (
+        <mesh position={[3.775, 0.92, 0.09]}>
+          <cylinderGeometry args={[0.01, 0.014, 0.13, 8]} />
+          <meshBasicMaterial color="#a9dcff" transparent opacity={0.7} />
+        </mesh>
+      )}
+      {water.sink && (
+        <mesh position={[1.07, 0.99, 1.49]}>
+          <cylinderGeometry args={[0.01, 0.014, 0.24, 8]} />
+          <meshBasicMaterial color="#a9dcff" transparent opacity={0.7} />
+        </mesh>
+      )}
+      {water.shower && (
+        <mesh position={[3.775, 1.0, 1.24]}>
+          <cylinderGeometry args={[0.06, 0.26, 2.0, 14, 1, true]} />
+          <meshBasicMaterial color="#bfe6ff" transparent opacity={0.28} side={2} depthWrite={false} />
+        </mesh>
+      )}
+    </>
+  )
+}
+
+function TubeLights() {
+  const on = useWorld((w) => w.lightsOn)
+  return (
+    <>
+      <pointLight position={[4.0, 2.45, 1.75]} intensity={on ? 3.2 : 0} distance={7} decay={1.6} color="#f4f8ff" />
+      <pointLight position={[0.3, 2.45, 2.6]} intensity={on ? 2.6 : 0} distance={7} decay={1.6} color="#f4f8ff" />
+    </>
+  )
+}
+
 // Mặt gương đứng (vòm trên) phản chiếu thật cả căn phòng; máy yếu dùng mặt tĩnh cho nhẹ.
 function MirrorGlass({ quality }: { quality: Quality }) {
   const m = FURNITURE.find((f) => f.id === 'mirror')!
@@ -161,9 +198,9 @@ export function Room({ showLabels = false, quality = 'medium' }: { showLabels?: 
       <MirrorGlass quality={quality} />
       <BathDoorLeaf />
       <WindowGlass />
-      {/* Ánh sáng 2 đèn tuýp */}
-      <pointLight position={[4.0, 2.45, 1.75]} intensity={3.2} distance={7} decay={1.6} color="#f4f8ff" />
-      <pointLight position={[0.3, 2.45, 2.6]} intensity={2.6} distance={7} decay={1.6} color="#f4f8ff" />
+      <Water />
+      {/* Ánh sáng 2 đèn tuýp (tắt được bằng công tắc cạnh cửa nhà vệ sinh) */}
+      <TubeLights />
 
       {showLabels &&
         FURNITURE.filter((f) => f.label).map((f) => (

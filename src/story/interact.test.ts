@@ -21,12 +21,13 @@ test('nothing in reach → null', () => {
 
 test('the lavabo offers brushing and washing until each is done', () => {
   const s = room()
-  expect(actionsFor('lavabo', s).map((o) => o.action)).toEqual([
+  const story = (st: StoryState) => actionsFor('lavabo', st).map((o) => o.action).filter((a) => a.type !== 'world')
+  expect(story(s)).toEqual([
     { type: 'open', overlay: 'brush' },
     { type: 'open', overlay: 'wash' },
   ])
   const done = { ...s, tasks: { ...s.tasks, brushed: true } }
-  expect(actionsFor('lavabo', done).map((o) => o.action)).toEqual([{ type: 'open', overlay: 'wash' }])
+  expect(story(done)).toEqual([{ type: 'open', overlay: 'wash' }])
 })
 
 test('key spots offer a search until the keys are found or the spot was searched', () => {
@@ -39,4 +40,31 @@ test('key spots offer a search until the keys are found or the spot was searched
 test('the wardrobe offers clothes and a search', () => {
   const kinds = actionsFor('wardrobe', room()).map((o) => o.action.type)
   expect(kinds).toEqual(['open', 'search'])
+})
+
+describe('usable props', () => {
+  const world = { bathDoorOpen: true, water: { lavabo: false, sink: false, shower: false }, lightsOn: true }
+  const labels = (id: string, w = world) => actionsFor(id, room(), w).map((o) => o.label)
+
+  test('the bathroom door can be closed, then opened', () => {
+    expect(labels('bathDoor')).toEqual(['Đóng cửa'])
+    expect(labels('bathDoor', { ...world, bathDoorOpen: false })).toEqual(['Mở cửa'])
+  })
+
+  test('the lavabo and kitchen taps turn on and off', () => {
+    expect(labels('lavabo')).toContain('Vặn vòi')
+    expect(labels('lavabo', { ...world, water: { ...world.water, lavabo: true } })).toContain('Khóa vòi')
+    expect(labels('kitchen')).toContain('Vặn vòi')
+  })
+
+  test('the shower, toilet and light switch can be used', () => {
+    expect(labels('shower')).toEqual(['Bật vòi sen'])
+    expect(labels('toilet')).toEqual(['Đi vệ sinh'])
+    expect(labels('lightSwitch')).toEqual(['Tắt đèn'])
+    expect(labels('lightSwitch', { ...world, lightsOn: false })).toEqual(['Bật đèn'])
+  })
+
+  test('standing in the passage by the bathroom picks the bathroom door, not the front door', () => {
+    expect(nearestInteractable({ x: 2.62, z: 0.73 })?.id).toBe('bathDoor')
+  })
 })

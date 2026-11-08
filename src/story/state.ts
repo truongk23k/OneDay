@@ -50,6 +50,7 @@ export type Action =
   | { type: 'washDone' }
   | { type: 'search'; id: string }
   | { type: 'dress'; outfit: Outfit }
+  | { type: 'toilet' }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
 
@@ -111,6 +112,10 @@ export function reducer(s: StoryState, a: Action): StoryState {
       // Lần đầu mặc đồ tử tế thì thơm tho hơn; mặc đồ "thảm họa" thì không.
       const bonus = !s.tasks.dressed && !outfitVerdict(a.outfit, s.weather).disaster ? 15 : 0
       return { ...s, outfit: a.outfit, tasks: { ...s.tasks, dressed: true }, hygiene: clamp100(s.hygiene + bonus), overlay: null }
+    }
+    case 'toilet': {
+      const lines = S.story.toilet
+      return { ...s, minutes: s.minutes + 2, line: lines[Math.floor(s.minutes) % lines.length] }
     }
     case 'clearLine':
       return { ...s, line: null }
