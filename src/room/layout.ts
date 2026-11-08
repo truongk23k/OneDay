@@ -29,15 +29,15 @@ export const WALLS: Box[] = [
   box('kitchenWall', 0, 1.75, 1.7, 1.8, 1.4),
   box('kitchenPillar', 1.75, 1.95, 1.65, 1.85, 3.0),
   // Nhà vệ sinh sát cạnh cửa chính, kéo tới tường đông; cửa vào nằm trong lối đi.
-  box('bathWallW1', 2.95, 3.05, 0, 0.15, 3.0),
-  box('bathWallW2', 2.95, 3.05, 0.85, 1.7, 3.0),
+  box('bathWallW1', 2.95, 3.05, 0, 0.325, 3.0),
+  box('bathWallW2', 2.95, 3.05, 1.125, 1.7, 3.0),
   box('bathWallS', 3.05, 5.6, 1.45, 1.55, 3.0),
 ]
 
 // Ô khoét chỉ để vẽ; va chạm vẫn dùng nguyên tường.
 export const WINDOW: Opening = { wall: 'wallW', axis: 'z', min: 3.5, max: 4.3, minY: 1.35, maxY: 2.25 }
 
-// xà đơn màu đen ngang miệng lối đi, từ cột bếp sang tường cạnh tủ lạnh; cao khoảng 1.65 lần người để nhảy lên đu.
+// Xà đơn màu đen ngang miệng lối đi, từ cột bếp sang tường cạnh tủ lạnh; cao khoảng 1.65 lần người để nhảy lên đu.
 export const PULLUP_BAR = { x0: 1.95, x1: 2.95, y: 1.65 * CHARACTER_HEIGHT, z: 1.675, radius: 0.02 }
 
 const L = S.labels

@@ -29,8 +29,8 @@ function walk(route: Vec2[], start: Vec2 = { x: SPAWN.x, z: SPAWN.z }) {
 test('walks from spawn through the passage into the bathroom to the lavabo', () => {
   const { p, minClearance } = walk([
     { x: 2.45, z: 3.4 },
-    { x: 2.45, z: 0.5 },
-    { x: 3.2, z: 0.55 },
+    { x: 2.45, z: 0.75 },
+    { x: 3.2, z: 0.75 },
     { x: 3.75, z: 0.7 },
   ])
   expect(Math.hypot(p.x - 3.75, p.z - 0.7)).toBeLessThan(0.1)

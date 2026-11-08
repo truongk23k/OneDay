@@ -215,3 +215,12 @@ test('the pull-up bar hangs about 1.65 times the character height, just under th
   expect(PULLUP_BAR.y).toBeLessThan(get('door').height)
   expect(PULLUP_BAR.radius).toBeLessThanOrEqual(0.03)
 })
+
+test('the bathroom door is centred on the bathroom wall and about 0.8 m wide', () => {
+  const w1 = wall('bathWallW1')
+  const w2 = wall('bathWallW2')
+  const doorCentre = (w1.maxZ + w2.minZ) / 2
+  const bathCentre = wall('bathWallS').minZ / 2
+  expect(w2.minZ - w1.maxZ).toBeGreaterThanOrEqual(0.8 - 1e-9)
+  expect(doorCentre).toBeCloseTo(bathCentre, 2)
+})
