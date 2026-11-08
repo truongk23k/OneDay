@@ -4,6 +4,7 @@ import { isTouchDevice } from './device'
 import { Player } from './player/Player'
 import { Room } from './room/Room'
 import { S } from './strings'
+import { HelpPanel } from './ui/HelpPanel'
 import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
 
@@ -20,6 +21,7 @@ export default function App() {
       </Canvas>
       {isTouch && <TouchControls />}
       <div className="title">{S.title}</div>
+      <HelpPanel isTouch={isTouch} />
       <RotatePrompt />
     </>
   )
