@@ -58,6 +58,7 @@ export type Action =
   | { type: 'chatReply'; index: number }
   | { type: 'takeHelmets'; n: 1 | 2 }
   | { type: 'leave' }
+  | { type: 'say'; line: string }
   | { type: 'chatSeen' }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
@@ -160,6 +161,8 @@ export function reducer(s: StoryState, a: Action): StoryState {
     case 'leave':
       if (!s.tasks.keys) return { ...s, line: S.story.needKeys }
       return { ...s, phase: 'left', overlay: null, line: null }
+    case 'say':
+      return { ...s, line: a.line }
     case 'clearLine':
       return { ...s, line: null }
     case 'restart':

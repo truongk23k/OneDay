@@ -1,5 +1,6 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useWorld } from '../room/world'
 import { initialState } from '../story/state'
 import { useStory } from '../story/store'
 import { Checklist, Clock, InteractPrompt } from './Hud'
@@ -37,4 +38,18 @@ test('E runs the first option on desktop', async () => {
   render(<InteractPrompt targetId="lavabo" isTouch={false} />)
   await userEvent.keyboard('e')
   expect(useStory.getState().s.overlay).toBe('brush')
+})
+
+test('holding E does not repeat the action', () => {
+  render(<InteractPrompt targetId="toilet" isTouch={false} />)
+  fireEvent.keyDown(window, { code: 'KeyE' })
+  fireEvent.keyDown(window, { code: 'KeyE', repeat: true })
+  fireEvent.keyDown(window, { code: 'KeyE', repeat: true })
+  expect(useStory.getState().s.minutes).toBe(452)
+})
+
+test('restart also resets the world store', () => {
+  useWorld.getState().toggleLights()
+  act(() => useStory.getState().dispatch({ type: 'restart', seed: 5 }))
+  expect(useWorld.getState().lightsOn).toBe(true)
 })

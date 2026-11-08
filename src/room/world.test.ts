@@ -22,3 +22,21 @@ test('taps and lights toggle independently', () => {
   useWorld.getState().toggleLights()
   expect(useWorld.getState().lightsOn).toBe(false)
 })
+
+test('the door will not close on Anh standing in the doorway', () => {
+  expect(useWorld.getState().toggleDoor({ x: 3.1, z: 0.72 })).toBe(false)
+  expect(useWorld.getState().bathDoorOpen).toBe(true)
+  expect(useWorld.getState().toggleDoor({ x: 2.6, z: 0.72 })).toBe(true)
+  expect(useWorld.getState().bathDoorOpen).toBe(false)
+})
+
+test('reset puts the room back to morning: door open, taps off, lights on', () => {
+  const w = useWorld.getState()
+  w.toggleDoor({ x: 2.6, z: 0.72 })
+  w.toggleWater('shower')
+  w.toggleLights()
+  useWorld.getState().reset()
+  expect(useWorld.getState().bathDoorOpen).toBe(true)
+  expect(useWorld.getState().water).toEqual({ lavabo: false, sink: false, shower: false })
+  expect(useWorld.getState().lightsOn).toBe(true)
+})

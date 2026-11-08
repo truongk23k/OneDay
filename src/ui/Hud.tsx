@@ -54,7 +54,9 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
     const a = o.action
     if (a.type !== 'world') return dispatch(a)
     const w = useWorld.getState()
-    if (a.do === 'door') w.toggleDoor()
+    if (a.do === 'door') {
+      if (!w.toggleDoor(player)) dispatch({ type: 'say', line: S.story.doorBlocked })
+    }
     else if (a.do === 'lights') w.toggleLights()
     else w.toggleWater(a.do)
   }
@@ -63,6 +65,8 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
     if (!options.length) return
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'KeyE' && e.code !== 'Space') return
+      // Giữ phím không được lặp lại hành động (đi vệ sinh, ra khỏi phòng…).
+      if (e.repeat) return
       if (useGame.getState().paused || useStory.getState().s.overlay) return
       e.preventDefault()
       run(options[0])

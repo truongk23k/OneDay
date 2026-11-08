@@ -21,6 +21,7 @@ export const INTERACTABLES: Target[] = [
   { id: 'shelf', x: 5.2, z: 3.45 },
   { id: 'door', x: 2.45, z: 0.4 },
   { id: 'bathDoor', x: 2.62, z: 0.73 },
+  { id: 'bathDoorIn', x: 3.3, z: 0.73 },
   { id: 'shower', x: 3.75, z: 1.12 },
   { id: 'toilet', x: 5.15, z: 1.05 },
   { id: 'lightSwitch', x: 2.62, z: 1.42 },
@@ -61,7 +62,7 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
   if (id === 'kitchen') o.push(tap('sink', w))
   if (id === 'shower') o.push(tap('shower', w))
   if (id === 'toilet') o.push({ label: S.options.toilet, action: { type: 'toilet' } })
-  if (id === 'bathDoor') o.push({ label: w.bathDoorOpen ? S.options.closeDoor : S.options.openDoor, action: { type: 'world', do: 'door' } })
+  if (id === 'bathDoor' || id === 'bathDoorIn') o.push({ label: w.bathDoorOpen ? S.options.closeDoor : S.options.openDoor, action: { type: 'world', do: 'door' } })
   if (id === 'lightSwitch') o.push({ label: w.lightsOn ? S.options.lightsOff : S.options.lightsOn, action: { type: 'world', do: 'lights' } })
   if (id === 'wardrobe') o.push({ label: S.options.wardrobe, action: { type: 'open', overlay: 'wardrobe' } })
   if (id === 'door') {

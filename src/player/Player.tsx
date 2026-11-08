@@ -36,6 +36,12 @@ export function Player() {
   const state = useRef({ x: SPAWN.x, z: SPAWN.z, yaw: SPAWN.yaw, pitch: 0.45, facing: SPAWN.yaw })
   const gl = useThree((s) => s.gl)
   const outfit = useStory((st) => st.s.outfit)
+  const seed = useStory((st) => st.s.seed)
+
+  // Lượt chơi mới: Anh về chỗ cạnh giường, camera quay về hướng cửa.
+  useEffect(() => {
+    state.current = { x: SPAWN.x, z: SPAWN.z, yaw: SPAWN.yaw, pitch: 0.45, facing: SPAWN.yaw }
+  }, [seed])
   const motion = useRef<Motion>({ speed: 0 })
   // 0 = camera theo Anh, 1 = camera đứng trước tủ quần áo đang mở.
   const wardrobeCam = useRef(0)

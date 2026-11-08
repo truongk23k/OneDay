@@ -174,6 +174,7 @@ export const S = {
     helmets: 'Đã lấy mũ bảo hiểm 🪖',
     helmetOne: 'Lấy 1 mũ thôi… mong là Em có mũ 😬',
     needKeys: 'Chưa có chìa khóa xe thì đi kiểu gì 🔑',
+    doorBlocked: 'Đang đứng giữa cửa mà đóng gì 😅',
     toilet: ['Nhẹ cả người 😌', 'Xả nước… ào ào 🚽', 'Ngồi lướt điện thoại hơi lâu rồi đấy 📱'],
     keysNotHere: ['Không có ở đây…', 'Chỗ này cũng không…', 'Chìa khóa ơi mày trốn đâu rồi…', 'Hôm qua để đâu nhỉ…'],
   },

@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { createTouchRouter, input, isSprintDrag, joystickVector } from '../player/input'
 import { useStory } from '../story/store'
 
@@ -15,6 +15,17 @@ export function TouchControls() {
   const [joy, setJoy] = useState<Joy | null>(null)
   // Khi đang mở bảng (tủ đồ, điện thoại…) thì nhường chạm cho bảng và cảnh 3D.
   const busy = useStory((st) => st.s.overlay !== null || st.s.phase !== 'room')
+
+  // Lớp chạm biến mất thì sự kiện nhấc ngón không tới được: tự thả joystick và quên các ngón đang giữ.
+  useEffect(() => {
+    if (!busy) return
+    input.move = { x: 0, y: 0 }
+    input.sprint = false
+    origin.current = null
+    last.current.clear()
+    router.current = createTouchRouter()
+    setJoy(null)
+  }, [busy])
 
   const onDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse') return

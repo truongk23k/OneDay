@@ -81,3 +81,11 @@ describe('front door', () => {
     expect(actionsFor('door', both).map((o) => o.action)).toEqual([{ type: 'leave' }])
   })
 })
+
+describe('bathroom door from inside', () => {
+  test('inside the bathroom, by the doorway, the door can be used too', () => {
+    expect(nearestInteractable({ x: 3.3, z: 0.75 })?.id).toBe('bathDoorIn')
+    const world = { bathDoorOpen: false, water: { lavabo: false, sink: false, shower: false }, lightsOn: true }
+    expect(actionsFor('bathDoorIn', room(), world).map((o) => o.label)).toEqual(['Mở cửa'])
+  })
+})

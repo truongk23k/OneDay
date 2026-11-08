@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import { BRUSH_DONE, PLAQUE_COLS, PLAQUE_ROWS, brushAt, cleanFraction, newPlaque, type Plaque } from '../story/minigames'
 import { useStory } from '../story/store'
 import { S } from '../strings'
@@ -21,7 +21,9 @@ function draw(ctx: CanvasRenderingContext2D, p: Plaque) {
     for (let i = 0; i < teethPerRow; i++) {
       ctx.fillStyle = '#fbf8f0'
       ctx.beginPath()
-      ctx.roundRect(i * tw + 2, y0 + 2, tw - 4, (PLAQUE_ROWS / 2) * CELL - 4, 8)
+      // iOS 15 chưa có roundRect: vẽ răng vuông góc thay vì làm sập trang.
+      if (typeof ctx.roundRect === 'function') ctx.roundRect(i * tw + 2, y0 + 2, tw - 4, (PLAQUE_ROWS / 2) * CELL - 4, 8)
+      else ctx.rect(i * tw + 2, y0 + 2, tw - 4, (PLAQUE_ROWS / 2) * CELL - 4)
       ctx.fill()
     }
   }
@@ -45,16 +47,24 @@ export function BrushGame({ isTouch }: { isTouch: boolean }) {
   const dispatch = useStory((st) => st.dispatch)
   const [step, setStep] = useState<'pick' | 'scrub'>('pick')
   const [wrongPicked, setWrongPicked] = useState(false)
-  const plaque = useRef<Plaque>(newPlaque(seed))
+  const plaque = useRef<Plaque | null>(null)
+  if (plaque.current === null) plaque.current = newPlaque(seed)
   const [progress, setProgress] = useState(0)
-  const canvas = useRef<HTMLCanvasElement>(null)
   const scrubbing = useRef(false)
 
+  // Lượt chơi mới: quay lại bước chọn tuýp, mảng bám mới.
   useEffect(() => {
-    if (step !== 'scrub' || !canvas.current) return
-    const ctx = canvas.current.getContext('2d')
-    if (ctx) draw(ctx, plaque.current)
-  }, [step])
+    setStep('pick')
+    setWrongPicked(false)
+    setProgress(0)
+    plaque.current = newPlaque(seed)
+  }, [seed])
+
+  // Vẽ mỗi khi khung răng xuất hiện (kể cả khi đóng bảng rồi mở lại).
+  const canvasRef = useCallback((el: HTMLCanvasElement | null) => {
+    const ctx = el?.getContext('2d')
+    if (ctx && plaque.current) draw(ctx, plaque.current)
+  }, [])
 
   if (overlay !== 'brush') return null
 
@@ -78,10 +88,11 @@ export function BrushGame({ isTouch }: { isTouch: boolean }) {
     // Bỏ khe giữa hai hàm khi đổi sang tọa độ ô.
     if (py > (PLAQUE_ROWS / 2) * CELL + 24) py -= 24
     else if (py > (PLAQUE_ROWS / 2) * CELL) py = (PLAQUE_ROWS / 2) * CELL - 1
-    plaque.current = brushAt(plaque.current, px / CELL, py / CELL, 1.3)
+    const next = brushAt(plaque.current!, px / CELL, py / CELL, 1.3)
+    plaque.current = next
     const ctx = el.getContext('2d')
-    if (ctx) draw(ctx, plaque.current)
-    const f = cleanFraction(plaque.current)
+    if (ctx) draw(ctx, next)
+    const f = cleanFraction(next)
     setProgress(f)
     if (f >= BRUSH_DONE) dispatch({ type: 'brushDone' })
   }
@@ -110,7 +121,7 @@ export function BrushGame({ isTouch }: { isTouch: boolean }) {
           <>
             <p>{isTouch ? S.brush.scrubTouch : S.brush.scrubMouse}</p>
             <canvas
-              ref={canvas}
+              ref={canvasRef}
               className="teeth"
               width={W}
               height={H}
