@@ -318,25 +318,23 @@ function wardrobe(b: Box): Part[] {
 }
 
 function bed(b: Box): Part[] {
-  // Khung gỗ thấp, đệm dày 20 cm, chiếu trúc trải trên đệm.
+  // Khung gỗ thấp, đệm dày 20 cm, chiếu trúc trải trên đệm. Đầu giường áp tường đông, gối ở phía đó.
   const frameTop = 0.22
   const top = 0.42
   const p: Part[] = [
     box(b.minX, b.maxX, 0, frameTop, b.minZ, b.maxZ, C.wood),
-    box(b.minX + 0.04, b.maxX - 0.02, frameTop, top, b.minZ + 0.04, b.maxZ - 0.06, '#dfe6ee'),
-    box(b.minX + 0.035, b.maxX - 0.015, top - 0.03, top - 0.015, b.minZ + 0.035, b.maxZ - 0.055, '#b9c6d6'),
-    box(b.minX + 0.06, b.maxX - 0.04, top, top + 0.02, b.minZ + 0.06, b.maxZ - 0.08, C.bamboo),
-    // Đầu giường gỗ dọc tường nam + đệm đen tựa tường đông
-    box(b.minX, b.maxX, frameTop, 0.95, b.maxZ - 0.05, b.maxZ, C.wood),
-    box(b.maxX - 0.06, b.maxX, top, 0.8, b.maxZ - 1.0, b.maxZ - 0.05, '#222226'),
+    box(b.minX + 0.02, b.maxX - 0.06, frameTop, top, b.minZ + 0.04, b.maxZ - 0.04, '#dfe6ee'),
+    box(b.minX + 0.015, b.maxX - 0.055, top - 0.03, top - 0.015, b.minZ + 0.035, b.maxZ - 0.035, '#b9c6d6'),
+    box(b.minX + 0.04, b.maxX - 0.08, top, top + 0.02, b.minZ + 0.06, b.maxZ - 0.06, C.bamboo),
+    box(b.maxX - 0.05, b.maxX, frameTop, 0.95, b.minZ, b.maxZ, C.wood),
   ]
-  // Sọc chiếu trúc
-  for (let x = b.minX + 0.12; x < b.maxX - 0.06; x += 0.12) p.push(box(x, x + 0.01, top + 0.02, top + 0.025, b.minZ + 0.07, b.maxZ - 0.09, '#8a6538'))
-  // Gối + chăn
-  p.push(ico(b.minX + 0.7, top + 0.1, b.maxZ - 0.3, 0.22, C.pillowPink, [1.4, 0.45, 0.8]))
-  p.push(ico(b.minX + 1.5, top + 0.1, b.maxZ - 0.3, 0.22, C.pillowNavy, [1.4, 0.45, 0.8]))
-  p.push(ico(b.minX + 0.9, top + 0.14, b.minZ + 0.9, 0.42, C.blanketRed, [1.3, 0.35, 1.2]))
-  p.push(ico(b.minX + 1.6, top + 0.12, b.minZ + 1.2, 0.38, C.blanketLilac, [1.1, 0.32, 1.3]))
+  // Sọc chiếu trúc chạy dọc chiều dài giường (theo trục x)
+  for (let z = b.minZ + 0.12; z < b.maxZ - 0.06; z += 0.12) p.push(box(b.minX + 0.06, b.maxX - 0.1, top + 0.02, top + 0.025, z, z + 0.01, '#8a6538'))
+  // Gối sát đầu giường, chăn ở giữa và cuối giường
+  p.push(ico(b.maxX - 0.32, top + 0.1, b.minZ + 0.7, 0.22, C.pillowPink, [0.8, 0.45, 1.4]))
+  p.push(ico(b.maxX - 0.32, top + 0.1, b.minZ + 1.5, 0.22, C.pillowNavy, [0.8, 0.45, 1.4]))
+  p.push(ico(b.minX + 0.9, top + 0.14, b.minZ + 0.8, 0.42, C.blanketRed, [1.2, 0.35, 1.3]))
+  p.push(ico(b.minX + 1.2, top + 0.12, b.minZ + 1.6, 0.38, C.blanketLilac, [1.3, 0.32, 1.1]))
   return p
 }
 

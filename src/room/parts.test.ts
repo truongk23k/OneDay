@@ -61,3 +61,14 @@ test('the bathroom has a mirror above the lavabo and a shower on the opposite wa
   expect(showerHead).toBeDefined()
   expect(showerHead!.pos[2]).toBeGreaterThan(1.2)
 })
+
+test('the bed’s headboard is against the east wall and there is no black pad beside it', () => {
+  const bed = FURNITURE.find((f) => f.id === 'bed')!
+  const parts = furnitureParts(bed)
+  expect(parts.some((p) => p.color === '#222226')).toBe(false)
+  const tall = parts.filter((p) => partBounds(p).maxY > 0.8).map(partBounds)
+  expect(tall).toHaveLength(1)
+  expect(tall[0].maxX).toBeCloseTo(bed.maxX)
+  expect(tall[0].maxX - tall[0].minX).toBeLessThanOrEqual(0.06)
+  expect(tall[0].maxZ - tall[0].minZ).toBeGreaterThan(2)
+})
