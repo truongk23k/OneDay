@@ -1,5 +1,5 @@
 import { FURNITURE, ROOM } from './layout'
-import { buildRoomParts, furnitureParts, groupParts, partBounds } from './parts'
+import { FRIDGE_DOOR_OPEN, buildRoomParts, furnitureParts, groupParts, partBounds } from './parts'
 
 test('every furniture item is built from several low-poly parts', () => {
   for (const f of FURNITURE) {
@@ -71,4 +71,14 @@ test('the bed’s headboard is against the east wall and there is no black pad b
   expect(tall[0].maxX).toBeCloseTo(bed.maxX)
   expect(tall[0].maxX - tall[0].minX).toBeLessThanOrEqual(0.06)
   expect(tall[0].maxZ - tall[0].minZ).toBeGreaterThan(2)
+})
+
+test('the open fridge door stays clear of the desk', () => {
+  const fridge = FURNITURE.find((f) => f.id === 'fridge')!
+  const desk = FURNITURE.find((f) => f.id === 'deskMine')!
+  const w = fridge.maxX - fridge.minX - 0.02
+  const angle = FRIDGE_DOOR_OPEN
+  // Mép tự do của cánh khi mở (bản lề ở mép phải, mặt trước tủ).
+  const freeX = fridge.maxX - 0.01 - Math.cos(angle) * w
+  expect(freeX).toBeLessThanOrEqual(desk.minX)
 })

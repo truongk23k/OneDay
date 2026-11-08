@@ -9,7 +9,7 @@ export type Furniture = Box & { label: string }
 export const ROOM = { width: 5.6, depth: 6.4, height: 3.0 }
 
 // Nhân vật cao ngang tủ lạnh.
-export const CHARACTER_HEIGHT = 1.3
+export const CHARACTER_HEIGHT = 1.22
 
 const box = (id: string, minX: number, maxX: number, minZ: number, maxZ: number, height: number): Box => ({
   id,

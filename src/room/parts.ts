@@ -556,6 +556,9 @@ export function buildRoomParts(openings: Opening[] = []): Part[] {
   return [...wallParts(openings), ...FURNITURE.flatMap(furnitureParts), ...windowParts(), ...decorParts(), ...fixtureParts()]
 }
 
+// Góc mở cánh tủ lạnh (~86°): cánh dừng ngay mép bàn học bên cạnh.
+export const FRIDGE_DOOR_OPEN = 1.5
+
 // Cánh dưới tủ lạnh của Anh theo tọa độ bản lề (mép phải, x = maxX): dài w về phía -x.
 export function fridgeDoorParts(b: Box): Part[] {
   const split = b.height * 0.7

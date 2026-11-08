@@ -8,7 +8,7 @@ import { Batched, PartsMesh } from './Batched'
 import { BATH_DOOR, BATH_LOFT, FURNITURE, ROOM, WINDOW } from './layout'
 import type { Opening } from './openings'
 import { useStory } from '../story/store'
-import { bathDoorLeafParts, buildRoomParts, fridgeDoorParts, helmetParts } from './parts'
+import { FRIDGE_DOOR_OPEN, bathDoorLeafParts, buildRoomParts, fridgeDoorParts, helmetParts } from './parts'
 import { useWorld } from './world'
 
 const OPENINGS: Opening[] = [WINDOW, BATH_DOOR, BATH_LOFT]
@@ -75,7 +75,7 @@ function FridgeDoor() {
   const parts = useMemo(() => fridgeDoorParts(f), [f])
   useFrame((_, dt) => {
     if (!door.current) return
-    const target = useWorld.getState().fridgeOpen ? 1.75 : 0
+    const target = useWorld.getState().fridgeOpen ? FRIDGE_DOOR_OPEN : 0
     door.current.rotation.y += (target - door.current.rotation.y) * Math.min(1, dt * 6)
   })
   return (
