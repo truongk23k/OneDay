@@ -1,6 +1,6 @@
 import { Html } from '@react-three/drei'
 import type { CSSProperties } from 'react'
-import { FURNITURE, HELMETS, KITCHEN_PASS, ROOM, WALLS, WINDOW, type Box } from './layout'
+import { FURNITURE, HELMETS, KITCHEN_BEAM, ROOM, WALLS, WINDOW, type Box } from './layout'
 import { splitWall, type Block, type Opening } from './openings'
 
 const COLORS: Record<string, string> = {
@@ -16,7 +16,7 @@ const COLORS: Record<string, string> = {
 }
 
 const WHITE = '#f7f7f5'
-const OPENINGS: Opening[] = [WINDOW, KITCHEN_PASS]
+const OPENINGS: Opening[] = [WINDOW]
 
 function Block3({ b, color }: { b: Block; color: string }) {
   return (
@@ -41,7 +41,7 @@ function Wall({ w }: { w: Box }) {
   )
 }
 
-// Cửa sổ tường tây: khung trắng, song sắt trắng, kính trong; nhìn ra trời và nhà hàng xóm.
+// Cửa sổ tường tây: song sắt trắng phía trong, hai cánh kính lùa khung trắng; bên ngoài sáng trắng.
 function Window() {
   const { min, max, minY, maxY } = WINDOW
   const x0 = -0.1
@@ -61,24 +61,40 @@ function Window() {
     bars.push({ minX: x0 + 0.02, maxX: x1, minY: y - bar / 2, maxY: y + bar / 2, minZ: min, maxZ: max })
   }
   const midZ = (min + max) / 2
+  // Hai cánh lùa chồng lên nhau 5 cm ở giữa, mỗi cánh nằm trên một ray khác nhau.
+  const sashes = [
+    { x: -0.085, z0: min + t, z1: midZ + 0.025 },
+    { x: -0.055, z0: midZ - 0.025, z1: max - t },
+  ]
+  const f = 0.045
+  for (const s of sashes) {
+    const sx0 = s.x - 0.012
+    const sx1 = s.x + 0.012
+    bars.push(
+      { minX: sx0, maxX: sx1, minY: minY + t, maxY: minY + t + f, minZ: s.z0, maxZ: s.z1 },
+      { minX: sx0, maxX: sx1, minY: maxY - t - f, maxY: maxY - t, minZ: s.z0, maxZ: s.z1 },
+      { minX: sx0, maxX: sx1, minY: minY + t, maxY: maxY - t, minZ: s.z0, maxZ: s.z0 + f },
+      { minX: sx0, maxX: sx1, minY: minY + t, maxY: maxY - t, minZ: s.z1 - f, maxZ: s.z1 },
+    )
+  }
   return (
     <group>
       {bars.map((b, i) => (
         <Block3 key={i} b={b} color={WHITE} />
       ))}
-      <mesh position={[-0.06, (minY + maxY) / 2, midZ]} rotation-y={Math.PI / 2}>
-        <planeGeometry args={[max - min, maxY - minY]} />
-        <meshStandardMaterial color="#dff1ff" transparent opacity={0.15} />
-      </mesh>
+      {sashes.map((s) => (
+        <mesh key={s.x} position={[s.x, (minY + maxY) / 2, (s.z0 + s.z1) / 2]} rotation-y={Math.PI / 2}>
+          <planeGeometry args={[s.z1 - s.z0 - 2 * f, maxY - minY - 2 * t - 2 * f]} />
+          <meshStandardMaterial color="#e8f4ff" transparent opacity={0.18} />
+        </mesh>
+      ))}
       {/* Điều hòa ngay trên cửa sổ */}
       <Block3 b={{ minX: 0, maxX: 0.24, minY: 2.45, maxY: 2.75, minZ: midZ - 0.4, maxZ: midZ + 0.4 }} color="#ffffff" />
-      {/* Bên ngoài: trời + hai khối nhà hàng xóm */}
-      <mesh position={[-8, 3, midZ]} rotation-y={Math.PI / 2}>
-        <planeGeometry args={[30, 16]} />
-        <meshBasicMaterial color="#cfe6ff" />
+      {/* Bên ngoài: ánh sáng ban ngày trắng xóa như trong ảnh */}
+      <mesh position={[-1.5, 2, midZ]} rotation-y={Math.PI / 2}>
+        <planeGeometry args={[12, 10]} />
+        <meshBasicMaterial color="#ffffff" />
       </mesh>
-      <Block3 b={{ minX: -3.2, maxX: -2.2, minY: -6, maxY: 2.6, minZ: midZ - 3, maxZ: midZ - 0.2 }} color="#e2d6c6" />
-      <Block3 b={{ minX: -4.5, maxX: -3.4, minY: -6, maxY: 4.5, minZ: midZ + 0.2, maxZ: midZ + 3.5 }} color="#d3c2ae" />
     </group>
   )
 }
@@ -114,6 +130,7 @@ export function Room() {
         <Block3 key={f.id} b={toBlock(f)} color={COLORS[f.id] ?? COLORS.furniture} />
       ))}
       <Window />
+      <Block3 b={KITCHEN_BEAM} color={COLORS.wall} />
 
       {/* 2 mũ bảo hiểm treo trên cửa */}
       {HELMETS.map((h) => (

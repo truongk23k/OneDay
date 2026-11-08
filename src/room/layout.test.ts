@@ -1,4 +1,4 @@
-import { COLLIDERS, FURNITURE, HELMETS, KITCHEN_PASS, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
+import { COLLIDERS, FURNITURE, HELMETS, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
 
 const R = 0.25
 
@@ -93,7 +93,7 @@ test('a wall separates the kitchen from the roommate desk', () => {
 })
 
 test('the passage to the main door is narrow, about 1 m', () => {
-  const width = wall('bathWallW1').minX - wall('kitchenWall').maxX
+  const width = wall('bathWallW1').minX - wall('kitchenPillar').maxX
   expect(width).toBeGreaterThanOrEqual(0.9)
   expect(width).toBeLessThanOrEqual(1.1)
 })
@@ -113,9 +113,13 @@ test('the kitchen L runs along the west wall and the partition wall', () => {
   expect(FURNITURE.some((f) => f.id === 'kitchenN')).toBe(false)
 })
 
-test('the kitchen wall has a high pass-through opening', () => {
-  expect(KITCHEN_PASS.wall).toBe('kitchenWall')
-  expect(KITCHEN_PASS.minY).toBeGreaterThanOrEqual(1.4)
+test('the kitchen partition is a low wall, open above, ending in a full-height pillar at the passage', () => {
+  const low = wall('kitchenWall')
+  const pillar = wall('kitchenPillar')
+  expect(low.height).toBeLessThanOrEqual(1.5)
+  expect(pillar.height).toBe(ROOM.height)
+  expect(pillar.minX).toBeCloseTo(low.maxX)
+  expect(pillar.maxX - pillar.minX).toBeLessThanOrEqual(0.25)
 })
 
 test('my desk is big: about 2 m long and 0.9 m deep', () => {
@@ -181,4 +185,10 @@ test('both helmets hang on the door, evenly spaced around its centre', () => {
   }
   expect(HELMETS[0].x + HELMETS[1].x).toBeCloseTo(2 * centre)
   expect(HELMETS[0].y).toBeCloseTo(HELMETS[1].y)
+})
+
+test('the shelf is 2/3 as wide as the mirror', () => {
+  const s = get('shelf')
+  const m = get('mirror')
+  expect(s.maxZ - s.minZ).toBeCloseTo(((m.maxZ - m.minZ) * 2) / 3, 2)
 })
