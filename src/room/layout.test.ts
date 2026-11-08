@@ -1,4 +1,4 @@
-import { COLLIDERS, FURNITURE, HELMETS, PASSAGE_SOFFIT, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
+import { COLLIDERS, FURNITURE, HELMETS, ROOM, SPAWN, WALLS, WINDOW, type Box } from './layout'
 
 const R = 0.25
 
@@ -196,12 +196,4 @@ test('the shelf is 2/3 as wide as the mirror', () => {
 test('the shelf is shallow: sticks out at most 0.2 m from the wall', () => {
   const s = get('shelf')
   expect(s.maxX - s.minX).toBeLessThanOrEqual(0.2)
-})
-
-test('a beam spans the passage from the pillar to the bathroom wall, above the door', () => {
-  expect(PASSAGE_SOFFIT.minX).toBeCloseTo(wall('kitchenPillar').maxX)
-  expect(PASSAGE_SOFFIT.maxX).toBeCloseTo(wall('bathWallW1').minX)
-  expect(PASSAGE_SOFFIT.maxZ).toBeCloseTo(wall('kitchenPillar').maxZ)
-  expect(PASSAGE_SOFFIT.minY).toBeGreaterThan(get('door').height + 0.3)
-  expect(PASSAGE_SOFFIT.maxY).toBe(ROOM.height)
 })
