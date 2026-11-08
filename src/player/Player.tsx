@@ -13,6 +13,7 @@ import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
 import { poseFor, type Pose } from './pose'
+import { useKeys } from './useKeys'
 
 const RADIUS = 0.25
 const SPEED = 2.2
@@ -72,22 +73,7 @@ export function Player() {
   const wasSitting = useRef(false)
   const lastSnap = useRef<(typeof SNAP)[Pose] | null>(null)
 
-  useEffect(() => {
-    const onDown = (e: KeyboardEvent) => keys.down(e.code)
-    const onUp = (e: KeyboardEvent) => keys.up(e.code)
-    const onBlur = () => keys.clear()
-    const onVisibility = () => document.hidden && keys.clear()
-    window.addEventListener('keydown', onDown)
-    window.addEventListener('keyup', onUp)
-    window.addEventListener('blur', onBlur)
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => {
-      window.removeEventListener('keydown', onDown)
-      window.removeEventListener('keyup', onUp)
-      window.removeEventListener('blur', onBlur)
-      document.removeEventListener('visibilitychange', onVisibility)
-    }
-  }, [])
+  useKeys()
 
   // Chuột: giữ nút trái và kéo để xoay camera. Cảm ứng do TouchControls xử lý.
   useEffect(() => {

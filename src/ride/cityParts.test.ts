@@ -34,3 +34,20 @@ test('nothing tall stands on the roadway', () => {
     expect(onRoad(cx, cz), JSON.stringify(p)).toBe(false)
   }
 })
+
+test('the outer edge of the map is lined with houses, not bare ground', () => {
+  const b = cityBounds()
+  const covered = (x: number, z: number) =>
+    parts.some((p) => {
+      const pb = partBounds(p)
+      return pb.maxY > 6 && x > pb.minX && x < pb.maxX && z > pb.minZ && z < pb.maxZ
+    })
+  for (const x of [60, 180, 300]) {
+    expect(covered(x, b.maxZ + 2), `south ${x}`).toBe(true)
+    expect(covered(x, b.minZ - 2), `north ${x}`).toBe(true)
+  }
+  for (const z of [-50, -150]) {
+    expect(covered(b.minX - 2, z), `west ${z}`).toBe(true)
+    expect(covered(b.maxX + 2, z), `east ${z}`).toBe(true)
+  }
+})

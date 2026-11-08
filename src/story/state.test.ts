@@ -164,6 +164,11 @@ describe('street clock and stages', () => {
     expect(reducer(street(), { type: 'tick', realDt: 60 }).minutes).toBeCloseTo(450 + STREET_SPEED)
   })
 
+  test('the clock stops once Anh reaches the office', () => {
+    const s = reducer({ ...street(), stage: 'done', minutes: 506 }, { type: 'tick', realDt: 30 })
+    expect(s.minutes).toBe(506)
+  })
+
   test('Em does not text while Anh is riding', () => {
     const s = reducer({ ...street(), minutes: 452.9 }, { type: 'tick', realDt: 10 })
     expect(s.chat.log).toHaveLength(0)

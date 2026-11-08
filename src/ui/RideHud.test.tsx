@@ -1,0 +1,57 @@
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { newBike } from '../ride/bike'
+import { LIGHTS } from '../ride/city'
+import { rideInput, useRide } from '../ride/store'
+import { lightState } from '../ride/traffic'
+import { initialState } from '../story/state'
+import { useStory } from '../story/store'
+import { RideHud } from './RideHud'
+
+beforeEach(() => {
+  useStory.setState({ s: { ...initialState(1), phase: 'street', stage: 'toEm', minutes: 480 } })
+  useRide.getState().reset()
+  Object.assign(rideInput, { throttle: 0, brake: 0, steer: 0 })
+})
+
+test('shows the clock and where to go next', () => {
+  render(<RideHud isTouch={false} />)
+  expect(screen.getByText('8:00')).toBeVisible()
+  expect(screen.getByText(/Nhà Em/)).toBeVisible()
+})
+
+test('touch pedals: holding Ga and ▶ together, releasing each', () => {
+  render(<RideHud isTouch={true} />)
+  const gas = screen.getByRole('button', { name: 'Ga' })
+  const right = screen.getByRole('button', { name: 'Rẽ phải' })
+  fireEvent.pointerDown(gas, { pointerId: 1 })
+  fireEvent.pointerDown(right, { pointerId: 2 })
+  expect(rideInput.throttle).toBe(1)
+  expect(rideInput.steer).toBe(1)
+  fireEvent.pointerUp(right, { pointerId: 2 })
+  expect(rideInput.steer).toBe(0)
+  expect(rideInput.throttle).toBe(1)
+  fireEvent.pointerUp(gas, { pointerId: 1 })
+  expect(rideInput.throttle).toBe(0)
+})
+
+test('Em’s mood heart shows only while she rides', () => {
+  const { rerender } = render(<RideHud isTouch={false} />)
+  expect(screen.queryByLabelText('Tâm trạng Em')).toBeNull()
+  act(() => useStory.setState({ s: { ...useStory.getState().s, stage: 'withEm' } }))
+  rerender(<RideHud isTouch={false} />)
+  expect(screen.getByLabelText('Tâm trạng Em')).toBeVisible()
+})
+
+test('warns about the light at the next crossing', () => {
+  const l = LIGHTS[2]
+  let time = 0
+  while (lightState(2, time, 'x') !== 'red') time += 0.1
+  useRide.setState({ bike: newBike(l.x - 20, l.z + 2, -Math.PI / 2), time })
+  render(<RideHud isTouch={false} />)
+  expect(screen.getByText('Đèn đỏ')).toBeVisible()
+})
+
+test('no light warning on an open road', () => {
+  render(<RideHud isTouch={false} />)
+  expect(screen.queryByText(/^Đèn /)).toBeNull()
+})

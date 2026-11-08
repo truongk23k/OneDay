@@ -11,7 +11,15 @@ const HAIR = '#18161a'
 
 export type Motion = { speed: number; pose?: Pose }
 
-type Props = { top: string; bottom: string; shoes: string; motion?: MutableRefObject<Motion> }
+type Props = {
+  top: string
+  bottom: string
+  shoes: string
+  motion?: MutableRefObject<Motion>
+  // 'em': tóc dài gợn sóng, quần dài công sở. helmet: đội mũ bảo hiểm nửa đầu màu đen.
+  variant?: 'anh' | 'em'
+  helmet?: boolean
+}
 
 const B = (size: V3, pos: V3, color: string, rot?: V3): Part => ({ kind: 'box', size, pos, color, rot })
 const Cy = (rTop: number, rBottom: number, h: number, pos: V3, color: string, seg = 8, rot?: V3): Part => ({
@@ -28,7 +36,8 @@ const I = (r: number, pos: V3, color: string, scale?: V3): Part => ({ kind: 'ico
 
 // Mỗi bộ phận là một lưới gộp (vài lệnh vẽ cho cả nhân vật); tọa độ tính từ khớp xoay của bộ phận đó.
 // Dáng gầy, nhỏ, hơi có cơ bắp: vai rộng hơn eo, bắp tay và bắp vai nổi nhẹ.
-function legParts(bottom: string, shoes: string): Part[] {
+function legParts(bottom: string, shoes: string, longPants = false): Part[] {
+  if (longPants) return [Cy(0.07, 0.052, 0.46, [0, -0.23, 0], bottom), B([0.08, 0.05, 0.16], [0, -0.475, -0.02], shoes)]
   return [
     Cy(0.074, 0.068, 0.22, [0, -0.12, 0], bottom),
     Cy(0.046, 0.04, 0.26, [0, -0.33, 0], SKIN, 7),
@@ -82,9 +91,24 @@ const HEAD_PARTS: Part[] = [
   I(0.035, [0.155, -0.005, 0], SKIN, [0.5, 1, 0.8]),
 ]
 
+// Em: tóc dài gợn sóng nâu đen phủ xuống vai, má hồng.
+const EM_HAIR = '#3a2a22'
+const HEAD_EM: Part[] = [
+  ...HEAD_PARTS.filter((p) => p.color !== HAIR),
+  I(0.162, [0, 0.04, 0.02], EM_HAIR, [1.08, 0.82, 1.08]),
+  B([0.3, 0.42, 0.1], [0, -0.13, 0.1], EM_HAIR),
+  I(0.07, [-0.15, -0.12, 0.02], EM_HAIR, [0.6, 1.8, 0.9]),
+  I(0.07, [0.15, -0.12, 0.02], EM_HAIR, [0.6, 1.8, 0.9]),
+  I(0.025, [-0.085, -0.04, -0.13], '#f2a7b6', [1, 0.6, 0.4]),
+  I(0.025, [0.085, -0.04, -0.13], '#f2a7b6', [1, 0.6, 0.4]),
+]
+
+// Mũ bảo hiểm nửa đầu màu đen (gắn lên đầu).
+const HELMET: Part[] = [I(0.175, [0, 0.07, 0.01], '#141416', [1.05, 0.72, 1.08]), B([0.2, 0.02, 0.06], [0, 0.0, -0.17], '#141416')]
+
 // Nhân vật Anh low-poly (mặt hướng về -z), cao CHARACTER_HEIGHT. Tay chân vung theo tốc độ đi,
 // người nhún nhẹ mỗi bước, đứng yên thì thở.
-export function Character({ top, bottom, shoes, motion }: Props) {
+export function Character({ top, bottom, shoes, motion, variant = 'anh', helmet = false }: Props) {
   const k = CHARACTER_HEIGHT / 1.3
   const root = useRef<Group>(null)
   const torso = useRef<Group>(null)
@@ -99,7 +123,8 @@ export function Character({ top, bottom, shoes, motion }: Props) {
   const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, armLZ: 0, head: 0, rootY: 0, tilt: 0, armScale: 1, sway: 0, twist: 0 })
   const spin = useRef(0)
 
-  const leg = useMemo(() => legParts(bottom, shoes), [bottom, shoes])
+  const leg = useMemo(() => legParts(bottom, shoes, variant === 'em'), [bottom, shoes, variant])
+  const headParts = useMemo(() => [...(variant === 'em' ? HEAD_EM : HEAD_PARTS), ...(helmet ? HELMET : [])], [variant, helmet])
   const armLeft = useMemo(() => armParts(-1, top), [top])
   const armRight = useMemo(() => armParts(1, top), [top])
   const body = useMemo(() => torsoParts(top, bottom), [top, bottom])
@@ -181,6 +206,14 @@ export function Character({ top, bottom, shoes, motion }: Props) {
         // Tay phải khuấy nồi theo vòng tròn, tay trái giữ quai nồi.
         tgt = { ...still, legL: 0, legR: 0, armL: 1.0, armR: 1.25 + Math.sin(t * 7) * 0.15, armRZ: Math.cos(t * 7) * 0.25, head: 0.3, rootY: 0 }
         break
+      case 'ride':
+        // Ngồi trên xe, hai tay cầm ghi đông.
+        tgt = { ...still, legL: 1.25, legR: 1.25, armL: 1.2, armR: 1.2, armLZ: 0.12, armRZ: -0.12, head: 0.05, rootY: 0 }
+        break
+      case 'pillion':
+        // Ngồi sau, tay ôm eo người lái.
+        tgt = { ...still, legL: 1.3, legR: 1.3, armL: 0.75, armR: 0.75, armLZ: 0.45, armRZ: -0.45, head: 0.08, rootY: 0 }
+        break
       case 'phone':
         tgt = { ...still, legL: 0, legR: 0, armL: 0.9, armR: 1.25, armRZ: 0.35, armLZ: -0.25, head: 0.4, rootY: 0 }
         break
@@ -236,7 +269,7 @@ export function Character({ top, bottom, shoes, motion }: Props) {
             <PartsMesh parts={armRight} />
           </group>
           <group ref={head} position={[0, 0.63, 0]}>
-            <PartsMesh parts={HEAD_PARTS} />
+            <PartsMesh parts={headParts} />
           </group>
         </group>
       </group>

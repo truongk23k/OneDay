@@ -4,7 +4,7 @@ import { chatReply, chatSeen, chatTick, newChat, type ChatState } from './chat'
 import { HINTS, outfitVerdict } from './outfit'
 import { mulberry32, pick } from './rng'
 
-export type Phase = 'alarm' | 'room' | 'street' | 'left' | 'overslept'
+export type Phase = 'alarm' | 'room' | 'street' | 'overslept'
 // Ngoài đường: đi đón Em (Màn 3) → chở Em đi làm (Màn 4) → nước rút một mình (Màn 5) → tới công ty.
 export type Stage = 'toEm' | 'withEm' | 'sprint' | 'done'
 const STAGE_ORDER: Stage[] = ['toEm', 'withEm', 'sprint', 'done']
@@ -123,7 +123,7 @@ export function reducer(s: StoryState, a: Action): StoryState {
       return { ...s, minutes, snoozes: s.snoozes + 1, line, phase: minutes >= OVERSLEEP_AT ? 'overslept' : 'alarm' }
     }
     case 'tick': {
-      if (s.phase === 'street') return { ...s, minutes: advance(s.minutes, a.realDt, STREET_SPEED) }
+      if (s.phase === 'street') return s.stage === 'done' ? s : { ...s, minutes: advance(s.minutes, a.realDt, STREET_SPEED) }
       if (s.phase !== 'room') return s
       const minutes = advance(s.minutes, a.realDt)
       const { chat, moodDelta } = chatTick(s.chat, minutes, hintText(s))

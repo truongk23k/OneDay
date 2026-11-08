@@ -1,3 +1,4 @@
+import { pickEnding } from '../ride/endings'
 import { format } from '../story/clock'
 import type { Tasks } from '../story/state'
 import { newSeed, useStory } from '../story/store'
@@ -5,32 +6,38 @@ import { S } from '../strings'
 
 const TASK_KEYS: (keyof Tasks)[] = ['brushed', 'washed', 'dressed', 'texted', 'keys', 'helmets']
 
-// Thẻ kết thúc: ngủ quên, hoặc tổng kết buổi sáng khi đã ra khỏi phòng.
+// Thẻ kết thúc: ngủ quên, hoặc tới công ty (kết thúc theo pickEnding).
 export function EndCard() {
   const s = useStory((st) => st.s)
   const dispatch = useStory((st) => st.dispatch)
-  if (s.phase !== 'overslept' && s.phase !== 'left' && s.phase !== 'street') return null
+  const arrived = s.phase === 'street' && s.stage === 'done'
+  if (s.phase !== 'overslept' && !arrived) return null
+  const ending = pickEnding(s)
+  const copy = S.endings[ending.id]
   const restart = () => dispatch({ type: 'restart', seed: newSeed() })
   return (
     <div className="overlay-backdrop">
       <div className="card end-card">
-        {s.phase === 'street' ? (
+        <h2>{copy.title}</h2>
+        {arrived && (
+          <p className="end-arrived">
+            {S.endings.arrived} <span className="end-time">{format(s.minutes)}</span>
+          </p>
+        )}
+        <p>{copy.body}</p>
+        {ending.emText && (
+          <div className="end-bubble">
+            <span className="end-bubble-name">{S.chat.contact}</span>
+            <span>{S.endings.emText}</span>
+          </div>
+        )}
+        {ending.also.map((id) => (
+          <p key={id} className="end-also">
+            + {S.endings[id].title}
+          </p>
+        ))}
+        {arrived && (
           <>
-            <h2>
-              {S.end.leftTitle} <span className="end-time">{format(s.minutes)}</span>
-            </h2>
-            <p>{S.end.leftNote}</p>
-          </>
-        ) : s.phase === 'overslept' ? (
-          <>
-            <h2>{S.end.oversleptTitle}</h2>
-            <p>{S.end.oversleptBody}</p>
-          </>
-        ) : (
-          <>
-            <h2>
-              {S.end.leftTitle} <span className="end-time">{format(s.minutes)}</span>
-            </h2>
             <div className="stats">
               <div>
                 {S.end.hygiene} <strong>{Math.round(s.hygiene)}</strong>
@@ -50,7 +57,6 @@ export function EndCard() {
                 )
               })}
             </ul>
-            <p>{S.end.leftNote}</p>
           </>
         )}
         <button className="btn btn-primary btn-block" onClick={restart}>

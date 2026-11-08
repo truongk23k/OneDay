@@ -17,6 +17,8 @@ export type Pose =
   | 'pee'
   | 'poop'
   | 'cook'
+  | 'ride'
+  | 'pillion'
   | 'danceTiktok'
   | 'danceHips'
   | 'danceSpin'

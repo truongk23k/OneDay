@@ -103,27 +103,53 @@ function tubeHouse(p: Part[], e: Edge, t0: number, t1: number, depth: number, h:
   }
 }
 
+// Một dãy nhà ống san sát dọc một mép.
+function houseRow(p: Part[], e: Edge, depth: number, rnd: () => number) {
+  const along = e.x0 === e.x1 ? 'z' : 'x'
+  const start = along === 'x' ? e.x0 : e.z0
+  const end = along === 'x' ? e.x1 : e.z1
+  for (let t = start; t < end - 2; ) {
+    const w = Math.min(end - t, 3.8 + rnd() * 1.6)
+    const h = 7 + Math.floor(rnd() * 3) * 3.2 + rnd() * 1.2
+    const color = FACADES[Math.floor(rnd() * FACADES.length)]
+    // Nhà Em: màu hồng nổi bật, ngay trước chỗ hẹn đón.
+    const mid = t + w / 2
+    const em = along === 'x' && Math.abs(mid - MARKERS.emHouse.x) < 2.6 && Math.abs(e.z0 - MARKERS.emHouse.z) < 8
+    tubeHouse(p, e, t, t + w, depth, h, color, rnd, em ? '#f4a6c0' : undefined)
+    t += w
+  }
+}
+
 function buildings(p: Part[], blocks: Box[], rnd: () => number) {
   for (const b of blocks) {
     const thin = Math.min(b.maxX - b.minX, b.maxZ - b.minZ)
     const depth = Math.min(10, thin / 2)
     p.push(box(b.minX + depth * 0.5, b.maxX - depth * 0.5, 0, 6, b.minZ + depth * 0.5, b.maxZ - depth * 0.5, ROOF))
-    for (const e of edgesOf(b)) {
-      const along = e.x0 === e.x1 ? 'z' : 'x'
-      const start = along === 'x' ? e.x0 : e.z0
-      const end = along === 'x' ? e.x1 : e.z1
-      for (let t = start; t < end - 2; ) {
-        const w = Math.min(end - t, 3.8 + rnd() * 1.6)
-        const h = 7 + Math.floor(rnd() * 3) * 3.2 + rnd() * 1.2
-        const color = FACADES[Math.floor(rnd() * FACADES.length)]
-        // Nhà Em: màu hồng nổi bật, ngay trước chỗ hẹn đón.
-        const mid = t + w / 2
-        const em = along === 'x' && Math.abs(mid - MARKERS.emHouse.x) < 2.6 && Math.abs(e.z0 - MARKERS.emHouse.z) < 8
-        tubeHouse(p, e, t, t + w, depth, h, color, rnd, em ? '#f4a6c0' : undefined)
-        t += w
-      }
-    }
+    for (const e of edgesOf(b)) houseRow(p, e, depth, rnd)
   }
+}
+
+// Bên ngoài các đường vành đai: vỉa hè + dãy nhà quay mặt vào phố, để mép bản đồ không trơ đất trống.
+function outerRows(p: Part[], rnd: () => number) {
+  const b = cityBounds()
+  const d = 10
+  const zS = ROADS_Z[0] + ROAD_HALF
+  const zN = ROADS_Z[ROADS_Z.length - 1] - ROAD_HALF
+  const xW = ROADS_X[0] - ROAD_HALF
+  const xE = ROADS_X[ROADS_X.length - 1] + ROAD_HALF
+  p.push(
+    box(b.minX, b.maxX, 0, 0.12, zS, b.maxZ, PAVEMENT),
+    box(b.minX, b.maxX, 0, 0.12, b.minZ, zN, PAVEMENT),
+    box(b.minX, xW, 0, 0.12, zN, zS, PAVEMENT),
+    box(xE, b.maxX, 0, 0.12, zN, zS, PAVEMENT),
+  )
+  const edges: Edge[] = [
+    { x0: b.minX - d, z0: b.maxZ, x1: b.maxX + d, z1: b.maxZ, out: [0, -1] },
+    { x0: b.minX - d, z0: b.minZ, x1: b.maxX + d, z1: b.minZ, out: [0, 1] },
+    { x0: b.minX, z0: b.minZ, x1: b.minX, z1: b.maxZ, out: [1, 0] },
+    { x0: b.maxX, z0: b.minZ, x1: b.maxX, z1: b.maxZ, out: [-1, 0] },
+  ]
+  for (const e of edges) houseRow(p, e, d, rnd)
 }
 
 // Văn phòng của Em và công ty phần mềm của Anh: nhà cao, kính xanh.
@@ -209,5 +235,6 @@ export function buildCityParts(): Part[] {
   roadworks(p)
   lightPoles(p)
   streetLife(p)
+  outerRows(p, rnd)
   return p
 }

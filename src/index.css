@@ -1069,3 +1069,222 @@ body {
   font-size: 15px;
   white-space: nowrap;
 }
+
+/* ---------- HUD chạy xe ---------- */
+.ride-nav {
+  position: absolute;
+  z-index: 30;
+  top: max(34px, calc(env(safe-area-inset-top) + 26px));
+  left: max(12px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, 0.7);
+  pointer-events: none;
+}
+
+.ride-arrow {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffd23f;
+  color: #1d1f24;
+  font-size: 18px;
+  transition: transform 0.1s linear;
+}
+
+.ride-stop {
+  font-weight: 700;
+}
+
+.ride-dist {
+  font-size: 12px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.ride-stop-hint {
+  position: absolute;
+  z-index: 30;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -140%);
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(255, 210, 63, 0.92);
+  color: #1d1f24;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.ride-mood {
+  position: absolute;
+  z-index: 30;
+  top: max(92px, calc(env(safe-area-inset-top) + 84px));
+  left: max(12px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(20, 22, 28, 0.7);
+  pointer-events: none;
+}
+
+.ride-mood-bar {
+  display: block;
+  width: 90px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ride-mood-bar span {
+  display: block;
+  height: 100%;
+  background: #ff6b8b;
+  transition: width 0.3s;
+}
+
+.ride-speed {
+  position: absolute;
+  z-index: 30;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, 0.7);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.ride-speed strong {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ride-keys {
+  position: absolute;
+  z-index: 30;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  font-size: 13px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.ride-steer,
+.ride-feet {
+  position: absolute;
+  z-index: 32;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 14px;
+}
+
+.ride-steer {
+  left: max(16px, env(safe-area-inset-left));
+}
+
+.ride-feet {
+  right: max(16px, env(safe-area-inset-right));
+  align-items: flex-end;
+}
+
+.ride-pedal {
+  min-width: 72px;
+  min-height: 72px;
+  border-radius: 50%;
+  background: rgba(20, 22, 28, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  font-size: 22px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.ride-pedal:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ride-pedal.brake {
+  min-width: 64px;
+  min-height: 64px;
+  font-size: 15px;
+}
+
+.ride-pedal.gas {
+  min-width: 84px;
+  min-height: 84px;
+  background: rgba(226, 87, 76, 0.85);
+  font-size: 18px;
+}
+
+/* Kết thúc: tin nhắn của Em */
+.end-arrived {
+  margin: 0 0 4px;
+}
+
+.end-bubble {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+  margin: 6px 0 10px;
+  padding: 8px 12px;
+  border-radius: 16px 16px 16px 4px;
+  background: #3b3f4a;
+}
+
+.end-bubble-name {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.end-also {
+  margin: 2px 0;
+  color: #ffb3a8;
+  font-size: 14px;
+}
+
+.ride-light {
+  position: absolute;
+  z-index: 30;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(64px, calc(env(safe-area-inset-right) + 56px));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, 0.75);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.ride-light-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.ride-light.red .ride-light-dot {
+  background: #ff2d2d;
+  box-shadow: 0 0 10px #ff2d2d;
+}
+
+.ride-light.yellow .ride-light-dot {
+  background: #ffc21a;
+  box-shadow: 0 0 10px #ffc21a;
+}
+
+.ride-light.green .ride-light-dot {
+  background: #2dff6a;
+  box-shadow: 0 0 10px #2dff6a;
+}
