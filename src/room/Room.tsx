@@ -74,6 +74,7 @@ export function Room() {
         <Html
           key={f.id}
           center
+          zIndexRange={[10, 0]}
           position={[(f.minX + f.maxX) / 2, Math.min(f.height + 0.3, ROOM.height - 0.2), (f.minZ + f.maxZ) / 2]}
         >
           <div style={labelStyle}>{f.label}</div>

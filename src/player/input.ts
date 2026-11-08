@@ -41,3 +41,41 @@ export function createKeyTracker() {
 }
 
 export const keys = createKeyTracker()
+
+const DEAD_ZONE = 0.12
+
+// Độ lệch ngón tay so với tâm joystick (pixel, y màn hình hướng xuống) → vector điều khiển, dài tối đa 1.
+export function joystickVector(dx: number, dy: number, radius: number) {
+  let x = dx / radius
+  let y = -dy / radius
+  const len = Math.hypot(x, y)
+  if (len < DEAD_ZONE) return { x: 0, y: 0 }
+  if (len > 1) {
+    x /= len
+    y /= len
+  }
+  return { x, y }
+}
+
+export type TouchRole = 'move' | 'look'
+
+// Mỗi ngón tay giữ vai trò từ lúc chạm: nửa trái đi lại (chỉ một ngón), còn lại xoay camera.
+export function createTouchRouter() {
+  const roles = new Map<number, TouchRole>()
+  let moveId: number | null = null
+  return {
+    start(id: number, x: number, screenWidth: number): TouchRole {
+      const role: TouchRole = x < screenWidth / 2 && moveId === null ? 'move' : 'look'
+      if (role === 'move') moveId = id
+      roles.set(id, role)
+      return role
+    },
+    role(id: number) {
+      return roles.get(id)
+    },
+    end(id: number) {
+      if (id === moveId) moveId = null
+      roles.delete(id)
+    },
+  }
+}

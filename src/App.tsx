@@ -1,9 +1,15 @@
 import { Canvas } from '@react-three/fiber'
+import { useState } from 'react'
+import { isTouchDevice } from './device'
 import { Player } from './player/Player'
 import { Room } from './room/Room'
 import { S } from './strings'
+import { RotatePrompt } from './ui/RotatePrompt'
+import { TouchControls } from './ui/TouchControls'
 
 export default function App() {
+  const [isTouch] = useState(isTouchDevice)
+
   return (
     <>
       <Canvas camera={{ fov: 70, near: 0.05, far: 50 }}>
@@ -12,7 +18,9 @@ export default function App() {
         <Room />
         <Player />
       </Canvas>
+      {isTouch && <TouchControls />}
       <div className="title">{S.title}</div>
+      <RotatePrompt />
     </>
   )
 }
