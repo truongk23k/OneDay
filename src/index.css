@@ -162,3 +162,27 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
+
+.debug-overlay {
+  position: absolute;
+  z-index: 40;
+  top: max(36px, calc(env(safe-area-inset-top) + 26px));
+  left: max(12px, env(safe-area-inset-left));
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+
+.no-webgl {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.5;
+}
