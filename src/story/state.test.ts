@@ -118,3 +118,20 @@ describe('small actions', () => {
     expect(reducer(s0(), { type: 'mail' }).minutes).toBe(451)
   })
 })
+
+describe('more actions', () => {
+  test('pull-ups take a minute', () => {
+    expect(reducer(s0(), { type: 'pullup' }).minutes).toBe(451)
+  })
+
+  test('a shower takes 3 minutes and makes Anh cleaner', () => {
+    const s = reducer(s0(), { type: 'bathe' })
+    expect(s.minutes).toBe(453)
+    expect(s.hygiene).toBe(30)
+  })
+
+  test('lying in takes 3 minutes; posing at the mirror half a minute', () => {
+    expect(reducer(s0(), { type: 'nap' }).minutes).toBe(453)
+    expect(reducer(s0(), { type: 'flex' }).minutes).toBe(450.5)
+  })
+})

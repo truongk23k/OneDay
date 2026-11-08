@@ -20,3 +20,7 @@ test('a short action (drinking) ends by itself', () => {
   expect(poseFor({ ...base, transient: { pose: 'drink', until: 2 }, now: 1 })).toBe('drink')
   expect(poseFor({ ...base, transient: { pose: 'drink', until: 2 }, now: 3 })).toBe('none')
 })
+
+test('looking at the phone makes Anh hold it', () => {
+  expect(poseFor({ ...base, overlay: 'phone' })).toBe('phone')
+})

@@ -59,6 +59,13 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
       // Động tác đi kèm một số việc.
       if (a.type === 'drink') w.play('drink', 1.6)
       if (a.type === 'toilet') w.play('squat', 2.2)
+      if (a.type === 'pullup') w.play('pullup', 3.5)
+      if (a.type === 'flex') w.play('flex', 2.5)
+      if (a.type === 'nap') w.play('lie', 3.5)
+      if (a.type === 'bathe') {
+        if (!w.water.shower) w.toggleWater('shower')
+        w.play('bathe', 3.5)
+      }
       return dispatch(a)
     }
     if (a.do === 'door') {

@@ -1,4 +1,5 @@
 import { format } from '../story/clock'
+import { useWorld } from '../room/world'
 import { useStory } from '../story/store'
 import { S } from '../strings'
 
@@ -22,7 +23,13 @@ export function AlarmScreen() {
             <button className="btn btn-ghost" onClick={() => dispatch({ type: 'snooze' })}>
               {S.alarm.snooze}
             </button>
-            <button className="btn btn-primary" onClick={() => dispatch({ type: 'wake' })}>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                dispatch({ type: 'wake' })
+                useWorld.getState().play('stretch', 2)
+              }}
+            >
               {S.alarm.wake}
             </button>
           </div>

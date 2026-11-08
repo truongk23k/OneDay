@@ -31,6 +31,8 @@ export const INTERACTABLES: Target[] = [
   { id: 'shower', x: 3.75, z: 1.12 },
   { id: 'toilet', x: 5.15, z: 1.05 },
   { id: 'lightSwitch', x: 2.62, z: 1.42 },
+  { id: 'pullupBar', x: 2.45, z: 1.72 },
+  { id: 'mirror', x: 5.15, z: 3.95 },
 ]
 
 export const REACH = 0.9
@@ -83,7 +85,13 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
     }
     o.push({ label: S.options.sit, action: { type: 'world', do: 'sit' } })
   }
-  if (id === 'shower') o.push(tap('shower', w))
+  if (id === 'shower') {
+    o.push({ label: S.options.bathe, action: { type: 'bathe' } })
+    o.push(tap('shower', w))
+  }
+  if (id === 'pullupBar') o.push({ label: S.options.pullup, action: { type: 'pullup' } })
+  if (id === 'mirror') o.push({ label: S.options.flex, action: { type: 'flex' } })
+  if (id === 'bed') o.push({ label: S.options.nap, action: { type: 'nap' } })
   if (id === 'toilet') o.push({ label: S.options.toilet, action: { type: 'toilet' } })
   if (id === 'bathDoor' || id === 'bathDoorIn') o.push({ label: w.bathDoorOpen ? S.options.closeDoor : S.options.openDoor, action: { type: 'world', do: 'door' } })
   if (id === 'lightSwitch') o.push({ label: w.lightsOn ? S.options.lightsOff : S.options.lightsOn, action: { type: 'world', do: 'lights' } })

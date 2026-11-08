@@ -59,7 +59,7 @@ describe('usable props', () => {
   })
 
   test('the shower, toilet and light switch can be used', () => {
-    expect(labels('shower')).toEqual(['Bật vòi sen'])
+    expect(labels('shower')).toContain('Bật vòi sen')
     expect(labels('toilet')).toEqual(['Đi vệ sinh'])
     expect(labels('lightSwitch')).toEqual(['Tắt đèn'])
     expect(labels('lightSwitch', { ...world, lightsOn: false })).toEqual(['Bật đèn'])
@@ -103,5 +103,19 @@ describe('fridge and computer', () => {
   test('at the desk Anh can sit; sitting, he can browse, check mail or stand up', () => {
     expect(labels('deskMine')).toContain('Ngồi máy tính')
     expect(labels('deskMine', { ...world, sitting: true })).toEqual(['Lướt mạng', 'Check mail công ty', 'Đứng dậy'])
+  })
+})
+
+describe('more things Anh can do', () => {
+  test('under the pull-up bar he can do pull-ups', () => {
+    expect(nearestInteractable({ x: 2.45, z: 1.72 })?.id).toBe('pullupBar')
+    expect(actionsFor('pullupBar', room()).map((o) => o.label)).toEqual(['Đu xà'])
+  })
+
+  test('in the shower he can take a shower; at the mirror he can pose; on the bed he can lie in', () => {
+    expect(actionsFor('shower', room()).map((o) => o.label)).toContain('Tắm')
+    expect(nearestInteractable({ x: 5.15, z: 3.95 })?.id).toBe('mirror')
+    expect(actionsFor('mirror', room()).map((o) => o.label)).toEqual(['Soi gương'])
+    expect(actionsFor('bed', room()).map((o) => o.label)).toContain('Nằm ườn thêm')
   })
 })

@@ -60,6 +60,10 @@ export type Action =
   | { type: 'leave' }
   | { type: 'say'; line: string }
   | { type: 'drink' }
+  | { type: 'pullup' }
+  | { type: 'bathe' }
+  | { type: 'flex' }
+  | { type: 'nap' }
   | { type: 'browse' }
   | { type: 'mail' }
   | { type: 'chatSeen' }
@@ -164,6 +168,16 @@ export function reducer(s: StoryState, a: Action): StoryState {
     case 'leave':
       if (!s.tasks.keys) return { ...s, line: S.story.needKeys }
       return { ...s, phase: 'left', overlay: null, line: null }
+    case 'pullup':
+      return { ...s, minutes: s.minutes + 1, line: S.story.pullup }
+    case 'bathe':
+      return { ...s, minutes: s.minutes + 3, hygiene: clamp100(s.hygiene + 10), line: S.story.bathe }
+    case 'flex': {
+      const lines = S.story.flex
+      return { ...s, minutes: s.minutes + 0.5, line: lines[Math.floor(s.minutes * 2) % lines.length] }
+    }
+    case 'nap':
+      return { ...s, minutes: s.minutes + 3, line: S.story.nap }
     case 'drink':
       return { ...s, minutes: s.minutes + 1, line: S.story.drink }
     case 'browse': {

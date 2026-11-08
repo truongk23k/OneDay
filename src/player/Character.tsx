@@ -86,7 +86,7 @@ export function Character({ top, bottom, shoes, motion }: Props) {
   const phase = useRef(0)
   const blend = useRef(0)
   // Góc hiện tại của các khớp (lerp dần tới tư thế mục tiêu).
-  const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, head: 0, rootY: 0 })
+  const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, armLZ: 0, head: 0, rootY: 0, tilt: 0 })
 
   const leg = useMemo(() => legParts(bottom, shoes), [bottom, shoes])
   const armLeft = useMemo(() => armParts(-1, top), [top])
@@ -104,22 +104,44 @@ export function Character({ top, bottom, shoes, motion }: Props) {
     const swing = 0.65 * w + 0.35 * Math.max(0, run - 1)
     const t = state.clock.elapsedTime
     // Tư thế mặc định: đi bộ / đứng.
-    let tgt = { legL: s * swing, legR: -s * swing, armL: -s * swing * 0.8, armR: s * swing * 0.8, armRZ: 0, head: 0, rootY: Math.abs(s) * 0.035 * w }
+    const still = { armRZ: 0, armLZ: 0, tilt: 0 }
+    let tgt = { ...still, legL: s * swing, legR: -s * swing, armL: -s * swing * 0.8, armR: s * swing * 0.8, head: 0, rootY: Math.abs(s) * 0.035 * w }
     switch (motion?.current.pose ?? 'none') {
       case 'sit':
-        tgt = { legL: 1.45, legR: 1.45, armL: 1.15 + Math.sin(t * 17) * 0.06, armR: 1.15 + Math.sin(t * 17 + 1.6) * 0.06, armRZ: 0, head: 0.12, rootY: 0 }
+        tgt = { ...still, legL: 1.45, legR: 1.45, armL: 1.15 + Math.sin(t * 17) * 0.06, armR: 1.15 + Math.sin(t * 17 + 1.6) * 0.06, head: 0.12, rootY: 0 }
         break
       case 'brush':
-        tgt = { legL: 0, legR: 0, armL: 0.15, armR: 2.25, armRZ: Math.sin(t * 22) * 0.28, head: 0, rootY: 0 }
+        tgt = { ...still, legL: 0, legR: 0, armL: 0.15, armR: 2.25, armRZ: Math.sin(t * 22) * 0.28, head: 0, rootY: 0 }
         break
       case 'wash':
-        tgt = { legL: 0, legR: 0, armL: 1.9 + Math.sin(t * 9) * 0.25, armR: 1.9 + Math.sin(t * 9) * 0.25, armRZ: 0, head: 0.3, rootY: 0 }
+        tgt = { ...still, legL: 0, legR: 0, armL: 1.9 + Math.sin(t * 9) * 0.25, armR: 1.9 + Math.sin(t * 9) * 0.25, head: 0.3, rootY: 0 }
         break
       case 'drink':
-        tgt = { legL: 0, legR: 0, armL: 0.1, armR: 2.6, armRZ: 0.2, head: -0.35, rootY: 0 }
+        tgt = { ...still, legL: 0, legR: 0, armL: 0.1, armR: 2.6, armRZ: 0.2, head: -0.35, rootY: 0 }
         break
       case 'squat':
-        tgt = { legL: 1.2, legR: 1.2, armL: 0.5, armR: 0.5, armRZ: 0, head: 0.1, rootY: -0.28 }
+        tgt = { ...still, legL: 1.2, legR: 1.2, armL: 0.5, armR: 0.5, head: 0.1, rootY: -0.28 }
+        break
+      case 'pullup': {
+        // Tay nắm xà phía trên, người kéo lên kéo xuống.
+        const lift = Math.abs(Math.sin(t * 3.2)) * 0.2
+        tgt = { ...still, legL: 0.25, legR: 0.15, armL: Math.PI, armR: Math.PI, head: -0.15, rootY: 0.68 + lift }
+        break
+      }
+      case 'bathe':
+        tgt = { ...still, legL: 0, legR: 0, armL: 2.7 + Math.sin(t * 10) * 0.25, armR: 2.7 + Math.sin(t * 10 + 2) * 0.25, head: -0.25, rootY: 0 }
+        break
+      case 'flex':
+        tgt = { ...still, legL: 0.05, legR: -0.05, armL: 0, armR: 0, armLZ: -1.35 + Math.sin(t * 6) * 0.1, armRZ: 1.35 - Math.sin(t * 6) * 0.1, head: -0.1, rootY: 0 }
+        break
+      case 'lie':
+        tgt = { ...still, legL: 0, legR: 0.08, armL: 0.25, armR: -0.2, head: 0, rootY: 0.6, tilt: -Math.PI / 2 }
+        break
+      case 'stretch':
+        tgt = { ...still, legL: 0, legR: 0, armL: 2.9 + Math.sin(t * 4) * 0.1, armR: 2.9 - Math.sin(t * 4) * 0.1, armLZ: -0.3, armRZ: 0.3, head: -0.35, rootY: 0.02 }
+        break
+      case 'phone':
+        tgt = { ...still, legL: 0, legR: 0, armL: 0.9, armR: 1.25, armRZ: 0.35, armLZ: -0.25, head: 0.4, rootY: 0 }
         break
     }
     const k = Math.min(1, dt * 12)
@@ -127,12 +149,18 @@ export function Character({ top, bottom, shoes, motion }: Props) {
     for (const key of Object.keys(cur) as (keyof typeof cur)[]) cur[key] += (tgt[key] - cur[key]) * k
     if (legL.current) legL.current.rotation.x = cur.legL
     if (legR.current) legR.current.rotation.x = cur.legR
-    if (armL.current) armL.current.rotation.x = cur.armL
+    if (armL.current) {
+      armL.current.rotation.x = cur.armL
+      armL.current.rotation.z = cur.armLZ
+    }
     if (armR.current) {
       armR.current.rotation.x = cur.armR
       armR.current.rotation.z = cur.armRZ
     }
-    if (root.current) root.current.position.y = cur.rootY
+    if (root.current) {
+      root.current.position.y = cur.rootY
+      root.current.rotation.x = cur.tilt
+    }
     if (torso.current) {
       torso.current.scale.y = 1 + Math.sin(t * 2.2) * 0.012 * (1 - w)
       torso.current.rotation.y = s * 0.08 * w

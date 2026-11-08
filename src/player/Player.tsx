@@ -12,7 +12,7 @@ import { Character, type Motion } from './Character'
 import { cameraDistance, resolveCircleBoxes } from './collision'
 import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
-import { poseFor } from './pose'
+import { poseFor, type Pose } from './pose'
 
 const RADIUS = 0.25
 const SPEED = 2.2
@@ -28,6 +28,14 @@ const TURN_RATE = 12
 const DRESS_SPOT = { x: 1.05, z: 5.0, facing: -Math.PI / 2 }
 const WARDROBE_CAM: [number, number, number] = [2.75, 1.05, 5.0]
 const WARDROBE_LOOK: [number, number, number] = [0.9, 0.85, 4.5]
+
+// Động tác cần đứng đúng chỗ: đu xà dưới xà, tắm dưới vòi sen, soi gương trước gương, nằm trên giường.
+const SNAP: Partial<Record<Pose, { x: number; z: number; facing: number; after?: { x: number; z: number } }>> = {
+  pullup: { x: 2.45, z: 1.675, facing: 0 },
+  bathe: { x: 3.78, z: 1.12, facing: Math.PI },
+  flex: { x: 5.15, z: 3.95, facing: -Math.PI / 2 },
+  lie: { x: 3.9, z: 5.3, facing: -Math.PI / 2, after: { x: 3.0, z: 5.3 } },
+}
 
 // Ghế ở bàn của Anh: ngồi quay về phía bàn (bắc); đứng dậy thì ra sau ghế.
 const CHAIR = { x: 4.6, z: 2.8 }
@@ -58,6 +66,7 @@ export function Player() {
   // 0 = camera theo Anh, 1 = camera đứng trước tủ quần áo đang mở.
   const wardrobeCam = useRef(0)
   const wasSitting = useRef(false)
+  const lastSnap = useRef<(typeof SNAP)[Pose] | null>(null)
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => keys.down(e.code)
@@ -127,7 +136,8 @@ export function Player() {
 
       const k = keys.vector()
       const v = moveVector(k.x || k.y ? k : input.move, s.yaw)
-      const speed = world.sitting ? 0 : Math.hypot(v.x, v.z)
+      const busyPose = SNAP[motion.current.pose ?? 'none'] !== undefined
+      const speed = world.sitting || busyPose ? 0 : Math.hypot(v.x, v.z)
       if (world.sitting) {
         s.x = CHAIR.x
         s.z = CHAIR.z
@@ -152,6 +162,20 @@ export function Player() {
 
     // Đánh răng, rửa mặt: quay mặt vào lavabo.
     if (st.overlay === 'brush' || st.overlay === 'wash') s.facing = 0
+    // Động tác cần đứng đúng chỗ; xong (ví dụ nằm giường) thì bước ra chỗ an toàn.
+    const snap = SNAP[motion.current.pose ?? 'none']
+    if (snap) {
+      s.x = snap.x
+      s.z = snap.z
+      s.facing = snap.facing
+      lastSnap.current = snap
+    } else if (lastSnap.current) {
+      if (lastSnap.current.after) {
+        s.x = lastSnap.current.after.x
+        s.z = lastSnap.current.after.z
+      }
+      lastSnap.current = null
+    }
     player.x = s.x
     player.z = s.z
     body.current?.position.set(s.x, 0, s.z)
