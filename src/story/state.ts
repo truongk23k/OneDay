@@ -41,6 +41,8 @@ export type StoryState = {
   pasteFirst: boolean
   hint: number
   searched: string[]
+  // Thả Em ở chỗ làm sau 8:25.
+  emDropLate: boolean
   chat: ChatState
   line: string | null
 }
@@ -64,6 +66,10 @@ export type Action =
   | { type: 'leave' }
   | { type: 'say'; line: string }
   | { type: 'stage'; to: Stage }
+  | { type: 'pickup' }
+  | { type: 'dropoff' }
+  | { type: 'arrive' }
+  | { type: 'rideEvent'; kind: 'crash' | 'hardBrake' | 'pothole' | 'redLight' }
   | { type: 'drink' }
   | { type: 'pullup' }
   | { type: 'pee' }
@@ -96,6 +102,7 @@ export function initialState(seed: number): StoryState {
     pasteFirst: rnd() < 0.5,
     hint: Math.floor(rnd() * HINTS.length),
     searched: [],
+    emDropLate: false,
     chat: newChat(),
     line: null,
   }
@@ -178,6 +185,47 @@ export function reducer(s: StoryState, a: Action): StoryState {
     case 'leave':
       if (!s.tasks.keys) return { ...s, line: S.story.needKeys }
       return { ...s, phase: 'street', stage: 'toEm', overlay: null, line: null }
+    case 'pickup': {
+      if (s.phase !== 'street' || s.stage !== 'toEm') return s
+      // Em lên xe: soi mũ bảo hiểm, bộ đồ, chuyện ướt mưa.
+      let mood = s.mood
+      let hygiene = s.hygiene
+      let line = S.ride.pickupHappy
+      const verdict = outfitVerdict(s.outfit, s.weather)
+      if (verdict.disaster) {
+        mood -= 5
+        line = verdict.emComment ?? line
+      }
+      if (HINTS[s.hint].match(s.outfit)) {
+        mood += 5
+        if (!verdict.disaster) line = S.ride.hintMatch
+      }
+      if (verdict.wetRisk) {
+        hygiene -= 15
+        mood -= 3
+        line = S.ride.wet
+      }
+      if (s.tasks.helmets < 2) {
+        mood -= 15
+        line = S.ride.noHelmet
+      }
+      return { ...s, stage: 'withEm', mood: clamp100(mood), hygiene: clamp100(hygiene), line }
+    }
+    case 'dropoff': {
+      if (s.phase !== 'street' || s.stage !== 'withEm') return s
+      const late = s.minutes > 505
+      return { ...s, stage: 'sprint', mood: clamp100(s.mood + (late ? -20 : 5)), emDropLate: late, line: late ? S.ride.dropLate : S.ride.dropOnTime }
+    }
+    case 'arrive':
+      if (s.phase !== 'street' || s.stage !== 'sprint') return s
+      return { ...s, stage: 'done', line: S.ride.arrive }
+    case 'rideEvent': {
+      const withEm = s.stage === 'withEm'
+      const cost = { crash: 10, hardBrake: 3, pothole: 5, redLight: 5 }[a.kind]
+      const lines = { crash: withEm ? S.ride.crashWithEm : S.ride.crashAlone, hardBrake: S.ride.hardBrake, pothole: S.ride.pothole, redLight: S.ride.redLight }
+      if (!withEm) return a.kind === 'crash' ? { ...s, line: lines.crash } : s
+      return { ...s, mood: clamp100(s.mood - cost), line: lines[a.kind] }
+    }
     case 'stage': {
       // Chỉ được đi tiếp đúng một bước theo thứ tự.
       const next = STAGE_ORDER[STAGE_ORDER.indexOf(s.stage) + 1]
