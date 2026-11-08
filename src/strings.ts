@@ -50,6 +50,18 @@ export const S = {
     search: 'Tìm chìa khóa',
     door: 'Ra cửa',
   },
+  brush: {
+    title: 'Đánh răng',
+    pick: 'Mắt nhắm mắt mở… tuýp nào là kem đánh răng nhỉ?',
+    tubes: ['Tuýp trắng xanh', 'Tuýp xanh trắng'],
+    scrubKeys: 'Nhấn A và D xen kẽ để chà răng',
+    scrubTouch: 'Vuốt qua lại trong khung để chà răng',
+  },
+  wash: {
+    title: 'Rửa mặt',
+    hint: 'Giữ nút để vốc nước, thả tay khi thanh nằm trong vùng xanh',
+    hold: 'Giữ để vốc nước',
+  },
   story: {
     snooze: ['5 phút nữa thôi…', 'Thêm 5 phút, thề luôn…', 'Chăn ấm quá…', 'Mai đi làm sớm bù…', 'Ngủ nốt lần này thôi…', 'Ơ… mấy giờ rồi nhỉ…'],
     wrongTube: 'Ối, sữa rửa mặt! Phì phì… mất 2 phút súc miệng.',

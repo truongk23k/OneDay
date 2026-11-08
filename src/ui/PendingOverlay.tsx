@@ -2,7 +2,7 @@ import { useStory } from '../story/store'
 import { S } from '../strings'
 
 // Bảng tạm cho những phần chưa làm xong, để bản chơi thử không bị kẹt.
-export const PENDING = new Set<string>(['brush', 'wash', 'wardrobe', 'phone', 'door'])
+export const PENDING = new Set<string>(['wardrobe', 'phone', 'door'])
 
 export function PendingOverlay() {
   const overlay = useStory((st) => st.s.overlay)

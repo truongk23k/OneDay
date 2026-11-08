@@ -7,6 +7,7 @@ import { Room } from './room/Room'
 import { StoryTicker } from './story/StoryTicker'
 import { S } from './strings'
 import { AlarmScreen } from './ui/AlarmScreen'
+import { BrushGame } from './ui/BrushGame'
 import { DebugOverlay, DebugProbe } from './ui/DebugOverlay'
 import { EndCard } from './ui/EndCard'
 import { HelpPanel } from './ui/HelpPanel'
@@ -14,6 +15,7 @@ import { Hud } from './ui/Hud'
 import { PendingOverlay } from './ui/PendingOverlay'
 import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
+import { WashGame } from './ui/WashGame'
 
 type NavigatorInfo = Navigator & { deviceMemory?: number }
 
@@ -48,6 +50,8 @@ export default function App() {
       {debug && <DebugOverlay quality={quality} />}
       <Hud isTouch={isTouch} />
       <AlarmScreen />
+      <BrushGame isTouch={isTouch} />
+      <WashGame />
       <PendingOverlay />
       <EndCard />
       <HelpPanel isTouch={isTouch} />
