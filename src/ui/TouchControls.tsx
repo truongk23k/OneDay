@@ -9,14 +9,19 @@ type Joy = { x: number; y: number; kx: number; ky: number }
 export function TouchControls() {
   const router = useRef(createTouchRouter())
   const last = useRef(new Map<number, { x: number; y: number }>())
+  // Tâm joystick giữ trong ref để input.move được ghi ngay trong sự kiện, không chờ React render.
+  const origin = useRef<{ x: number; y: number } | null>(null)
   const [joy, setJoy] = useState<Joy | null>(null)
 
   const onDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse') return
-    e.currentTarget.setPointerCapture(e.pointerId)
+    e.currentTarget.setPointerCapture?.(e.pointerId)
     const role = router.current.start(e.pointerId, e.clientX, window.innerWidth)
     last.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    if (role === 'move') setJoy({ x: e.clientX, y: e.clientY, kx: 0, ky: 0 })
+    if (role === 'move') {
+      origin.current = { x: e.clientX, y: e.clientY }
+      setJoy({ x: e.clientX, y: e.clientY, kx: 0, ky: 0 })
+    }
   }
 
   const onMove = (e: PointerEvent<HTMLDivElement>) => {
@@ -29,19 +34,19 @@ export function TouchControls() {
       last.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
       return
     }
-    setJoy((j) => {
-      if (!j) return j
-      const dx = e.clientX - j.x
-      const dy = e.clientY - j.y
-      input.move = joystickVector(dx, dy, JOY_RADIUS)
-      const len = Math.hypot(dx, dy)
-      const k = len > JOY_RADIUS ? JOY_RADIUS / len : 1
-      return { ...j, kx: dx * k, ky: dy * k }
-    })
+    const o = origin.current
+    if (!o) return
+    const dx = e.clientX - o.x
+    const dy = e.clientY - o.y
+    input.move = joystickVector(dx, dy, JOY_RADIUS)
+    const len = Math.hypot(dx, dy)
+    const k = len > JOY_RADIUS ? JOY_RADIUS / len : 1
+    setJoy({ x: o.x, y: o.y, kx: dx * k, ky: dy * k })
   }
 
   const onUp = (e: PointerEvent<HTMLDivElement>) => {
     if (router.current.role(e.pointerId) === 'move') {
+      origin.current = null
       input.move = { x: 0, y: 0 }
       setJoy(null)
     }

@@ -7,12 +7,13 @@ export function isTouchDevice(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true
 }
 
-// Thiếu thông tin (Safari không báo RAM) thì không coi là máy yếu.
+// Thiếu thông tin thì không coi là máy yếu. Safari (iPhone) không báo RAM và báo số nhân giả (4 hoặc 2)
+// để chống theo dõi, nên trên cảm ứng chỉ tin số nhân khi trình duyệt có báo RAM.
 export function pickQuality(i: { isTouch: boolean; memoryGB?: number; cores?: number }): Quality {
   const fewCores = i.cores !== undefined && i.cores <= 4
   if (i.isTouch) {
-    const lowMemory = i.memoryGB !== undefined && i.memoryGB <= 3
-    return lowMemory || fewCores ? 'low' : 'medium'
+    if (i.memoryGB === undefined) return 'medium'
+    return i.memoryGB <= 3 || fewCores ? 'low' : 'medium'
   }
   return fewCores ? 'medium' : 'high'
 }

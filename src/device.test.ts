@@ -13,8 +13,13 @@ describe('pickQuality', () => {
     expect(pickQuality({ isTouch: true, memoryGB: 8, cores: 8 })).toBe('medium')
   })
 
-  test('touch with unknown memory and cores is medium (iPhone Safari reports neither)', () => {
+  test('touch with unknown memory and cores is medium', () => {
     expect(pickQuality({ isTouch: true })).toBe('medium')
+  })
+
+  test('iPhone Safari (no deviceMemory, cores clamped to 4 or 2) is medium, not low', () => {
+    expect(pickQuality({ isTouch: true, cores: 4 })).toBe('medium')
+    expect(pickQuality({ isTouch: true, cores: 2 })).toBe('medium')
   })
 
   test('desktop with 4 cores is medium', () => {
