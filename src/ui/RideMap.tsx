@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import type { BikeState } from '../ride/bike'
 import { ALLEY, BARRIERS, MARKERS, cityBounds } from '../ride/city'
-import { ROAD_SEGMENTS, type Route } from '../ride/nav'
+import { ROAD_SEGMENTS, type Pt, type Route } from '../ride/nav'
+import { CHECKPOINT } from '../ride/police'
 import { targetFor } from '../ride/rules'
 import { useGame } from '../store'
 import type { Stage } from '../story/state'
@@ -19,7 +20,9 @@ const PLACES = [
   { id: 'anhOffice', at: MARKERS.anhOffice, color: '#5ab0ff', icon: '💻' },
 ] as const
 
-function MapSvg({ bike, route, stage, big }: { bike: BikeState; route: Route | null; stage: Stage; big: boolean }) {
+type MapProps = { bike: Pick<BikeState, 'x' | 'z' | 'heading'>; route: Route | null; stage: Stage; big: boolean; police?: Pt | null }
+
+export function MapSvg({ bike, route, stage, big, police }: MapProps) {
   const target = targetFor(stage)
   const k = big ? 1 : 1.8
   return (
@@ -55,6 +58,16 @@ function MapSvg({ bike, route, stage, big }: { bike: BikeState; route: Route | n
           )}
         </g>
       ))}
+      <g transform={`translate(${CHECKPOINT.x + 7} ${CHECKPOINT.z})`} className="map-checkpoint">
+        <rect x={-5 * k} y={-5 * k} width={10 * k} height={10 * k} rx={2.5 * k} fill="#1f4fbf" stroke="#fff" strokeWidth={1.2} />
+        <rect x={-2.5 * k} y={-1 * k} width={5 * k} height={2 * k} fill="#ffd23f" />
+        {big && (
+          <text x={9} y={3} className="map-label" textAnchor="start">
+            {S.police.checkpoint}
+          </text>
+        )}
+      </g>
+      {police && <circle cx={police.x} cy={police.z} r={5 * k} className="map-police" />}
       <g transform={`translate(${bike.x} ${bike.z}) rotate(${(-bike.heading * 180) / Math.PI}) scale(${k})`}>
         <path d="M0,-7 L5,6 L0,3 L-5,6 Z" fill="#ffffff" stroke="#e2574c" strokeWidth={1.6} strokeLinejoin="round" />
       </g>
@@ -63,7 +76,7 @@ function MapSvg({ bike, route, stage, big }: { bike: BikeState; route: Route | n
 }
 
 // Bản đồ nhỏ ở góc; chạm (hoặc phím M) để mở bản đồ lớn — lúc đó game tạm dừng.
-export function RideMap({ bike, route, stage }: { bike: BikeState; route: Route | null; stage: Stage }) {
+export function RideMap({ bike, route, stage, police }: { bike: BikeState; route: Route | null; stage: Stage; police?: Pt | null }) {
   const open = useGame((g) => g.mapOpen)
   const setOpen = useGame((g) => g.setMapOpen)
 
@@ -85,13 +98,13 @@ export function RideMap({ bike, route, stage }: { bike: BikeState; route: Route 
   return (
     <>
       <button className="ride-minimap" aria-label={S.ride.map.title} onClick={() => setOpen(true)}>
-        <MapSvg bike={bike} route={route} stage={stage} big={false} />
+        <MapSvg bike={bike} route={route} stage={stage} big={false} police={police} />
       </button>
       {open && (
         <div className="overlay-backdrop" onClick={() => setOpen(false)}>
           <div className="card map-card" role="dialog" aria-label={S.ride.map.title} onClick={(e) => e.stopPropagation()}>
             <h2>{S.ride.map.title}</h2>
-            <MapSvg bike={bike} route={route} stage={stage} big={true} />
+            <MapSvg bike={bike} route={route} stage={stage} big={true} police={police} />
             <div className="map-legend">
               <span>
                 <i className="swatch route" /> {S.ride.map.route}

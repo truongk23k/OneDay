@@ -9,7 +9,8 @@ import type { Pose } from './pose'
 const SKIN = '#eab88f'
 const HAIR = '#18161a'
 
-export type Motion = { speed: number; pose?: Pose }
+// seated: đang ngồi trên xe (cầm điện thoại thì chân vẫn co).
+export type Motion = { speed: number; pose?: Pose; seated?: boolean }
 
 type Props = {
   top: string
@@ -103,6 +104,22 @@ const HEAD_EM: Part[] = [
   I(0.025, [0.085, -0.04, -0.13], '#f2a7b6', [1, 0.6, 0.4]),
 ]
 
+// Chìa khóa xe vàng trong tay phải (chỉ hiện lúc vừa tìm thấy).
+const KEY_PROP: Part[] = [
+  Cy(0.032, 0.032, 0.014, [0, -0.47, -0.02], '#ffd23f', 10, [Math.PI / 2, 0, 0]),
+  B([0.016, 0.075, 0.01], [0, -0.53, -0.02], '#ffd23f'),
+  B([0.022, 0.012, 0.01], [0.012, -0.55, -0.02], '#ffd23f'),
+  B([0.05, 0.03, 0.02], [0, -0.445, -0.02], '#2a2a2d'),
+]
+
+// Điện thoại xanh lá trong tay phải (lúc xem điện thoại, chụp ảnh, selfie).
+const PHONE_PROP: Part[] = [
+  B([0.075, 0.15, 0.012], [0, -0.47, -0.035], '#4c7357'),
+  B([0.064, 0.135, 0.004], [0, -0.47, -0.042], '#9fd3ff'),
+  B([0.02, 0.02, 0.006], [-0.018, -0.425, -0.027], '#1b1d22'),
+]
+const HOLDS_PHONE: Pose[] = ['phone', 'photo', 'selfie']
+
 // Mũ bảo hiểm nửa đầu màu đen (gắn lên đầu).
 const HELMET: Part[] = [I(0.175, [0, 0.07, 0.01], '#141416', [1.05, 0.72, 1.08]), B([0.2, 0.02, 0.06], [0, 0.0, -0.17], '#141416')]
 
@@ -122,6 +139,10 @@ export function Character({ top, bottom, shoes, motion, variant = 'anh', helmet 
   // Góc hiện tại của các khớp (lerp dần tới tư thế mục tiêu).
   const j = useRef({ legL: 0, legR: 0, armL: 0, armR: 0, armRZ: 0, armLZ: 0, head: 0, rootY: 0, tilt: 0, armScale: 1, sway: 0, twist: 0 })
   const spin = useRef(0)
+  const keyProp = useRef<Group>(null)
+  const phoneProp = useRef<Group>(null)
+  // Động tác hiện tại bắt đầu lúc nào (để nhảy đúng một cái).
+  const since = useRef<{ pose: Pose | 'none'; t: number }>({ pose: 'none', t: 0 })
 
   const leg = useMemo(() => legParts(bottom, shoes, variant === 'em'), [bottom, shoes, variant])
   const headParts = useMemo(() => [...(variant === 'em' ? HEAD_EM : HEAD_PARTS), ...(helmet ? HELMET : [])], [variant, helmet])
@@ -142,6 +163,8 @@ export function Character({ top, bottom, shoes, motion, variant = 'anh', helmet 
     // Tư thế mặc định: đi bộ / đứng.
     const still = { armRZ: 0, armLZ: 0, tilt: 0, armScale: 1, sway: 0, twist: 0 }
     const pose = motion?.current.pose ?? 'none'
+    if (since.current.pose !== pose) since.current = { pose, t }
+    const u = t - since.current.t
     let tgt = { ...still, legL: s * swing, legR: -s * swing, armL: -s * swing * 0.8, armR: s * swing * 0.8, head: 0, rootY: Math.abs(s) * 0.035 * w }
     switch (pose) {
       case 'sit':
@@ -217,6 +240,44 @@ export function Character({ top, bottom, shoes, motion, variant = 'anh', helmet 
       case 'phone':
         tgt = { ...still, legL: 0, legR: 0, armL: 0.9, armR: 1.25, armRZ: 0.35, armLZ: -0.25, head: 0.4, rootY: 0 }
         break
+      case 'photo':
+        // Giơ điện thoại bằng hai tay ngang tầm mắt để chụp.
+        tgt = { ...still, legL: 0, legR: 0, armL: 1.75, armR: 1.75, armLZ: -0.32, armRZ: 0.32, head: 0, rootY: 0 }
+        break
+      case 'selfie':
+        // Tay phải đưa điện thoại ra trước, chếch lên; đầu hơi nghiêng tạo dáng.
+        tgt = { ...still, legL: 0, legR: 0.08, armL: 0.15, armR: 2.1, armRZ: 0.45, armLZ: -0.1, head: -0.12, rootY: 0, twist: -0.12 }
+        break
+      case 'keyJump': {
+        // Giơ chìa khóa lên cao, nhún xuống rồi nhảy cẫng một cái.
+        const crouch = u < 0.3 ? Math.sin((u / 0.3) * Math.PI) : 0
+        const hop = u > 0.3 && u < 0.85 ? Math.sin(((u - 0.3) / 0.55) * Math.PI) : 0
+        tgt = {
+          ...still,
+          legL: 0.55 * crouch + 0.6 * hop,
+          legR: 0.55 * crouch + 0.6 * hop,
+          armL: 0.5 + 1.6 * hop,
+          armR: 2.95,
+          armRZ: 0.15 + Math.sin(t * 14) * 0.08,
+          armLZ: -0.5 * hop,
+          head: -0.3,
+          rootY: 0.36 * hop - 0.06 * crouch,
+        }
+        break
+      }
+    }
+    // Vừa đi vừa cầm điện thoại: chân vẫn bước.
+    if (HOLDS_PHONE.includes(pose) && !motion?.current.seated && w > 0.02) {
+      tgt.legL = s * swing
+      tgt.legR = -s * swing
+      tgt.rootY = Math.abs(s) * 0.035 * w
+    }
+    // Ngồi trên xe mà cầm điện thoại: chân vẫn co trên xe.
+    if (motion?.current.seated) {
+      tgt.legL = 1.25
+      tgt.legR = 1.25
+      tgt.rootY = 0
+      tgt.twist = 0
     }
     const ease = Math.min(1, dt * 12)
     const cur = j.current
@@ -245,6 +306,8 @@ export function Character({ top, bottom, shoes, motion, variant = 'anh', helmet 
       torso.current.scale.y = 1 + Math.sin(t * 2.2) * 0.012 * (1 - w)
       torso.current.rotation.y = s * 0.08 * w
     }
+    if (keyProp.current) keyProp.current.visible = pose === 'keyJump'
+    if (phoneProp.current) phoneProp.current.visible = HOLDS_PHONE.includes(pose)
     if (head.current) {
       head.current.rotation.z = Math.sin(t * 1.3) * 0.03 * (1 - w)
       head.current.rotation.x = cur.head
@@ -267,6 +330,12 @@ export function Character({ top, bottom, shoes, motion, variant = 'anh', helmet 
           </group>
           <group ref={armR} position={[0.19, 0.4, 0]}>
             <PartsMesh parts={armRight} />
+            <group ref={keyProp} visible={false}>
+              <PartsMesh parts={KEY_PROP} />
+            </group>
+            <group ref={phoneProp} visible={false}>
+              <PartsMesh parts={PHONE_PROP} />
+            </group>
           </group>
           <group ref={head} position={[0, 0.63, 0]}>
             <PartsMesh parts={headParts} />

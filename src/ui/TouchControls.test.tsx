@@ -63,3 +63,9 @@ test('opening a screen mid-drag releases the joystick, and it works again afterw
   layer().dispatchEvent(second('pointermove', 120, 240))
   expect(input.move.y).toBeCloseTo(1)
 })
+
+test('Anh can keep walking while holding the phone in the room', () => {
+  useStory.setState({ s: { ...initialState(1), phase: 'room', overlay: 'phone' } })
+  const { container } = render(<TouchControls />)
+  expect(container.querySelector('.touch-layer')).not.toBeNull()
+})

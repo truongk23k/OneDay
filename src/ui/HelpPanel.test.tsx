@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useGame } from '../store'
 import { HelpPanel } from './HelpPanel'
+import { useSettings } from '../sfx'
+import { initialState } from '../story/state'
+import { useStory } from '../story/store'
 
 afterEach(() => useGame.getState().setHelpOpen(false))
 
@@ -41,4 +44,23 @@ test('Escape toggles', async () => {
   expect(screen.getByRole('dialog')).toBeVisible()
   await userEvent.keyboard('{Escape}')
   expect(screen.queryByRole('dialog')).toBeNull()
+})
+
+test('on the street the help shows riding controls, not walking ones', async () => {
+  useStory.setState({ s: { ...initialState(1), phase: 'street', stage: 'toEm' } })
+  render(<HelpPanel isTouch={true} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Hướng dẫn' }))
+  expect(screen.getByRole('dialog')).toHaveTextContent('Ga')
+  expect(screen.getByRole('dialog')).not.toHaveTextContent('joystick')
+  useStory.setState({ s: initialState(1) })
+})
+
+test('help has a sound switch', async () => {
+  render(<HelpPanel isTouch={false} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Hướng dẫn' }))
+  const sw = screen.getByRole('switch', { name: /Âm thanh/ })
+  const before = useSettings.getState().sound
+  await userEvent.click(sw)
+  expect(useSettings.getState().sound).toBe(!before)
+  useSettings.getState().setSound(before)
 })

@@ -5,6 +5,7 @@ import { useStory } from '../story/store'
 import { S } from '../strings'
 import { newBike, stepBike, type BikeInput, type BikeState } from './bike'
 import { LIGHTS, MARKERS, POTHOLES, ROAD_HALF, ROADS_Z, SIDEWALK, STREET_COLLIDERS } from './city'
+import { CHECK_RADIUS, CHECK_WATCH, CHECKPOINT, helmetsShort, newPolice, startChase, stepPolice, type Police } from './police'
 import { arrivedAt, STOP_SPEED } from './rules'
 import { axisOf, lightState, newTraffic, stepTraffic, vehicleBox, type Vehicle } from './traffic'
 
@@ -26,8 +27,9 @@ const WALK_SPEED = 1.6
 const EM_REACH = 10
 const EM_KERB = { x: EM_DOOR.x, z: EM_DOOR.z - 3 }
 const HOP_ON = 1
-// Gọi sau 8:15 thì Em hơi dỗi.
-const LATE_CALL = 495
+// Bị CSGT dừng xe: đứng yên lập biên bản vài giây; xong thì một lúc sau mới bị đuổi lần nữa.
+export const PULLOVER = 3
+const POLICE_COOLDOWN = 10
 
 export type EmState = 'home' | 'ringing' | 'coming' | 'aboard'
 
@@ -45,6 +47,11 @@ type Ride = {
   em: EmState
   emPos: { x: number; z: number }
   emCalledAt: number
+  // CSGT: xe đang đuổi/đang lập biên bản, đứng yên tới lúc nào, hết thời gian chờ đuổi lần mới, đã qua chốt chưa.
+  police: Police
+  pulloverUntil: number
+  policeCooldown: number
+  checkpointDone: boolean
   callEm: () => boolean
   reset: () => void
 }
@@ -62,6 +69,10 @@ const fresh = () => ({
   em: 'home' as EmState,
   emPos: { ...EM_DOOR },
   emCalledAt: 0,
+  police: newPolice(),
+  pulloverUntil: -1,
+  policeCooldown: 0,
+  checkpointDone: false,
 })
 
 export const useRide = create<Ride>()((set, get) => ({
@@ -86,7 +97,7 @@ function stepEm(ride: Ride, bike: BikeState, time: number, dt: number) {
   const story = useStory.getState()
   if (story.s.stage !== 'toEm') return {}
   if (ride.em === 'ringing' && time - ride.emCalledAt >= RING_TIME) {
-    story.dispatch({ type: 'say', line: story.s.minutes > LATE_CALL ? S.ride.callLate : S.ride.callAnswer })
+    story.dispatch({ type: 'emAnswers' })
     return { em: 'coming' as EmState, emPos: { ...EM_DOOR } }
   }
   if (ride.em !== 'coming') return {}
@@ -119,10 +130,14 @@ export function stepRide(dt: number, now: number) {
   const time = ride.time + dt
   const traffic = stepTraffic(ride.traffic, dt, time, ride.bike, ride.em === 'coming' ? [ride.emPos] : [])
   const colliders = traffic.length ? [...STREET_COLLIDERS, ...traffic.map(vehicleBox)] : STREET_COLLIDERS
-  const { state, events } = stepBike(ride.bike, readInput(), dt, colliders)
+  // Đang bị CSGT lập biên bản: xe đứng im.
+  const held = time < ride.pulloverUntil
+  const input = held ? { throttle: 0, brake: ride.bike.speed > 0.05 ? 1 : 0, steer: 0, wheelie: 0 } : readInput()
+  const { state, events } = stepBike(ride.bike, input, dt, colliders)
   let { lastPothole, lastCrash } = ride
 
-  for (const e of events) {
+  // Đang bị giữ xe thì phanh dừng không tính là phanh gấp.
+  for (const e of held ? [] : events) {
     if (e.kind === 'crash') {
       if (now - lastCrash > CRASH_COOLDOWN) story.dispatch({ type: 'rideEvent', kind: 'crash' })
       lastCrash = now
@@ -136,15 +151,61 @@ export function stepRide(dt: number, now: number) {
   } else if (hole < 0) lastPothole = -1
 
   // Vượt đèn đỏ: lúc vừa lao vào giao lộ mà đèn theo hướng đi đang đỏ.
+  let { police, pulloverUntil, policeCooldown, checkpointDone } = ride
   const light = LIGHTS.findIndex((l) => Math.abs(l.x - state.x) < ROAD_HALF && Math.abs(l.z - state.z) < ROAD_HALF)
   if (light >= 0 && light !== ride.lastLight && Math.abs(state.speed) > RED_LIGHT_SPEED) {
     const axis = axisOf(-Math.sin(state.heading), -Math.cos(state.heading))
-    if (lightState(light, time, axis) === 'red') story.dispatch({ type: 'rideEvent', kind: 'redLight' })
+    if (lightState(light, time, axis) === 'red') {
+      story.dispatch({ type: 'rideEvent', kind: 'redLight' })
+      if (ride.police.mode === 'off' && time >= ride.policeCooldown) {
+        police = startChase(state, time, 'redLight')
+        story.dispatch({ type: 'chased', reason: 'redLight' })
+      }
+    }
+  }
+
+  // Chốt CSGT: thiếu mũ bảo hiểm thì bị dừng ngay; bốc đầu trước mặt thì bị đuổi.
+  const fromCheck = Math.hypot(state.x - CHECKPOINT.x, state.z - CHECKPOINT.z)
+  if (!checkpointDone && fromCheck < CHECK_RADIUS && police.mode === 'off' && helmetsShort(s.stage, s.tasks.helmets)) {
+    checkpointDone = true
+    police = { ...startChase(state, time, 'helmet', CHECKPOINT), mode: 'pullover' }
+    pulloverUntil = time + PULLOVER
+    story.dispatch({ type: 'busted', reason: 'helmet', fled: false })
+  } else if (state.lifted && fromCheck < CHECK_WATCH && police.mode === 'off' && time >= ride.policeCooldown) {
+    police = startChase(state, time, 'wheelie', CHECKPOINT)
+    story.dispatch({ type: 'chased', reason: 'wheelie' })
+  }
+
+  const chase = stepPolice(police, state, dt, time)
+  police = chase.police
+  if ((chase.event === 'caught' || chase.event === 'surrender') && police.reason) {
+    pulloverUntil = time + PULLOVER
+    story.dispatch({ type: 'busted', reason: police.reason, fled: chase.event === 'caught' })
+  } else if (chase.event === 'lost') {
+    policeCooldown = time + POLICE_COOLDOWN
+    story.dispatch({ type: 'escaped' })
+  }
+  // Lập biên bản xong: CSGT đi, một lúc sau mới đuổi lần nữa được.
+  if (police.mode === 'pullover' && time >= pulloverUntil) {
+    police = { ...police, mode: 'off' }
+    policeCooldown = time + POLICE_COOLDOWN
   }
 
   // Tới nhà Em chỉ là dừng trước cửa; Em lên xe sau khi Anh gọi (stepEm).
   const arrival = arrivedAt(useStory.getState().s.stage, state)
-  useRide.setState({ bike: state, traffic, time, lastPothole, lastLight: light, lastCrash, atEmDoor: arrival === 'pickup' })
+  useRide.setState({
+    bike: state,
+    traffic,
+    time,
+    lastPothole,
+    lastLight: light,
+    lastCrash,
+    atEmDoor: arrival === 'pickup',
+    police,
+    pulloverUntil,
+    policeCooldown,
+    checkpointDone,
+  })
   if (arrival && arrival !== 'pickup') story.dispatch({ type: arrival })
   const em = stepEm(useRide.getState(), state, time, dt)
   if (Object.keys(em).length) useRide.setState(em)

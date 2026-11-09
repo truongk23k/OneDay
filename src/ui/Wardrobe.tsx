@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { HINTS, ICONS, itemById, itemLabel, type Slot } from '../story/outfit'
 import { useStory } from '../story/store'
@@ -39,7 +40,7 @@ export function Wardrobe() {
           return (
             <div key={slot} className="dress-row">
               <button className="dress-arrow" aria-label={`${name} ${S.wardrobe.prev}`} onClick={() => cycle(slot, -1)}>
-                ‹
+                <ChevronLeft aria-hidden />
               </button>
               <div className="dress-item">
                 <div className="dress-slot">{name}</div>
@@ -48,7 +49,7 @@ export function Wardrobe() {
                 </div>
               </div>
               <button className="dress-arrow" aria-label={`${name} ${S.wardrobe.next}`} onClick={() => cycle(slot, 1)}>
-                ›
+                <ChevronRight aria-hidden />
               </button>
             </div>
           )

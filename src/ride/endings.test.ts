@@ -31,20 +31,28 @@ test('Em upset (low mood or dropped after 8:25) → "Mai em tự đi làm ko c�
   expect(pickEnding(done({ emDropLate: true })).id).toBe('emUpset')
 })
 
-test('forgot to brush → colleagues keep a metre away', () => {
-  const s = done()
-  expect(pickEnding({ ...s, tasks: { ...s.tasks, brushed: false } }).id).toBe('noBrush')
-})
-
-test('priority: overslept > late > Em upset > no brush > perfect, others as extra lines', () => {
-  const s = done({ minutes: 515, mood: 20 })
-  const e = pickEnding({ ...s, tasks: { ...s.tasks, brushed: false } })
+test('priority: overslept > late > Em upset > fined > perfect, others as extra lines', () => {
+  const e = pickEnding(done({ minutes: 515, mood: 20, busts: 1, fines: 4000 }))
   expect(e.id).toBe('late')
-  expect(e.also).toEqual(['emUpset', 'noBrush'])
+  expect(e.also).toEqual(['emUpset', 'busted'])
   expect(pickEnding({ ...initialState(1), phase: 'overslept' }).id).toBe('overslept')
 })
 
 test('on time but not perfect → an ordinary day', () => {
   const s = done({ mood: 60 })
-  expect(pickEnding({ ...s, tasks: { ...s.tasks, washed: false } }).id).toBe('ok')
+  expect(pickEnding({ ...s, tasks: { ...s.tasks, texted: false } }).id).toBe('ok')
+})
+
+test('perfect also needs Anh to smell nice', () => {
+  expect(pickEnding(done({ hygiene: 50 })).id).toBe('ok')
+})
+
+test('a police fine shows up as its own ending line', () => {
+  expect(pickEnding(done({ fines: 4000, busts: 1 })).id).toBe('busted')
+  const e = pickEnding(done({ minutes: 512, fines: 400, busts: 1 }))
+  expect(e.also).toContain('busted')
+})
+
+test('late but the boss was warned → a softer ending', () => {
+  expect(pickEnding(done({ minutes: 512, warnedBoss: true })).id).toBe('lateWarned')
 })

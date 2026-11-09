@@ -54,3 +54,33 @@ test('restart also resets the world store', () => {
   act(() => useStory.getState().dispatch({ type: 'restart', seed: 5 }))
   expect(useWorld.getState().lightsOn).toBe(true)
 })
+
+test('finding the keys makes Anh hold them up and jump', async () => {
+  const s = useStory.getState().s
+  render(<InteractPrompt targetId={s.keySpot} isTouch={true} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Tìm chìa khóa' }))
+  expect(useStory.getState().s.tasks.keys).toBe(true)
+  expect(useWorld.getState().transient?.pose).toBe('keyJump')
+})
+
+test('searching the wrong spot does not celebrate', async () => {
+  const s = useStory.getState().s
+  const wrong = ['bed', 'wardrobe', 'fridge', 'deskMine', 'kitchen', 'shelf'].find((k) => k !== s.keySpot)!
+  useWorld.setState({ transient: null })
+  render(<InteractPrompt targetId={wrong} isTouch={true} />)
+  const btn = screen.queryByRole('button', { name: 'Tìm chìa khóa' })
+  if (btn) await userEvent.click(btn)
+  expect(useWorld.getState().transient?.pose).not.toBe('keyJump')
+})
+
+test('the checklist puts the three must-dos first, and says when Anh is ready to go', () => {
+  const s = useStory.getState().s
+  useStory.setState({ s: { ...s, tasks: { ...s.tasks, brushed: true, washed: true } } })
+  const { rerender } = render(<Checklist />)
+  expect(screen.getByText('Bắt buộc trước khi ra khỏi nhà')).toBeVisible()
+  expect(screen.getByText('2/6')).toBeVisible()
+  expect(screen.getByRole('progressbar', { name: 'Việc cần làm' })).toHaveAttribute('aria-valuenow', '2')
+  act(() => useStory.setState({ s: { ...useStory.getState().s, tasks: { ...useStory.getState().s.tasks, keys: true } } }))
+  rerender(<Checklist />)
+  expect(screen.getByText('Sẵn sàng ra cửa!')).toBeVisible()
+})

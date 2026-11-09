@@ -14,6 +14,7 @@ import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
 import { poseFor, type Pose } from './pose'
 import { useKeys } from './useKeys'
+import { activeLens } from '../ui/phone/phoneStore'
 
 const RADIUS = 0.25
 const SPEED = 2.2
@@ -108,10 +109,10 @@ export function Player() {
   useFrame(({ camera }, rawDt) => {
     const s = state.current
     const st = useStory.getState().s
-    // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ, điện thoại…).
-    const paused = useGame.getState().paused || st.phase !== 'room' || st.overlay !== null
+    // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ…); cầm điện thoại vẫn đi được.
+    const paused = useGame.getState().paused || st.phase !== 'room' || (st.overlay !== null && st.overlay !== 'phone')
     let world = useWorld.getState()
-    motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds() })
+    motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds(), lens: activeLens() })
 
     motion.current.speed = 0
     if (paused) {
@@ -179,6 +180,7 @@ export function Player() {
     }
     player.x = s.x
     player.z = s.z
+    player.facing = s.facing
     body.current?.position.set(s.x, 0, s.z)
     if (body.current) body.current.rotation.y = s.facing
 

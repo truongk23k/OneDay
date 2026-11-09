@@ -82,3 +82,23 @@ describe('in the story', () => {
     expect(s.mood).toBe(before + BEATS[0].replies[0].mood)
   })
 })
+
+describe('the morning script fits picking Em up', () => {
+  const ids = BEATS.map((b) => b.id)
+
+  test('Em texts: wake, outfit, when, helmet, then nudges if Anh has not left yet', () => {
+    expect(ids).toEqual(['wake', 'hint', 'when', 'helmet', 'ready', 'late'])
+    expect(BEATS.map((b) => b.at)).toEqual([...BEATS.map((b) => b.at)].sort((a, b) => a - b))
+  })
+
+  test('asking Em to go alone does not cancel the pickup: she insists Anh comes', () => {
+    const when = BEATS.find((b) => b.id === 'when')!
+    const alone = when.replies[2]
+    expect(alone.promise).toBeUndefined()
+    expect(alone.answer).toMatch(/đón/)
+  })
+
+  test('the last nudge comes before Em has to be at work', () => {
+    expect(BEATS.at(-1)!.at).toBeLessThan(505)
+  })
+})

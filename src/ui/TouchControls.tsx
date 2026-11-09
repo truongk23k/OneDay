@@ -13,8 +13,8 @@ export function TouchControls() {
   // Tâm joystick giữ trong ref để input.move được ghi ngay trong sự kiện, không chờ React render.
   const origin = useRef<{ x: number; y: number } | null>(null)
   const [joy, setJoy] = useState<Joy | null>(null)
-  // Khi đang mở bảng (tủ đồ, điện thoại…) thì nhường chạm cho bảng và cảnh 3D.
-  const busy = useStory((st) => st.s.overlay !== null || st.s.phase !== 'room')
+  // Khi đang mở bảng (tủ đồ, mini-game…) thì nhường chạm cho bảng và cảnh 3D. Điện thoại thì vẫn vừa đi vừa xem được.
+  const busy = useStory((st) => (st.s.overlay !== null && st.s.overlay !== 'phone') || st.s.phase !== 'room')
 
   // Lớp chạm biến mất thì sự kiện nhấc ngón không tới được: tự thả joystick và quên các ngón đang giữ.
   useEffect(() => {

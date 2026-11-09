@@ -1,3 +1,4 @@
+import { AlarmClock, BellRing, CloudRain, Sun } from 'lucide-react'
 import { format } from '../story/clock'
 import { useWorld } from '../room/world'
 import { useStory } from '../story/store'
@@ -15,13 +16,18 @@ export function AlarmScreen() {
     <div className="overlay-backdrop">
       <div className="phone">
         <div className="phone-screen alarm">
-          <div className="alarm-label">{S.alarm.label}</div>
+          <div className="alarm-label">
+            <BellRing className="alarm-bell" aria-hidden /> {S.alarm.label}
+          </div>
           <div className="alarm-time">{format(minutes)}</div>
-          <div className="alarm-weather">{weather === 'rain' ? S.alarm.rain : S.alarm.sun}</div>
+          <div className="alarm-weather">
+            {weather === 'rain' ? <CloudRain aria-hidden /> : <Sun aria-hidden />}
+            {weather === 'rain' ? S.alarm.rain : S.alarm.sun}
+          </div>
           {line && <div className="alarm-line">{line}</div>}
           <div className="alarm-buttons">
             <button className="btn btn-ghost" onClick={() => dispatch({ type: 'snooze' })}>
-              {S.alarm.snooze}
+              <AlarmClock aria-hidden /> {S.alarm.snooze}
             </button>
             <button
               className="btn btn-primary"

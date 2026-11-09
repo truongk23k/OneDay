@@ -6,6 +6,7 @@ import { Batched } from '../room/Batched'
 import type { Stage } from '../story/state'
 import { useStory } from '../story/store'
 import { EmWalker, Riders, Scooter } from './Bike3D'
+import { ChaseCar, Checkpoint } from './Police3D'
 import { BEACONS } from './city'
 import { buildCityParts } from './cityParts'
 import { Rain } from './Rain'
@@ -172,6 +173,8 @@ export default function StreetScene() {
       <Traffic />
       {weather === 'rain' && <Rain />}
       <TargetMarker />
+      <Checkpoint />
+      <ChaseCar />
       {stage === 'toEm' && <EmWalker />}
       <group ref={bikeRef}>
         {/* Bốc đầu: xoay quanh trục bánh sau. */}

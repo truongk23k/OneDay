@@ -4,6 +4,7 @@ import { useWorld } from '../room/world'
 import { useGame } from '../store'
 import { useStory } from '../story/store'
 import { S } from '../strings'
+import { DanceGlyph, DanceMoveGlyph } from './GameIcons'
 
 const DANCE_SECONDS = 4
 
@@ -28,7 +29,7 @@ export function DanceButton() {
   return (
     <div className="dance">
       {open && (
-        <div className="dance-menu">
+        <div className="hud-panel dance-menu">
           {DANCES.map((d) => (
             <button
               key={d}
@@ -38,13 +39,14 @@ export function DanceButton() {
                 setOpen(false)
               }}
             >
+              <DanceMoveGlyph move={d} />
               {S.dance.names[d]}
             </button>
           ))}
         </div>
       )}
-      <button className="dance-button" aria-label={S.dance.button} onClick={() => setOpen(!open)}>
-        💃
+      <button className="icon-btn dance-button" aria-label={S.dance.button} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <DanceGlyph />
       </button>
     </div>
   )

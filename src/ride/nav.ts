@@ -30,11 +30,14 @@ function buildSegments(): Seg[] {
 }
 
 export const ROAD_SEGMENTS = buildSegments()
+const isAlley = ([a, b]: Seg) => a.x === ALLEY.x && b.x === ALLEY.x
+// Ô tô (xe CSGT) không vào được hẻm.
+const CAR_SEGMENTS = ROAD_SEGMENTS.filter((s) => !isAlley(s))
 
 // Điểm gần nhất trên mạng đường.
-function snap(p: Pt): { seg: Seg; q: Pt } {
-  let best = { seg: ROAD_SEGMENTS[0], q: ROAD_SEGMENTS[0][0], d: Infinity }
-  for (const seg of ROAD_SEGMENTS) {
+function snap(p: Pt, segs = ROAD_SEGMENTS): { seg: Seg; q: Pt } {
+  let best = { seg: segs[0], q: segs[0][0], d: Infinity }
+  for (const seg of segs) {
     const [a, b] = seg
     const len2 = (b.x - a.x) ** 2 + (b.z - a.z) ** 2
     const t = Math.max(0, Math.min(1, ((p.x - a.x) * (b.x - a.x) + (p.z - a.z) * (b.z - a.z)) / len2))
@@ -44,6 +47,8 @@ function snap(p: Pt): { seg: Seg; q: Pt } {
   }
   return best
 }
+
+export const snapToRoad = (p: Pt, opts: { alley?: boolean } = {}): Pt => snap(p, opts.alley === false ? CAR_SEGMENTS : ROAD_SEGMENTS).q
 
 // Bỏ các điểm nằm thẳng hàng: chỉ giữ chỗ phải rẽ.
 function corners(pts: Pt[]): Pt[] {
@@ -60,7 +65,9 @@ function corners(pts: Pt[]): Pt[] {
   return out
 }
 
-export function routeTo(from: Pt, to: Pt): Route {
+// alley: false = đường cho ô tô, không đi qua hẻm.
+export function routeTo(from: Pt, to: Pt, opts: { alley?: boolean } = {}): Route {
+  const segs = opts.alley === false ? CAR_SEGMENTS : ROAD_SEGMENTS
   const adj = new Map<string, { pt: Pt; next: { k: string; w: number }[] }>()
   const node = (p: Pt) => {
     const k = key(p)
@@ -72,10 +79,10 @@ export function routeTo(from: Pt, to: Pt): Route {
     adj.get(node(a))!.next.push({ k: node(b), w })
     adj.get(node(b))!.next.push({ k: node(a), w })
   }
-  for (const [a, b] of ROAD_SEGMENTS) link(a, b)
+  for (const [a, b] of segs) link(a, b)
 
-  const s = snap(from)
-  const e = snap(to)
+  const s = snap(from, segs)
+  const e = snap(to, segs)
   const S = 'start'
   const E = 'end'
   adj.set(S, { pt: s.q, next: [] })

@@ -1,7 +1,7 @@
 import { S } from '../strings'
 import { useGame } from '../store'
 import { STREET_SPEED } from './clock'
-import { initialState, reducer, type StoryState } from './state'
+import { FINES, FOOD_PRICE, initialState, reducer, type StoryState } from './state'
 import { useStory } from './store'
 
 const s0 = () => ({ ...initialState(42), phase: 'room' as const })
@@ -95,15 +95,27 @@ describe('leaving the room', () => {
     expect(reducer(s0(), { type: 'takeHelmets', n: 1 }).tasks.helmets).toBe(1)
   })
 
+  const ready = (over: Partial<StoryState['tasks']> = {}): StoryState => {
+    const base = s0()
+    return { ...base, tasks: { ...base.tasks, keys: true, brushed: true, washed: true, ...over } }
+  }
+
   test('cannot leave without keys', () => {
-    const s = reducer(s0(), { type: 'leave' })
+    const s = reducer(ready({ keys: false }), { type: 'leave' })
     expect(s.phase).toBe('room')
-    expect(s.line).toMatch(/chìa khóa/i)
+    expect(s.line).toBe(S.story.needKeys)
   })
 
-  test('leaving with the keys goes out to the street, on the way to Em', () => {
-    const base = s0()
-    const s = reducer({ ...base, tasks: { ...base.tasks, keys: true } }, { type: 'leave' })
+  test('cannot leave without brushing teeth and washing the face', () => {
+    expect(reducer(ready({ brushed: false }), { type: 'leave' }).line).toBe(S.story.needBrush)
+    expect(reducer(ready({ washed: false }), { type: 'leave' }).line).toBe(S.story.needWash)
+    const both = reducer(ready({ brushed: false, washed: false }), { type: 'leave' })
+    expect(both.phase).toBe('room')
+    expect(both.line).toBe(S.story.needFresh)
+  })
+
+  test('keys, brushed and washed: out to the street, on the way to Em', () => {
+    const s = reducer(ready(), { type: 'leave' })
     expect(s.phase).toBe('street')
     expect(s.stage).toBe('toEm')
   })
@@ -208,5 +220,123 @@ describe('wheelie on the street', () => {
     const s = reducer(ride('toEm'), { type: 'rideEvent', kind: 'wheelie' })
     expect(s.mood).toBe(60)
     expect(s.line).toBe(S.ride.wheelieAlone)
+  })
+})
+
+describe('police', () => {
+  const ride = (stage: StoryState['stage']): StoryState => ({ ...s0(), phase: 'street', stage, mood: 60, minutes: 490 })
+
+  test('pulling over for a red light costs the fine and a few minutes', () => {
+    const s = reducer(ride('toEm'), { type: 'busted', reason: 'redLight', fled: false })
+    expect(s.money).toBe(initialState(42).money - FINES.redLight)
+    expect(s.fines).toBe(FINES.redLight)
+    expect(s.busts).toBe(1)
+    expect(s.minutes).toBe(494)
+    expect(s.mood).toBe(60)
+    expect(s.line).toBe(S.police.busted.redLight)
+  })
+
+  test('being caught after running costs more time, and Em is upset', () => {
+    const s = reducer(ride('withEm'), { type: 'busted', reason: 'helmet', fled: true })
+    expect(s.minutes).toBe(498)
+    expect(s.mood).toBe(45)
+    expect(s.fines).toBe(FINES.helmet)
+  })
+
+  test('a chase scares Em; getting away is a relief for Anh only', () => {
+    expect(reducer(ride('withEm'), { type: 'chased', reason: 'redLight' }).mood).toBe(56)
+    expect(reducer(ride('toEm'), { type: 'chased', reason: 'redLight' }).line).toBe(S.police.chase.redLight)
+    const away = reducer(ride('withEm'), { type: 'escaped' })
+    expect(away.mood).toBe(54)
+    expect(away.line).toBe(S.police.escaped)
+  })
+})
+
+describe('phone apps', () => {
+  test('ordering breakfast for Em costs money once, and she loves it at drop-off', () => {
+    const a = reducer(s0(), { type: 'orderFood' })
+    expect(a.breakfast).toBe(true)
+    expect(a.money).toBe(s0().money - FOOD_PRICE)
+    expect(reducer(a, { type: 'orderFood' }).money).toBe(a.money)
+    const ride = { ...a, phase: 'street' as const, stage: 'withEm' as const, minutes: 500, mood: 60 }
+    const s = reducer(ride, { type: 'dropoff' })
+    expect(s.mood).toBe(60 + 5 + 8)
+    expect(s.line).toBe(S.ride.dropBreakfast)
+  })
+
+  test('calling the boss warns him, calling Em in the morning cheers her once', () => {
+    expect(reducer(s0(), { type: 'callBoss' }).warnedBoss).toBe(true)
+    const a = reducer(s0(), { type: 'callEm' })
+    expect(a.mood).toBe(63)
+    expect(a.minutes).toBe(451)
+    expect(reducer(a, { type: 'callEm' }).mood).toBe(63)
+  })
+
+  test('each short video eats a minute', () => {
+    expect(reducer(s0(), { type: 'scroll' }).minutes).toBe(451)
+  })
+})
+
+describe('promises and texting', () => {
+  const street = (over: Partial<StoryState> = {}): StoryState => ({
+    ...s0(),
+    phase: 'street',
+    stage: 'toEm',
+    mood: 60,
+    outfit: { top: 'teeWhite', bottom: 'khaki', shoes: 'sneakers', raincoat: false },
+    tasks: { brushed: true, washed: true, dressed: true, texted: true, keys: true, helmets: 2 },
+    ...over,
+  })
+
+  test('answering "when" sets the time Anh promised', () => {
+    const at = (i: number) => {
+      let s: StoryState = { ...s0(), minutes: 464 }
+      s = reducer(s, { type: 'tick', realDt: 0 })
+      while (s.chat.pending !== null && s.chat.log.at(-1)?.text !== S.chat.when.msg) {
+        s = reducer(s, { type: 'chatReply', index: 0 })
+        s = reducer(s, { type: 'tick', realDt: 0 })
+      }
+      return reducer(s, { type: 'chatReply', index: i }).promise
+    }
+    expect(at(0)).toBe(480)
+    expect(at(1)).toBe(490)
+    expect(at(2)).toBeNull()
+  })
+
+  test('picking Em up later than promised costs mood', () => {
+    const kept = reducer(street({ promise: 480, minutes: 481 }), { type: 'pickup' })
+    const broken = reducer(street({ promise: 480, minutes: 486 }), { type: 'pickup' })
+    expect(kept.mood - broken.mood).toBe(8)
+    expect(broken.line).toBe(S.ride.brokePromise)
+  })
+
+  test('Em answers the call; without a text first she needs a few minutes to get ready', () => {
+    const ready = reducer(street({ minutes: 480 }), { type: 'emAnswers' })
+    expect(ready.minutes).toBe(480)
+    expect(ready.line).toBe(S.ride.callAnswer)
+    const base = street({ minutes: 480 })
+    const unready = reducer({ ...base, tasks: { ...base.tasks, texted: false } }, { type: 'emAnswers' })
+    expect(unready.minutes).toBe(484)
+    expect(unready.mood).toBe(55)
+    expect(unready.line).toBe(S.ride.callNoText)
+    expect(reducer(street({ minutes: 500 }), { type: 'emAnswers' }).line).toBe(S.ride.callLate)
+  })
+})
+
+describe('Grap and Face bút', () => {
+  test('trying to send Em off by GrapBike: she refuses, a bit hurt, once — Anh still has to pick her up', () => {
+    const a = reducer({ ...s0(), mood: 60 }, { type: 'grabForEm' })
+    expect(a.mood).toBe(55)
+    expect(a.line).toBe(S.phone.grab.bikeLine)
+    expect(a.money).toBe(s0().money)
+    expect(reducer(a, { type: 'grabForEm' }).mood).toBe(55)
+    const ride = reducer({ ...s0(), phase: 'street', stage: 'toEm' }, { type: 'grabForEm' })
+    expect(ride.stage).toBe('toEm')
+  })
+
+  test('liking Em’s post cheers her up once', () => {
+    const a = reducer({ ...s0(), mood: 60 }, { type: 'likeEmPost' })
+    expect(a.mood).toBe(62)
+    expect(reducer(a, { type: 'likeEmPost' }).mood).toBe(62)
   })
 })

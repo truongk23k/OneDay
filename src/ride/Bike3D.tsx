@@ -8,6 +8,8 @@ import { itemById } from '../story/outfit'
 import type { Outfit } from '../story/state'
 import { ROAD_HALF, ROADS_Z } from './city'
 import { useRide } from './store'
+import { useStory } from '../story/store'
+import { activeLens } from '../ui/phone/phoneStore'
 
 // Xe tay ga đen nhám kiểu AB 2026 (không logo, không chữ). Đầu xe hướng về -z.
 const BLACK = '#1d1e21'
@@ -51,7 +53,13 @@ export function Scooter() {
 
 // Anh cầm lái (và Em ngồi sau nếu đã đón) trên xe.
 export function Riders({ outfit, helmetsTaken, emAboard }: { outfit: Outfit; helmetsTaken: number; emAboard: boolean }) {
-  const anh = useRef<Motion>({ speed: 0, pose: 'ride' })
+  const anh = useRef<Motion>({ speed: 0, pose: 'ride', seated: true })
+  // Dừng xe dùng điện thoại: Anh cầm máy lên xem / chụp / selfie.
+  useFrame(() => {
+    const lens = activeLens()
+    const phone = useStory.getState().s.overlay === 'phone'
+    anh.current.pose = !phone ? 'ride' : lens === 'back' ? 'photo' : lens === 'front' ? 'selfie' : 'phone'
+  })
   const em = useRef<Motion>({ speed: 0, pose: 'pillion' })
   const colors = useMemo(
     () => ({

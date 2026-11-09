@@ -39,7 +39,7 @@ export const INTERACTABLES: Target[] = [
 export const REACH = 0.9
 
 // Vị trí Anh, Player ghi vào mỗi khung hình.
-export const player = { x: 0, z: 0 }
+export const player = { x: 0, z: 0, facing: 0 }
 
 export function nearestInteractable(p: { x: number; z: number }): Target | null {
   let best: Target | null = null

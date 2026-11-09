@@ -1,7 +1,8 @@
 import { S } from '../strings'
 
 export type Line = { from: 'em' | 'anh'; text: string }
-export type Reply = { text: string; mood: number; answer: string }
+// promise: giờ Anh hứa có mặt (phút trong game) khi trả lời câu hỏi "mấy giờ qua đón".
+export type Reply = { text: string; mood: number; answer: string; promise?: number }
 export type Beat = { id: string; at: number; msg: string | null; replies: readonly Reply[] }
 
 // Kịch bản nhắn tin buổi sáng với Em ❤️ (phút trong game). msg null = dùng gợi ý cách mặc của hôm nay.
@@ -11,6 +12,9 @@ export const BEATS: Beat[] = [
   { id: 'hint', at: 458, msg: null, replies: C.hint.replies },
   { id: 'when', at: 464, msg: C.when.msg, replies: C.when.replies },
   { id: 'helmet', at: 470, msg: C.helmet.msg, replies: C.helmet.replies },
+  // Anh còn ở trong phòng thì Em hối: 7:56 Em đã sẵn sàng, 8:06 Em sắp trễ.
+  { id: 'ready', at: 476, msg: C.ready.msg, replies: C.ready.replies },
+  { id: 'late', at: 486, msg: C.late.msg, replies: C.late.replies },
 ]
 
 export const ESCALATE_AFTER = 6
@@ -53,7 +57,7 @@ export function chatTick(c: ChatState, minutes: number, hintText: string): { cha
   return { chat: c, moodDelta: 0 }
 }
 
-export function chatReply(c: ChatState, index: number): { chat: ChatState; moodDelta: number; beatId: string | null } {
+export function chatReply(c: ChatState, index: number): { chat: ChatState; moodDelta: number; beatId: string | null; promise?: number } {
   if (c.pending === null) return { chat: c, moodDelta: 0, beatId: null }
   const beat = BEATS[c.pending]
   const r = beat.replies[index]
@@ -66,6 +70,7 @@ export function chatReply(c: ChatState, index: number): { chat: ChatState; moodD
     },
     moodDelta: r.mood,
     beatId: beat.id,
+    promise: r.promise,
   }
 }
 

@@ -1,3 +1,4 @@
+import { Droplets, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { WASH_ROUNDS, washLevel, washOk } from '../story/minigames'
 import { useStory } from '../story/store'
@@ -74,8 +75,8 @@ export function WashGame() {
   return (
     <div className="overlay-backdrop">
       <div className="card game">
-        <button className="card-close" aria-label="Đóng" onClick={() => dispatch({ type: 'close' })}>
-          ×
+        <button className="card-close" aria-label={S.hud.close} onClick={() => dispatch({ type: 'close' })}>
+          <X aria-hidden />
         </button>
         <h2>{S.wash.title}</h2>
         <p>
@@ -94,7 +95,7 @@ export function WashGame() {
           onPointerLeave={release}
           onPointerCancel={release}
         >
-          💧 {S.wash.hold}
+          <Droplets aria-hidden /> {S.wash.hold}
         </button>
       </div>
     </div>

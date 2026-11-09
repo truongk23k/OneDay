@@ -29,3 +29,9 @@ test('a dance plays as a short action', () => {
   expect(poseFor({ ...base, transient: { pose: 'danceTiktok', until: 4 }, now: 1 })).toBe('danceTiktok')
   expect(DANCES).toEqual(['danceTiktok', 'danceHips', 'danceSpin'])
 })
+
+test('holding the phone up as a camera: two hands for the back camera, arm out for a selfie', () => {
+  expect(poseFor({ ...base, overlay: 'phone', lens: 'back' })).toBe('photo')
+  expect(poseFor({ ...base, overlay: 'phone', lens: 'front' })).toBe('selfie')
+  expect(poseFor({ ...base, overlay: 'phone', lens: null })).toBe('phone')
+})

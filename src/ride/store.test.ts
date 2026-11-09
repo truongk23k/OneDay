@@ -5,6 +5,10 @@ import { useStory } from '../story/store'
 import { newBike } from './bike'
 import { LIGHTS, MARKERS, POTHOLES } from './city'
 import { LIGHT_CYCLE, lightState, newTraffic, poseOf, type Vehicle } from './traffic'
+import { ALLEY } from './city'
+import { CHECKPOINT, POLICE, startChase } from './police'
+import { S } from '../strings'
+import { FINES } from '../story/state'
 import { EM_DOOR, rideInput, stepRide, useRide } from './store'
 
 const street = (over: Partial<StoryState> = {}) =>
@@ -21,7 +25,7 @@ const street = (over: Partial<StoryState> = {}) =>
   })
 
 beforeEach(() => {
-  Object.assign(rideInput, { throttle: 0, brake: 0, steer: 0 })
+  Object.assign(rideInput, { throttle: 0, brake: 0, steer: 0, wheelie: 0 })
   useRide.getState().reset()
   useGame.getState().setHelpOpen(false)
 })
@@ -69,10 +73,14 @@ function throughLight(color: 'red' | 'green') {
   for (let i = 0; i < 60; i++) stepRide(1 / 60, i / 60)
 }
 
-test('running a red light with Em aboard upsets her, once', () => {
+test('running a red light with Em aboard upsets her once, and the police give chase', () => {
   street({ stage: 'withEm' })
   throughLight('red')
-  expect(useStory.getState().s.mood).toBe(55)
+  // -5 vượt đèn, -4 vì sợ khi CSGT hú còi đuổi.
+  expect(useStory.getState().s.mood).toBe(51)
+  expect(useRide.getState().police.mode).toBe('chase')
+  expect(useRide.getState().police.reason).toBe('redLight')
+  expect(useStory.getState().s.line).toBe(S.police.chase.redLight)
 })
 
 test('crossing on green is fine', () => {
@@ -177,7 +185,7 @@ describe('every ride starts fresh', () => {
   }
 
   test('leaving the room resets the bike, traffic, Em and held keys before the street draws', () => {
-    useStory.setState({ s: { ...initialState(1), phase: 'room', tasks: { ...initialState(1).tasks, keys: true } } })
+    useStory.setState({ s: { ...initialState(1), phase: 'room', tasks: { ...initialState(1).tasks, keys: true, brushed: true, washed: true } } })
     dirty()
     useStory.getState().dispatch({ type: 'leave' })
     expect(useStory.getState().s.phase).toBe('street')
@@ -189,5 +197,68 @@ describe('every ride starts fresh', () => {
     dirty()
     useStory.getState().dispatch({ type: 'restart', seed: 3 })
     expectFresh()
+  })
+})
+
+describe('police', () => {
+  test('caught while riding on: fined, held at the kerb for a moment, then free to go', () => {
+    street()
+    const bike = { ...newBike(150, 0, -Math.PI / 2), speed: 6 }
+    useRide.setState({ bike, traffic: [], police: { ...startChase(bike, 0, 'redLight'), x: 146, z: 0, speed: 10 } })
+    rideInput.throttle = 1
+    runFor(0.5)
+    const s = useStory.getState().s
+    expect(s.fines).toBe(FINES.redLight)
+    expect(s.busts).toBe(1)
+    expect(useRide.getState().police.mode).toBe('pullover')
+    // Ga vẫn giữ mà xe dừng lại và đứng im tới khi lập biên bản xong.
+    runFor(1.2)
+    const x = useRide.getState().bike.x
+    expect(Math.abs(useRide.getState().bike.speed)).toBeLessThan(0.1)
+    runFor(1)
+    expect(useRide.getState().bike.x).toBeCloseTo(x, 1)
+    runFor(2)
+    expect(useRide.getState().police.mode).toBe('off')
+    expect(useRide.getState().bike.x).toBeGreaterThan(x + 1)
+  })
+
+  test('hiding in the alley shakes them off, and a fresh chase cannot start straight away', () => {
+    street()
+    const hide = newBike(ALLEY.x, -50, Math.PI)
+    useRide.setState({ bike: hide, traffic: [], police: startChase(newBike(200, 0, Math.PI), 0, 'redLight') })
+    runFor(POLICE.loseTime + 6)
+    expect(useRide.getState().police.mode).toBe('off')
+    expect(useStory.getState().s.line).toBe(S.police.escaped)
+    expect(useStory.getState().s.fines).toBe(0)
+  })
+
+  test('the checkpoint pulls Anh over when Em has no helmet, once', () => {
+    street({ stage: 'withEm', tasks: { brushed: true, washed: true, dressed: true, texted: true, keys: true, helmets: 1 } })
+    useRide.setState({ bike: { ...newBike(CHECKPOINT.x, CHECKPOINT.z + 12, 0), speed: 6 }, traffic: [] })
+    rideInput.throttle = 1
+    runFor(1.5)
+    expect(useStory.getState().s.fines).toBe(FINES.helmet)
+    runFor(8)
+    expect(useStory.getState().s.busts).toBe(1)
+  })
+
+  test('with enough helmets the checkpoint lets Anh pass', () => {
+    street({ stage: 'withEm' })
+    useRide.setState({ bike: { ...newBike(CHECKPOINT.x, CHECKPOINT.z + 12, 0), speed: 6 }, traffic: [] })
+    rideInput.throttle = 1
+    runFor(3)
+    expect(useStory.getState().s.busts).toBe(0)
+    expect(useRide.getState().police.mode).toBe('off')
+  })
+
+  test('a wheelie in front of the checkpoint starts a chase', () => {
+    street()
+    useRide.setState({ bike: { ...newBike(CHECKPOINT.x, CHECKPOINT.z + 25, 0), speed: 8 }, traffic: [] })
+    rideInput.throttle = 1
+    rideInput.wheelie = 1
+    runFor(1)
+    rideInput.wheelie = 0
+    expect(useRide.getState().police.mode).toBe('chase')
+    expect(useRide.getState().police.reason).toBe('wheelie')
   })
 })

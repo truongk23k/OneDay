@@ -1,3 +1,4 @@
+import { Check, ChevronDown, ChevronUp, CloudRain, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useWorld } from '../room/world'
 import { useGame } from '../store'
@@ -7,39 +8,69 @@ import type { Tasks } from '../story/state'
 import { useStory } from '../story/store'
 import { S } from '../strings'
 import { DanceButton } from './DanceButton'
+import { QuestGlyph } from './GameIcons'
 import { PhoneButton } from './Phone'
 
 export function Clock() {
   const minute = useStory((st) => Math.floor(st.s.minutes))
   const weather = useStory((st) => st.s.weather)
   return (
-    <div className="hud-clock">
+    <div className="hud-panel hud-clock">
       <div className="hud-time">
-        {format(minute)} <span className="hud-weather">{weather === 'rain' ? '🌧️' : '☀️'}</span>
+        <span>{format(minute)}</span>
+        {weather === 'rain' ? <CloudRain className="hud-weather rain" aria-hidden /> : <Sun className="hud-weather sun" aria-hidden />}
       </div>
       <div className="hud-deadlines">{S.hud.deadlines}</div>
     </div>
   )
 }
 
-const TASK_KEYS: (keyof Tasks)[] = ['brushed', 'washed', 'dressed', 'texted', 'keys', 'helmets']
+// Ba việc bắt buộc mới ra được cửa; ba việc nên làm thêm.
+export const REQUIRED: (keyof Tasks)[] = ['brushed', 'washed', 'keys']
+const OPTIONAL: (keyof Tasks)[] = ['dressed', 'texted', 'helmets']
+const TASK_COUNT = REQUIRED.length + OPTIONAL.length
 
+// Bảng nhiệm vụ buổi sáng kiểu game: thanh tiến độ, nhóm bắt buộc / nên làm; chạm tiêu đề để thu gọn.
 export function Checklist() {
   const tasks = useStory((st) => st.s.tasks)
+  const [open, setOpen] = useState(true)
+  const done = (k: keyof Tasks) => (k === 'helmets' ? tasks.helmets === 2 : tasks[k] === true)
+  const count = [...REQUIRED, ...OPTIONAL].filter(done).length
+  const ready = REQUIRED.every(done)
+  const row = (k: keyof Tasks, required: boolean) => (
+    <li key={k} className={done(k) ? 'done' : required ? 'req' : ''}>
+      <span className="quest-dot" aria-hidden>
+        {done(k) ? <Check /> : required ? '!' : null}
+      </span>
+      <span className="quest-text">{S.tasks[k]}</span>
+    </li>
+  )
   return (
-    <ul className="hud-tasks">
-      {TASK_KEYS.map((k) => {
-        const done = k === 'helmets' ? tasks.helmets === 2 : tasks[k] === true
-        return (
-          <li key={k} className={done ? 'done' : ''}>
-            <span className="tick">{done ? '✓' : '○'}</span>
-            {S.tasks[k]}
-          </li>
-        )
-      })}
-    </ul>
+    <div className="hud-panel quest">
+      <button className="quest-head" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <QuestGlyph />
+        <span className="quest-title">{S.hud.todo}</span>
+        <span className="quest-count">
+          {count}/{TASK_COUNT}
+        </span>
+        {open ? <ChevronUp className="quest-chev" aria-hidden /> : <ChevronDown className="quest-chev" aria-hidden />}
+      </button>
+      <div className="quest-bar" role="progressbar" aria-label={S.hud.todo} aria-valuemin={0} aria-valuemax={TASK_COUNT} aria-valuenow={count}>
+        <span style={{ width: `${(count / TASK_COUNT) * 100}%` }} />
+      </div>
+      {open && (
+        <>
+          <div className={ready ? 'quest-group ok' : 'quest-group'}>{ready ? S.hud.ready : S.hud.required}</div>
+          <ul>{REQUIRED.map((k) => row(k, true))}</ul>
+          <div className="quest-group soft">{S.hud.optional}</div>
+          <ul>{OPTIONAL.map((k) => row(k, false))}</ul>
+        </>
+      )}
+    </div>
   )
 }
+
+const KEY_JUMP = 1.6
 
 // Nút / gợi ý tương tác với đồ vật đang đứng gần. Phím E (hoặc Space) chạy lựa chọn đầu tiên.
 export function InteractPrompt({ targetId, isTouch }: { targetId: string | null; isTouch: boolean }) {
@@ -74,7 +105,11 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
         if (!w.water.shower) w.toggleWater('shower')
         w.play('bathe', 3.5)
       }
-      return dispatch(a)
+      const hadKeys = useStory.getState().s.tasks.keys
+      dispatch(a)
+      // Thấy chìa khóa: giơ lên tay và nhảy cẫng một cái.
+      if (a.type === 'search' && !hadKeys && useStory.getState().s.tasks.keys) w.play('keyJump', KEY_JUMP)
+      return
     }
     if (a.do === 'door') {
       if (!w.toggleDoor(player)) dispatch({ type: 'say', line: S.story.doorBlocked })
@@ -131,12 +166,14 @@ function useNearestTarget(active: boolean) {
 function Toast() {
   const line = useStory((st) => st.s.line)
   const phase = useStory((st) => st.s.phase)
+  const paused = useGame((g) => g.paused)
   const dispatch = useStory((st) => st.dispatch)
+  // Tạm dừng (mở hướng dẫn) thì câu thoại đứng lại, không tự tắt.
   useEffect(() => {
-    if (!line || phase !== 'room') return
-    const timer = setTimeout(() => dispatch({ type: 'clearLine' }), 2600)
+    if (!line || phase !== 'room' || paused) return
+    const timer = setTimeout(() => dispatch({ type: 'clearLine' }), 2800)
     return () => clearTimeout(timer)
-  }, [line, phase, dispatch])
+  }, [line, phase, paused, dispatch])
   if (!line || phase !== 'room') return null
   return <div className="toast">{line}</div>
 }
@@ -146,13 +183,24 @@ export function Hud({ isTouch }: { isTouch: boolean }) {
   const overlay = useStory((st) => st.s.overlay)
   const targetId = useNearestTarget(phase === 'room' && overlay === null)
   if (phase !== 'room') return null
+  const wardrobe = overlay === 'wardrobe'
   return (
     <>
-      {overlay !== 'wardrobe' && <Clock />}
-      {overlay !== 'wardrobe' && <Checklist />}
-      <Toast />
-      <PhoneButton />
-      {overlay === null && <DanceButton />}
+      {!wardrobe && (
+        <div className="hud-stack hud-tl">
+          <Checklist />
+        </div>
+      )}
+      <div className="hud-stack hud-tc">
+        {!wardrobe && <Clock />}
+        <Toast />
+      </div>
+      {!wardrobe && (
+        <div className="hud-tr">
+          {overlay === null && <DanceButton />}
+          <PhoneButton />
+        </div>
+      )}
       {overlay === null && <InteractPrompt targetId={targetId} isTouch={isTouch} />}
     </>
   )

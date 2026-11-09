@@ -40,3 +40,10 @@ test('nothing shows while still riding', () => {
   const { container } = render(<EndCard />)
   expect(container).toBeEmptyDOMElement()
 })
+
+test('police fines show on the end card', () => {
+  arrived({ fines: 4000, busts: 1 })
+  render(<EndCard />)
+  expect(screen.getByText('Đóng phạt sáng sớm')).toBeVisible()
+  expect(screen.getByText('4.000.000đ')).toBeVisible()
+})

@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import { BRUSH_DONE, PLAQUE_COLS, PLAQUE_ROWS, brushAt, cleanFraction, newPlaque, type Plaque } from '../story/minigames'
 import { useStory } from '../story/store'
@@ -100,8 +101,8 @@ export function BrushGame({ isTouch }: { isTouch: boolean }) {
   return (
     <div className="overlay-backdrop">
       <div className="card game">
-        <button className="card-close" aria-label="Đóng" onClick={() => dispatch({ type: 'close' })}>
-          ×
+        <button className="card-close" aria-label={S.hud.close} onClick={() => dispatch({ type: 'close' })}>
+          <X aria-hidden />
         </button>
         <h2>{S.brush.title}</h2>
         {step === 'pick' ? (

@@ -7,6 +7,8 @@ import { initialState } from '../story/state'
 import { useStory } from '../story/store'
 import { useGame } from '../store'
 import { RideHud } from './RideHud'
+import { Phone } from './Phone'
+import { startChase } from '../ride/police'
 
 beforeEach(() => {
   useStory.setState({ s: { ...initialState(1), phase: 'street', stage: 'toEm', minutes: 480 } })
@@ -59,13 +61,35 @@ test('no light warning on an open road', () => {
   expect(screen.queryByText(/^Đèn /)).toBeNull()
 })
 
-test('at Em’s door the HUD offers a call, then shows the phone ringing', async () => {
+test('at Em’s door: open the phone, call Em, her phone rings', async () => {
   useRide.setState({ bike: newBike(300, -100, 0), atEmDoor: true })
-  render(<RideHud isTouch={true} />)
-  fireEvent.click(screen.getByRole('button', { name: /Gọi Em/ }))
+  render(
+    <>
+      <RideHud isTouch={true} />
+      <Phone />
+    </>,
+  )
+  expect(screen.getByText(/Mở điện thoại gọi Em ra/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Điện thoại' }))
+  fireEvent.click(screen.getAllByRole('button', { name: 'Điện thoại' }).at(-1)!)
+  fireEvent.click(screen.getByRole('button', { name: 'Điện thoại Em ❤️' }))
   expect(useRide.getState().em).toBe('ringing')
-  expect(await screen.findByText('Đang gọi Em ❤️…')).toBeVisible()
-  expect(screen.queryByRole('button', { name: /Gọi Em/ })).toBeNull()
+  expect(screen.getByText('Đang gọi…')).toBeVisible()
+})
+
+test('E at Em’s door opens the phone and calls her straight away', () => {
+  useRide.setState({ bike: newBike(300, -100, 0), atEmDoor: true })
+  render(<RideHud isTouch={false} />)
+  fireEvent.keyDown(window, { code: 'KeyE' })
+  expect(useStory.getState().s.overlay).toBe('phone')
+  expect(useRide.getState().em).toBe('ringing')
+})
+
+test('the police chase shows a banner with the gap', () => {
+  const bike = newBike(150, 0, -Math.PI / 2)
+  useRide.setState({ bike, police: { ...startChase(bike, 0, 'redLight'), x: 120, z: 0 } })
+  render(<RideHud isTouch={false} />)
+  expect(screen.getByText(/CSGT đang đuổi! · 30 m/)).toBeVisible()
 })
 
 test('the minimap opens a big map that pauses the ride, and closes again', () => {
@@ -87,8 +111,8 @@ test('leaving the street with the map open does not leave the game paused', () =
 test('inside the stop ring the arrow becomes a pin instead of spinning', () => {
   useRide.setState({ bike: newBike(301, -99, -Math.PI / 2) })
   render(<RideHud isTouch={false} />)
-  expect(screen.getByText('📍')).toBeVisible()
-  expect(screen.queryByText('▲')).toBeNull()
+  expect(screen.getByRole('img', { name: 'Tới nơi' })).toBeVisible()
+  expect(screen.queryByRole('img', { name: 'Hướng đi' })).toBeNull()
 })
 
 test('the ride shows its missions, ticking off what is done', () => {
@@ -98,8 +122,8 @@ test('the ride shows its missions, ticking off what is done', () => {
   const items = within(list).getAllByRole('listitem')
   expect(items.map((li) => li.textContent)).toEqual([
     expect.stringContaining('Đón Em'),
-    expect.stringContaining('Đưa Em tới chỗ làm trước 8:25'),
-    expect.stringContaining('Tới công ty trước 8:30'),
+    expect.stringMatching(/Đưa Em tới chỗ làm.*8:25/),
+    expect.stringMatching(/Tới công ty.*8:30/),
   ])
   expect(items[0]).toHaveClass('done')
   expect(items[1]).toHaveClass('current')

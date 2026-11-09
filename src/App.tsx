@@ -1,7 +1,8 @@
 import { Canvas } from '@react-three/fiber'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { isDebug } from './debug'
 import { DPR_CAP, hasWebGL2, isTouchDevice, pickQuality } from './device'
+import { unlockAudio } from './sfx'
 import { Player } from './player/Player'
 import { Room } from './room/Room'
 import { WardrobeScene } from './room/WardrobeScene'
@@ -17,6 +18,7 @@ import { EndCard } from './ui/EndCard'
 import { HelpPanel } from './ui/HelpPanel'
 import { Hud } from './ui/Hud'
 import { Phone } from './ui/Phone'
+import { PhoneLens } from './ui/phone/PhoneLens'
 import { RideHud } from './ui/RideHud'
 import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
@@ -44,6 +46,7 @@ export default function App() {
   const street = useStory((st) => st.s.phase === 'street')
   // Chỉ khi có ?debug: mở store ra console để thử nhanh từng màn.
   if (debug) Object.assign(window, { __story: useStory, __world: useWorld, __ride: useRide })
+  useEffect(unlockAudio, [])
 
   if (!webgl) return <div className="no-webgl">{S.noWebGL}</div>
 
@@ -64,10 +67,10 @@ export default function App() {
           </>
         )}
         <StoryTicker />
+        <PhoneLens />
         {debug && <DebugProbe />}
       </Canvas>
       {isTouch && <TouchControls />}
-      <div className="title">{S.title}</div>
       {debug && <DebugOverlay quality={quality} />}
       <Hud isTouch={isTouch} />
       <RideHud isTouch={isTouch} />
