@@ -27,6 +27,7 @@ export type Cue =
   | 'escaped'
   | 'phoneOpen'
   | 'phoneClose'
+  | 'pcOn'
   | 'like'
   | 'order'
   | 'crash'
@@ -76,6 +77,7 @@ export function storyCues(a: StoryState, b: StoryState): Cue[] {
   if (b.likedEm && !a.likedEm) out.push('like')
   if (a.overlay !== 'phone' && b.overlay === 'phone') out.push('phoneOpen')
   if (a.overlay === 'phone' && b.overlay !== 'phone') out.push('phoneClose')
+  if (a.overlay !== 'computer' && b.overlay === 'computer') out.push('pcOn')
   const arrived = a.stage !== 'done' && b.stage === 'done' && b.phase === 'street'
   if (arrived) out.push('arrive')
   if (arrived || (a.phase !== 'overslept' && b.phase === 'overslept')) {

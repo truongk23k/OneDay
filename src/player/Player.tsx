@@ -117,10 +117,25 @@ export function Player() {
     let world = useWorld.getState()
     motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds(), lens: activeLens() })
 
+    // Ngồi ghế: Anh ở đúng chỗ ghế, quay vào bàn; đứng dậy thì ra sau ghế (cả khi màn hình máy tính đang mở).
+    const seat = () => {
+      if (world.sitting) {
+        s.x = CHAIR.x
+        s.z = CHAIR.z
+        s.facing = 0
+        wasSitting.current = true
+      } else if (wasSitting.current) {
+        s.x = CHAIR.x
+        s.z = STAND_Z
+        wasSitting.current = false
+      }
+    }
+
     motion.current.speed = 0
     if (paused) {
       input.look.dx = 0
       input.look.dy = 0
+      seat()
     } else {
       const dt = clampDelta(rawDt)
       s.yaw -= input.look.dx
@@ -138,16 +153,7 @@ export function Player() {
       const v = moveVector(stick, s.yaw)
       const busyPose = SNAP[motion.current.pose ?? 'none'] !== undefined
       const speed = world.sitting || busyPose ? 0 : Math.hypot(v.x, v.z)
-      if (world.sitting) {
-        s.x = CHAIR.x
-        s.z = CHAIR.z
-        s.facing = 0
-        wasSitting.current = true
-      } else if (wasSitting.current) {
-        s.x = CHAIR.x
-        s.z = STAND_Z
-        wasSitting.current = false
-      }
+      seat()
       if (speed > 0.01) {
         const run = keys.sprinting() || input.sprint ? SPRINT : 1
         motion.current.speed = speed * run

@@ -100,9 +100,10 @@ describe('fridge and computer', () => {
     expect(labels('fridge', { ...world, fridgeOpen: true })).toEqual(expect.arrayContaining(['Uống nước', 'Đóng tủ lạnh']))
   })
 
-  test('at the desk Anh can sit; sitting, he can browse, check mail or stand up', () => {
+  test('at the desk Anh can sit down at the computer; seated with the screen shut, he can open it again or stand up', () => {
     expect(labels('deskMine')).toContain('Ngồi máy tính')
-    expect(labels('deskMine', { ...world, sitting: true })).toEqual(['Lướt mạng', 'Check mail công ty', 'Đứng dậy'])
+    expect(labels('deskMine', { ...world, sitting: true })).toEqual(['Mở máy tính', 'Đứng dậy'])
+    expect(actionsFor('deskMine', room(), { ...world, sitting: true })[0].action).toEqual({ type: 'open', overlay: 'computer' })
   })
 })
 

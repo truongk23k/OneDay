@@ -129,11 +129,6 @@ describe('small actions', () => {
     expect(s.minutes).toBe(451)
     expect(s.line).toBeTruthy()
   })
-
-  test('browsing takes 3 minutes, checking mail 1 minute', () => {
-    expect(reducer(s0(), { type: 'browse' }).minutes).toBe(453)
-    expect(reducer(s0(), { type: 'mail' }).minutes).toBe(451)
-  })
 })
 
 describe('more actions', () => {

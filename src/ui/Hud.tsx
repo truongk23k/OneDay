@@ -123,7 +123,10 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
     else if (a.do === 'lights') w.toggleLights()
     else if (a.do === 'fridge') w.toggleFridge()
     else if (a.do === 'stove') w.toggleStove()
-    else if (a.do === 'sit') w.setSitting(true)
+    else if (a.do === 'sit') {
+      w.setSitting(true)
+      dispatch({ type: 'open', overlay: 'computer' })
+    }
     else if (a.do === 'stand') w.setSitting(false)
     else w.toggleWater(a.do)
   }
@@ -189,19 +192,20 @@ export function Hud({ isTouch }: { isTouch: boolean }) {
   const overlay = useStory((st) => st.s.overlay)
   const targetId = useNearestTarget(phase === 'room' && overlay === null)
   if (phase !== 'room') return null
-  const wardrobe = overlay === 'wardrobe'
+  // Tủ đồ và màn hình máy tính chiếm chỗ: ẩn bảng nhiệm vụ, đồng hồ, nút góc phải (vẫn hiện câu thoại).
+  const covered = overlay === 'wardrobe' || overlay === 'computer'
   return (
     <>
-      {!wardrobe && (
+      {!covered && (
         <div className="hud-stack hud-tl">
           <Checklist />
         </div>
       )}
       <div className="hud-stack hud-tc">
-        {!wardrobe && <Clock />}
+        {!covered && <Clock />}
         <Toast />
       </div>
-      {!wardrobe && (
+      {!covered && (
         <div className="hud-tr">
           {overlay === null && <DanceButton />}
           <PhoneButton />

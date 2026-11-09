@@ -14,6 +14,7 @@ import { useStory } from './story/store'
 import { S } from './strings'
 import { AlarmScreen } from './ui/AlarmScreen'
 import { BrushGame } from './ui/BrushGame'
+import { Computer } from './ui/Computer'
 import { DebugOverlay, DebugProbe } from './ui/DebugOverlay'
 import { EndCard } from './ui/EndCard'
 import { HelpPanel } from './ui/HelpPanel'
@@ -86,6 +87,7 @@ export default function App() {
       <WashGame />
       <Wardrobe />
       <Phone />
+      <Computer />
       <EndCard />
       <HelpPanel isTouch={isTouch} />
       <AudioDirector />

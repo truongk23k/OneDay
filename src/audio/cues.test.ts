@@ -58,6 +58,11 @@ describe('story cues', () => {
     expect(storyCues(open, reducer(open, { type: 'close' }))).toContain('phoneClose')
   })
 
+  test('the computer chimes when its screen comes on', () => {
+    const s = room()
+    expect(storyCues(s, reducer(s, { type: 'open', overlay: 'computer' }))).toContain('pcOn')
+  })
+
   test('nothing changes, nothing plays', () => {
     const s = room()
     expect(storyCues(s, s)).toEqual([])

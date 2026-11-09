@@ -53,8 +53,8 @@ function BackBar({ title, sub }: { title: string; sub?: string }) {
   )
 }
 
-// Tin nhắn với Em ❤️.
-export function MessagesApp() {
+// Tin nhắn với Em ❤️. bare: không có thanh quay lại (cửa sổ Mes trên máy tính tự vẽ tiêu đề).
+export function MessagesApp({ bare = false }: { bare?: boolean } = {}) {
   const chat = useStory((st) => st.s.chat)
   const minute = useStory((st) => Math.floor(st.s.minutes))
   const dispatch = useStory((st) => st.dispatch)
@@ -71,7 +71,7 @@ export function MessagesApp() {
   const replies = chat.pending !== null ? BEATS[chat.pending].replies : []
   return (
     <>
-      <BackBar title={S.chat.contact} sub={`${S.chat.online} · ${format(minute)}`} />
+      {!bare && <BackBar title={S.chat.contact} sub={`${S.chat.online} · ${format(minute)}`} />}
       <div className="chat-log">
         {chat.log.map((l, i) => (
           <div key={i} className={`bubble ${l.from}`}>

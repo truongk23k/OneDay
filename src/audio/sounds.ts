@@ -90,6 +90,8 @@ const PLAY: Record<Cue, () => void> = {
   },
   phoneOpen: () => tone({ f: 600, to: 950, dur: 0.1, gain: 0.08 }),
   phoneClose: () => tone({ f: 900, to: 560, dur: 0.1, gain: 0.07 }),
+  // Máy tính bật lên: tiếng khởi động êm.
+  pcOn: () => arp([60, 67, 72, 76], 0.1, 0.09, 'sine'),
   like: () => tone({ f: 520, to: 980, dur: 0.08, gain: 0.12 }),
   order: () => {
     mallet(hz(76), 0, 0.14)

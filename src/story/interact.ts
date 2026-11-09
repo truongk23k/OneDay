@@ -80,11 +80,10 @@ export function actionsFor(id: string, s: Pick<StoryState, 'tasks' | 'searched'>
     } else o.push({ label: S.options.fridgeOpen, action: { type: 'world', do: 'fridge' } })
   }
   if (id === 'deskMine') {
-    // Đang ngồi thì chỉ còn việc trên máy tính và đứng dậy.
+    // Ngồi xuống là máy tính bật lên; đang ngồi mà màn hình tắt thì mở lại hoặc đứng dậy.
     if (w.sitting) {
       return [
-        { label: S.options.browse, action: { type: 'browse' } },
-        { label: S.options.mail, action: { type: 'mail' } },
+        { label: S.options.openPc, action: { type: 'open', overlay: 'computer' } },
         { label: S.options.stand, action: { type: 'world', do: 'stand' } },
       ]
     }

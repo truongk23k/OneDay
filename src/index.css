@@ -3777,3 +3777,992 @@ kbd {
   padding: 4px 8px 6px;
   font-size: clamp(11px, 6cqw, 14px);
 }
+
+/* ---------- Máy tính ở bàn của Anh: màn hình nền, cửa sổ Chrome / Mes, thanh tác vụ ---------- */
+.pc-dock {
+  position: absolute;
+  z-index: 28;
+  top: var(--st);
+  bottom: var(--sb);
+  /* Chừa chỗ cho nút "?" ở góc phải (hai bên bằng nhau cho cân). */
+  left: calc(var(--sl) + var(--btn) + 8px);
+  right: calc(var(--sr) + var(--btn) + 8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pc {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  width: min(100%, 980px);
+  height: min(calc(100% - 22px), 600px);
+  padding: 10px 10px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #2c2f37, #15171c);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  animation: pop 0.2s ease-out;
+}
+
+/* Đèn nguồn ở viền dưới. */
+.pc::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4cd97b;
+  box-shadow: 0 0 6px #4cd97b;
+  transform: translateX(-50%);
+}
+
+.pc-stand {
+  flex: none;
+  width: 130px;
+  height: 22px;
+  background: linear-gradient(180deg, #3a3d45, #1d1f25);
+  clip-path: polygon(32% 0, 68% 0, 100% 100%, 0 100%);
+}
+
+.pc .pc-close {
+  top: -8px;
+  left: -8px;
+}
+
+.pc-screen {
+  container: pc / inline-size;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    radial-gradient(120% 85% at 72% 115%, #ffb36b 0%, #f0657e 30%, transparent 62%),
+    linear-gradient(160deg, #1f4296, #2d1b5e 58%, #120d2a);
+  font-size: 13px;
+}
+
+.pc-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.pc-desktop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(auto-fill, 76px);
+  grid-auto-columns: 78px;
+  align-content: start;
+  justify-content: start;
+  gap: 4px;
+  padding: 10px;
+}
+
+.pc-icon {
+  padding: 6px 2px;
+  border-radius: 8px;
+}
+
+.pc-icon:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.pc-icon .app-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.pc-icon .app-tile svg {
+  width: 24px;
+  height: 24px;
+}
+
+.app-tile.trash {
+  background: linear-gradient(160deg, #a3abbd, #5d6576);
+}
+
+.pc-wallpaper-text {
+  position: absolute;
+  right: 18px;
+  bottom: 12px;
+  font-family: var(--game);
+  font-size: clamp(15px, 3vw, 26px);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.app-tile.mini {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.app-tile.mini svg {
+  width: 15px;
+  height: 15px;
+}
+
+.app-tile.mini .badge {
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 10px;
+}
+
+/* Cửa sổ (luôn phóng to hết màn hình nền) */
+.pc-window {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #202124;
+  animation: pop 0.15s ease-out;
+}
+
+.pc-titlebar {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 34px;
+  padding-left: 8px;
+  background: #16171a;
+}
+
+.pc-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 240px;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 9px 9px 0 0;
+  background: #35363a;
+  font-size: 12px;
+}
+
+.pc-tab span,
+.pc-url span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pc-tab svg,
+.pc-wintitle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pc-newtab,
+.pc-address button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #e8eaed;
+  cursor: pointer;
+}
+
+.pc-newtab {
+  align-self: center;
+  width: 26px;
+  height: 26px;
+}
+
+.pc-newtab:hover,
+.pc-address button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pc-address button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pc-newtab svg,
+.pc-address button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pc-wintitle {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.pc-winbtns {
+  align-self: stretch;
+  display: flex;
+  margin-left: auto;
+}
+
+.pc-winbtns button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #e8eaed;
+  cursor: pointer;
+}
+
+.pc-winbtns button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pc-winbtns button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pc-winbtns button.close:hover {
+  background: #e81123;
+}
+
+.pc-address {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: #35363a;
+}
+
+.pc-url {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  margin-left: 4px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: #202124;
+  color: #e8eaed;
+}
+
+.pc-url svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: #9aa0a6;
+}
+
+.pc-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #202124;
+}
+
+/* Trang web: cả trang cuộn được */
+.pc-site {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.pc-site > .app-body {
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 580px;
+  min-height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.site-bar {
+  flex: none;
+  padding: 8px 16px;
+  font-weight: 800;
+}
+
+/* Gu Gồ */
+.gugo-home {
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+}
+
+.gugo-logo {
+  font-family: var(--game);
+  font-size: clamp(36px, 7vw, 64px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gugo-logo.small {
+  flex: none;
+  font-size: 24px;
+}
+
+.gugo-box {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 520px);
+  height: 44px;
+  padding: 0 6px 0 14px;
+  border: 1px solid #5f6368;
+  border-radius: 22px;
+  background: #303134;
+}
+
+.gugo-box.compact {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+}
+
+.gugo-box > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #9aa0a6;
+}
+
+.gugo-box input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #e8eaed;
+  font: inherit;
+  /* 16px: iPhone không tự phóng to khi gõ. */
+  font-size: 16px;
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
+.gugo-go {
+  flex: none;
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 15px;
+  background: #4f8dff;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gugo-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 560px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid #5f6368;
+  border-radius: 16px;
+  background: #303134;
+  color: #e8eaed;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: #3c4043;
+}
+
+.gugo-results {
+  gap: 12px;
+  padding: 12px clamp(12px, 4cqw, 40px) 18px;
+}
+
+.gugo-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.answer {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 620px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #303134;
+}
+
+.answer p {
+  margin: 4px 0 0;
+}
+
+.weather-answer > svg {
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+
+.weather-answer.sun > svg {
+  color: #ffc83d;
+}
+
+.weather-answer.rain > svg {
+  color: #8ab4f8;
+}
+
+.answer-big {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 620px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-url {
+  font-size: 12px;
+  color: #bdc1c6;
+}
+
+.result-title {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #8ab4f8;
+  font-size: 17px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result-title:hover {
+  text-decoration: underline;
+}
+
+.result-list p {
+  margin: 2px 0 0;
+  color: #bdc1c6;
+}
+
+/* Báo Sáng (trang sáng màu như báo thật) */
+.news-site {
+  background: #fbf8f3;
+  color: #1d1d1f;
+}
+
+.news-head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 16px;
+  background: #c8261b;
+  color: #fff;
+}
+
+.news-head strong {
+  font-family: var(--game);
+  font-size: 22px;
+}
+
+.news-head span {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.news-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0 16px;
+  margin: 0;
+  padding: 6px 14px;
+  list-style: none;
+}
+
+.news-list button {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 2px;
+  border: none;
+  border-bottom: 1px solid #e3ddd3;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.news-list button:hover .news-title {
+  color: #c8261b;
+}
+
+.news-pic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 44px;
+  border-radius: 6px;
+  background: #efe7da;
+  font-size: 24px;
+}
+
+.news-pic.big {
+  width: 100%;
+  max-width: 360px;
+  height: 110px;
+  margin: 6px 0;
+  font-size: 60px;
+}
+
+.news-tag {
+  display: block;
+  color: #c8261b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.news-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.news-article {
+  max-width: 680px;
+  padding: 8px clamp(12px, 4cqw, 40px) 16px;
+}
+
+.news-article h3 {
+  margin: 4px 0;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.news-article p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.news-site .link-btn {
+  color: #c8261b;
+}
+
+.news-site .news-cost {
+  margin: 0;
+  padding: 4px 16px 12px;
+  color: #7a7266;
+}
+
+/* Face bút trên web */
+.face-site {
+  background: #18191a;
+}
+
+.face-bar {
+  background: #1877f2;
+  color: #fff;
+  font-family: var(--game);
+  font-size: 20px;
+}
+
+/* Mail công ty trên web */
+.mail-site {
+  background: #101218;
+}
+
+.mail-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #2b2d31;
+  color: #e8eaed;
+  font-size: 15px;
+}
+
+.mail-bar svg {
+  width: 18px;
+  height: 18px;
+  color: #8ab4f8;
+}
+
+.mail-cols {
+  flex: 1 0 auto;
+  display: flex;
+}
+
+.mail-cols > .app-body {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
+.mail-folders {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 170px;
+  padding: 10px 8px;
+}
+
+.mail-compose {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #c2e7ff;
+  color: #001d35;
+  font-weight: 800;
+}
+
+.mail-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  color: #c4c7c5;
+}
+
+.mail-folder.on {
+  background: #3a4a62;
+  color: #fff;
+  font-weight: 800;
+}
+
+.mail-folder b {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.mail-compose svg,
+.mail-folder svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Mes trên máy tính: danh sách đoạn chat bên trái, chat với Em bên phải */
+.pc-mes {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: #101218;
+}
+
+.mes-side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 220px;
+  padding: 8px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+}
+
+.mes-side-title {
+  padding: 4px 6px 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.mes-row,
+.mes-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.mes-row {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.mes-row.on {
+  background: rgba(78, 161, 255, 0.16);
+}
+
+.mes-row > span:last-child,
+.mes-head > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mes-row small,
+.mes-head small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mes-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mes-head {
+  flex: none;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pc-mes .bubble {
+  max-width: 70%;
+}
+
+.pc-mes .chat-replies {
+  max-height: 42%;
+}
+
+/* Menu Bắt đầu */
+.pc-start {
+  position: absolute;
+  z-index: 5;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 210px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(32, 33, 38, 0.97);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: pop 0.15s ease-out;
+}
+
+.pc-start button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pc-start button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pc-start .pc-power {
+  margin-top: 4px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 8px 8px;
+}
+
+.pc-power svg {
+  width: 20px;
+  height: 20px;
+  margin: 0 3px;
+  color: #ff7a6b;
+}
+
+/* Thanh tác vụ */
+.pc-taskbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(20, 22, 30, 0.88);
+}
+
+.pc-task {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.pc-task:hover,
+.pc-task.on {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pc-task.start svg {
+  width: 21px;
+  height: 21px;
+  color: #6cb6ff;
+}
+
+.pc-task.running::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: #9aa0a6;
+  transform: translateX(-50%);
+}
+
+.pc-task.on::after {
+  width: 14px;
+  background: #4f8dff;
+}
+
+.pc-tray {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pc-tray svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Màn hình hẹp (điện thoại ngang): bỏ cột thư mục mail và danh sách chat cho rộng chỗ. */
+@container pc (max-width: 560px) {
+  .mail-folders,
+  .mes-side {
+    display: none;
+  }
+}
+
+/* Màn hình thấp (điện thoại xoay ngang): viền mỏng, bỏ chân đế, thanh gọn hơn. */
+@media (max-height: 450px) {
+  .pc {
+    height: 100%;
+    padding: 6px 8px 9px;
+    border-radius: 12px;
+  }
+
+  .pc::after {
+    bottom: 2px;
+    width: 4px;
+    height: 4px;
+  }
+
+  .pc-stand {
+    display: none;
+  }
+
+  .pc-desktop {
+    grid-template-rows: repeat(auto-fill, 66px);
+    grid-auto-columns: 70px;
+    padding: 6px;
+  }
+
+  .pc-icon .app-tile {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .pc-icon .app-tile svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .pc-titlebar {
+    height: 30px;
+  }
+
+  .pc-tab {
+    height: 25px;
+  }
+
+  .pc-address {
+    padding: 2px 6px;
+  }
+
+  .pc-address button {
+    width: 26px;
+    height: 26px;
+  }
+
+  .pc-url {
+    height: 24px;
+  }
+
+  .pc-taskbar {
+    height: 34px;
+  }
+
+  .pc-task {
+    height: 30px;
+  }
+
+  .gugo-home {
+    gap: 10px;
+  }
+
+  .gugo-box {
+    height: 38px;
+  }
+}

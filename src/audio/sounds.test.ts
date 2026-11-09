@@ -58,7 +58,7 @@ afterAll(() => {
   resetMixerForTest()
 })
 
-const CUES: Cue[] = ['message', 'sent', 'search', 'keyFound', 'taskDone', 'wrong', 'door', 'switch', 'fridge', 'flush', 'gulp', 'pickup', 'dropoff', 'arrive', 'endingGood', 'endingBad', 'whistle', 'cash', 'escaped', 'phoneOpen', 'phoneClose', 'like', 'order', 'crash', 'pothole', 'brake', 'honkedAt', 'horn', 'step', 'click', 'snooze', 'slash', 'spin', 'dash', 'thunder', 'enemySkill', 'kill', 'death', 'levelUp', 'towerHit']
+const CUES: Cue[] = ['message', 'sent', 'search', 'keyFound', 'taskDone', 'wrong', 'door', 'switch', 'fridge', 'flush', 'gulp', 'pickup', 'dropoff', 'arrive', 'endingGood', 'endingBad', 'whistle', 'cash', 'escaped', 'phoneOpen', 'phoneClose', 'pcOn', 'like', 'order', 'crash', 'pothole', 'brake', 'honkedAt', 'horn', 'step', 'click', 'snooze', 'slash', 'spin', 'dash', 'thunder', 'enemySkill', 'kill', 'death', 'levelUp', 'towerHit']
 
 test('every sound effect builds and plays notes', () => {
   for (const c of CUES) {

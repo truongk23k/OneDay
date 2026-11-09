@@ -8,7 +8,7 @@ export type Phase = 'alarm' | 'room' | 'street' | 'overslept'
 // Ngoài đường: đi đón Em (Màn 3) → chở Em đi làm (Màn 4) → nước rút một mình (Màn 5) → tới công ty.
 export type Stage = 'toEm' | 'withEm' | 'sprint' | 'done'
 const STAGE_ORDER: Stage[] = ['toEm', 'withEm', 'sprint', 'done']
-export type Overlay = null | 'brush' | 'wash' | 'wardrobe' | 'phone' | 'door'
+export type Overlay = null | 'brush' | 'wash' | 'wardrobe' | 'phone' | 'door' | 'computer'
 export type Weather = 'sun' | 'rain'
 export type Outfit = { top: string; bottom: string; shoes: string; raincoat: boolean }
 
@@ -115,8 +115,6 @@ export type Action =
   | { type: 'bathe' }
   | { type: 'flex' }
   | { type: 'nap' }
-  | { type: 'browse' }
-  | { type: 'mail' }
   | { type: 'chatSeen' }
   | { type: 'clearLine' }
   | { type: 'restart'; seed: number }
@@ -363,12 +361,6 @@ export function reducer(s: StoryState, a: Action): StoryState {
       return { ...s, minutes: s.minutes + 3, line: S.story.nap }
     case 'drink':
       return { ...s, minutes: s.minutes + 1, line: S.story.drink }
-    case 'browse': {
-      const lines = S.story.browse
-      return { ...s, minutes: s.minutes + 3, line: lines[Math.floor(s.minutes) % lines.length] }
-    }
-    case 'mail':
-      return { ...s, minutes: s.minutes + 1, line: S.story.mail }
     case 'say':
       return { ...s, line: a.line }
     case 'clearLine':
