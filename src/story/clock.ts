@@ -1,5 +1,8 @@
 // Giờ trong game tính bằng phút kể từ nửa đêm. 7:30 = 450.
 export const GAME_START = 450
+// Giờ hạn: Em vào làm 8:45, Anh vào làm 9:00 (phút trong ngày).
+export const EM_DEADLINE = 525
+export const ANH_DEADLINE = 540
 // Số giây trong game trôi qua cho mỗi giây thật: 60 phút game ≈ 7 phút thật.
 export const SPEED = 8.5
 

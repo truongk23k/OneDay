@@ -1,9 +1,9 @@
+import { ANH_DEADLINE } from '../story/clock'
 import type { StoryState } from '../story/state'
 
 export type EndingId = 'overslept' | 'late' | 'lateWarned' | 'emUpset' | 'busted' | 'perfect' | 'ok'
 export type Ending = { id: EndingId; also: EndingId[]; emText?: string }
 
-const ANH_DEADLINE = 510
 const UPSET_MOOD = 40
 const HAPPY_MOOD = 70
 const FRESH = 70

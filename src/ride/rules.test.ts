@@ -80,11 +80,11 @@ describe('riding with Em', () => {
     expect(reducer(street(), { type: 'rideEvent', kind: 'crash' }).mood).toBe(60)
   })
 
-  test('dropping Em by 8:25 pleases her; late upsets her', () => {
-    const onTime = reducer(street({ stage: 'withEm', minutes: 504 }), { type: 'dropoff' })
+  test('dropping Em by 8:45 pleases her; late upsets her', () => {
+    const onTime = reducer(street({ stage: 'withEm', minutes: 524 }), { type: 'dropoff' })
     expect(onTime.stage).toBe('sprint')
     expect(onTime.mood).toBe(65)
-    const late = reducer(street({ stage: 'withEm', minutes: 506 }), { type: 'dropoff' })
+    const late = reducer(street({ stage: 'withEm', minutes: 526 }), { type: 'dropoff' })
     expect(late.mood).toBe(40)
     expect(late.emDropLate).toBe(true)
   })

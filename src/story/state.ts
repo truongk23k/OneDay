@@ -1,5 +1,5 @@
 import { S } from '../strings'
-import { GAME_START, STREET_SPEED, advance } from './clock'
+import { EM_DEADLINE, GAME_START, STREET_SPEED, advance } from './clock'
 import { chatReply, chatSeen, chatTick, newChat, type ChatState } from './chat'
 import { HINTS, outfitVerdict } from './outfit'
 import { mulberry32, pick } from './rng'
@@ -14,7 +14,8 @@ export type Outfit = { top: string; bottom: string; shoes: string; raincoat: boo
 
 export const KEY_SPOTS = ['bed', 'wardrobe', 'fridge', 'deskMine', 'kitchen', 'shelf'] as const
 export const PYJAMAS: Outfit = { top: 'pyjama', bottom: 'floral', shoes: 'honeycomb', raincoat: false }
-export const OVERSLEEP_AT = 480
+// Ngủ tới 8:15 là không kịp gì nữa.
+export const OVERSLEEP_AT = 495
 // Tiền tính bằng nghìn đồng. Phạt CSGT (trò chơi, không phải biểu phí thật).
 export const START_MONEY = 5000
 export const FINES = { redLight: 4000, wheelie: 8000, helmet: 400 } as const
@@ -23,7 +24,8 @@ const GRAB_HURT = 5
 export type PoliceReason = keyof typeof FINES
 // Trễ hơn giờ đã hứa quá mức này thì Em dỗi.
 const PROMISE_GRACE = 2
-const LATE_CALL = 495
+// Tới gọi Em sau 8:30 thì Em dỗi.
+const LATE_CALL = 510
 const NO_TEXT_DELAY = 4
 
 export type Tasks = {
@@ -51,7 +53,7 @@ export type StoryState = {
   pasteFirst: boolean
   hint: number
   searched: string[]
-  // Thả Em ở chỗ làm sau 8:25.
+  // Thả Em ở chỗ làm sau 8:45.
   emDropLate: boolean
   // Ví (nghìn đồng), tổng tiền phạt, số lần bị CSGT tóm.
   money: number
@@ -64,6 +66,8 @@ export type StoryState = {
   calledEm: boolean
   // Đã thử đặt GrapBike cho Em (Em từ chối), đã thả tim bài của Em trên Face bút.
   triedGrab: boolean
+  // Số trận Liên Quậy đã chơi sáng nay.
+  matches: number
   likedEm: boolean
   chat: ChatState
   line: string | null
@@ -102,6 +106,7 @@ export type Action =
   | { type: 'scroll' }
   | { type: 'grabForEm' }
   | { type: 'likeEmPost' }
+  | { type: 'matchEnd'; won: boolean }
   | { type: 'drink' }
   | { type: 'pullup' }
   | { type: 'pee' }
@@ -143,6 +148,7 @@ export function initialState(seed: number): StoryState {
     breakfast: false,
     calledEm: false,
     triedGrab: false,
+    matches: 0,
     likedEm: false,
     chat: newChat(),
     line: null,
@@ -263,7 +269,7 @@ export function reducer(s: StoryState, a: Action): StoryState {
     }
     case 'dropoff': {
       if (s.phase !== 'street' || s.stage !== 'withEm') return s
-      const late = s.minutes > 505
+      const late = s.minutes > EM_DEADLINE
       // Đồ ăn sáng Anh đặt giao tới chỗ làm: Em vui hơn (trễ thì đỡ giận một chút).
       const food = s.breakfast ? 8 : 0
       const line = late ? S.ride.dropLate : s.breakfast ? S.ride.dropBreakfast : S.ride.dropOnTime
@@ -322,6 +328,14 @@ export function reducer(s: StoryState, a: Action): StoryState {
       // Em không chịu đi Grap: Anh phải tự qua đón. Thử lần đầu thì Em dỗi nhẹ.
       if (s.triedGrab) return { ...s, line: S.phone.grab.bikeLine }
       return { ...s, triedGrab: true, mood: clamp100(s.mood - GRAB_HURT), line: S.phone.grab.bikeLine }
+    case 'matchEnd':
+      // Trận đầu tiên Em biết là Anh chơi game buổi sáng: dỗi nhẹ.
+      return {
+        ...s,
+        matches: s.matches + 1,
+        mood: clamp100(s.mood - (s.matches === 0 ? 4 : 0)),
+        line: a.won ? S.phone.moba.lineWin : S.phone.moba.lineLose,
+      }
     case 'likeEmPost':
       return s.likedEm ? s : { ...s, likedEm: true, mood: clamp100(s.mood + 2) }
     case 'stage': {

@@ -5,7 +5,7 @@ import { S } from '../../strings'
 import { AIM_PITCH, AIM_YAW, type Aim, type Lens } from './lens'
 
 // Điện thoại của Anh: màn hình chính với các app, và cuộc gọi đang diễn ra.
-export type AppId = 'home' | 'messages' | 'call' | 'maps' | 'face' | 'grap' | 'weather' | 'bank' | 'music' | 'mail' | 'notes' | 'camera' | 'settings'
+export type AppId = 'home' | 'messages' | 'call' | 'maps' | 'face' | 'grap' | 'moba' | 'weather' | 'bank' | 'music' | 'mail' | 'notes' | 'camera' | 'settings'
 export type Contact = 'em' | 'boss' | 'mom'
 export type Call = { who: Contact; phase: 'ringing' | 'talking'; text: string | null }
 

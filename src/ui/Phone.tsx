@@ -13,6 +13,7 @@ import {
   Settings,
   Signal,
   Sun,
+  Swords,
   ThumbsUp,
   Wifi,
   X,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useEffect } from 'react'
 import { BackGlyph, PhoneGlyph } from './GameIcons'
+import { MobaApp } from './phone/MobaApp'
 import { useRide } from '../ride/store'
 import { format } from '../story/clock'
 import { useStory } from '../story/store'
@@ -36,6 +38,7 @@ const APPS: AppDef[] = [
   { id: 'maps', icon: MapPin, color: 'linear-gradient(160deg, #ffffff 55%, #d7f0dd)', ink: '#ea4335' },
   { id: 'face', icon: ThumbsUp, color: '#1877f2' },
   { id: 'grap', icon: Bike, color: '#00b14f' },
+  { id: 'moba', icon: Swords, color: 'linear-gradient(150deg, #ffcf4d, #e0412f 60%, #6b1a7a)' },
   { id: 'weather', icon: Sun, color: 'linear-gradient(160deg, #4aa8ff, #1f5fd6)' },
   { id: 'bank', icon: Landmark, color: '#5e5ce6' },
   { id: 'music', icon: Headphones, color: 'linear-gradient(160deg, #ff5f7e, #c2246b)' },
@@ -51,6 +54,7 @@ const VIEWS: Record<Exclude<AppId, 'home'>, () => React.ReactNode> = {
   maps: MapsApp,
   face: FaceApp,
   grap: GrapApp,
+  moba: MobaApp,
   weather: WeatherApp,
   bank: BankApp,
   music: MusicApp,

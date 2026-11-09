@@ -40,9 +40,9 @@ describe('story cues', () => {
   test('the ending plays a happy or a sad tune', () => {
     const sprint: StoryState = { ...room(), phase: 'street', stage: 'sprint', minutes: 500, mood: 90, hygiene: 90, tasks: { brushed: true, washed: true, dressed: true, texted: true, keys: true, helmets: 2 } }
     expect(storyCues(sprint, reducer(sprint, { type: 'arrive' }))).toContain('endingGood')
-    const late = { ...sprint, minutes: 515 }
+    const late = { ...sprint, minutes: 545 }
     expect(storyCues(late, reducer(late, { type: 'arrive' }))).toContain('endingBad')
-    const alarm: StoryState = { ...initialState(1), minutes: 475 }
+    const alarm: StoryState = { ...initialState(1), minutes: 490 }
     expect(storyCues(alarm, reducer(alarm, { type: 'snooze' }))).toContain('endingBad')
   })
 

@@ -4,6 +4,7 @@ import { LIGHTS, ROAD_HALF } from '../ride/city'
 import { nextTurn, routeTo, type Pt, type Route } from '../ride/nav'
 import { CHECKPOINT, helmetsShort } from '../ride/police'
 import { STOP_RADIUS, targetFor } from '../ride/rules'
+import { ANH_DEADLINE, EM_DEADLINE, format } from '../story/clock'
 import { rideInput, useRide } from '../ride/store'
 import { axisOf, lightState, type LightColor } from '../ride/traffic'
 import type { BikeState } from '../ride/bike'
@@ -199,8 +200,8 @@ function RideToast() {
 const MISSION_ORDER: Stage[] = ['toEm', 'withEm', 'sprint']
 const MISSIONS = [
   { stage: 'toEm', label: S.ride.missions.pickup, due: null },
-  { stage: 'withEm', label: S.ride.missions.dropoff, due: '8:25' },
-  { stage: 'sprint', label: S.ride.missions.arrive, due: '8:30' },
+  { stage: 'withEm', label: S.ride.missions.dropoff, due: format(EM_DEADLINE) },
+  { stage: 'sprint', label: S.ride.missions.arrive, due: format(ANH_DEADLINE) },
 ] as const
 
 // Ba nhiệm vụ của chuyến xe (bảng quest): đánh số, xong thì tích xanh, đang làm sáng vàng, đưa Em trễ thì đỏ.

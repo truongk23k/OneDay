@@ -122,8 +122,8 @@ test('the ride shows its missions, ticking off what is done', () => {
   const items = within(list).getAllByRole('listitem')
   expect(items.map((li) => li.textContent)).toEqual([
     expect.stringContaining('Đón Em'),
-    expect.stringMatching(/Đưa Em tới chỗ làm.*8:25/),
-    expect.stringMatching(/Tới công ty.*8:30/),
+    expect.stringMatching(/Đưa Em tới chỗ làm.*8:45/),
+    expect.stringMatching(/Tới công ty.*9:00/),
   ])
   expect(items[0]).toHaveClass('done')
   expect(items[1]).toHaveClass('current')

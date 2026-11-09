@@ -27,7 +27,7 @@ import { useSettings } from '../../audio/engine'
 import { music, TRACKS } from '../../audio/music'
 import { useGame } from '../../store'
 import { BEATS } from '../../story/chat'
-import { format } from '../../story/clock'
+import { ANH_DEADLINE, EM_DEADLINE, format } from '../../story/clock'
 import { FOOD_PRICE, START_MONEY, type Tasks } from '../../story/state'
 import { useStory } from '../../story/store'
 import { S } from '../../strings'
@@ -433,7 +433,7 @@ export function NotesApp() {
       </ul>
       <div className="app-section">{S.phone.notes.ride}</div>
       <ul className="note-list">
-        {[S.ride.missions.pickup, `${S.ride.missions.dropoff} · 8:25`, `${S.ride.missions.arrive} · 8:30`].map((m) => (
+        {[S.ride.missions.pickup, `${S.ride.missions.dropoff} · ${format(EM_DEADLINE)}`, `${S.ride.missions.arrive} · ${format(ANH_DEADLINE)}`].map((m) => (
           <li key={m}>
             <Circle aria-hidden />
             {m}

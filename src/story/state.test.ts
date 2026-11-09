@@ -27,10 +27,12 @@ test('snooze adds 5 minutes and says something', () => {
   expect(s.line).toBeTruthy()
 })
 
-test('snoozing to 8:00 oversleeps', () => {
+test('snoozing to 8:15 oversleeps', () => {
   let s: StoryState = initialState(1)
-  for (let i = 0; i < 6; i++) s = reducer(s, { type: 'snooze' })
-  expect(s.minutes).toBe(480)
+  for (let i = 0; i < 8; i++) s = reducer(s, { type: 'snooze' })
+  expect(s.phase).toBe('alarm')
+  s = reducer(s, { type: 'snooze' })
+  expect(s.minutes).toBe(495)
   expect(s.phase).toBe('overslept')
 })
 
@@ -298,14 +300,14 @@ describe('promises and texting', () => {
       }
       return reducer(s, { type: 'chatReply', index: i }).promise
     }
-    expect(at(0)).toBe(480)
-    expect(at(1)).toBe(490)
+    expect(at(0)).toBe(495)
+    expect(at(1)).toBe(510)
     expect(at(2)).toBeNull()
   })
 
   test('picking Em up later than promised costs mood', () => {
-    const kept = reducer(street({ promise: 480, minutes: 481 }), { type: 'pickup' })
-    const broken = reducer(street({ promise: 480, minutes: 486 }), { type: 'pickup' })
+    const kept = reducer(street({ promise: 495, minutes: 496 }), { type: 'pickup' })
+    const broken = reducer(street({ promise: 495, minutes: 501 }), { type: 'pickup' })
     expect(kept.mood - broken.mood).toBe(8)
     expect(broken.line).toBe(S.ride.brokePromise)
   })
@@ -319,7 +321,8 @@ describe('promises and texting', () => {
     expect(unready.minutes).toBe(484)
     expect(unready.mood).toBe(55)
     expect(unready.line).toBe(S.ride.callNoText)
-    expect(reducer(street({ minutes: 500 }), { type: 'emAnswers' }).line).toBe(S.ride.callLate)
+    expect(reducer(street({ minutes: 505 }), { type: 'emAnswers' }).line).toBe(S.ride.callAnswer)
+    expect(reducer(street({ minutes: 515 }), { type: 'emAnswers' }).line).toBe(S.ride.callLate)
   })
 })
 
@@ -338,5 +341,18 @@ describe('Grap and Face bút', () => {
     const a = reducer({ ...s0(), mood: 60 }, { type: 'likeEmPost' })
     expect(a.mood).toBe(62)
     expect(reducer(a, { type: 'likeEmPost' }).mood).toBe(62)
+  })
+})
+
+describe('Liên Quậy', () => {
+  test('finishing a match says how it went; the first one also annoys Em', () => {
+    const win = reducer({ ...s0(), mood: 60 }, { type: 'matchEnd', won: true })
+    expect(win.line).toBe(S.phone.moba.lineWin)
+    expect(win.mood).toBe(56)
+    expect(win.matches).toBe(1)
+    const lose = reducer(win, { type: 'matchEnd', won: false })
+    expect(lose.line).toBe(S.phone.moba.lineLose)
+    expect(lose.mood).toBe(56)
+    expect(lose.matches).toBe(2)
   })
 })

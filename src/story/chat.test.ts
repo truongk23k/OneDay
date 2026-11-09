@@ -99,6 +99,7 @@ describe('the morning script fits picking Em up', () => {
   })
 
   test('the last nudge comes before Em has to be at work', () => {
-    expect(BEATS.at(-1)!.at).toBeLessThan(505)
+    expect(BEATS.at(-1)!.at).toBeLessThan(525)
+    expect(BEATS.find((b) => b.id === 'late')!.at).toBeGreaterThanOrEqual(500)
   })
 })

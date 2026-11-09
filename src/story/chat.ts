@@ -12,9 +12,9 @@ export const BEATS: Beat[] = [
   { id: 'hint', at: 458, msg: null, replies: C.hint.replies },
   { id: 'when', at: 464, msg: C.when.msg, replies: C.when.replies },
   { id: 'helmet', at: 470, msg: C.helmet.msg, replies: C.helmet.replies },
-  // Anh còn ở trong phòng thì Em hối: 7:56 Em đã sẵn sàng, 8:06 Em sắp trễ.
-  { id: 'ready', at: 476, msg: C.ready.msg, replies: C.ready.replies },
-  { id: 'late', at: 486, msg: C.late.msg, replies: C.late.replies },
+  // Anh còn ở trong phòng thì Em hối: 8:10 Em đã sẵn sàng, 8:25 Em sắp trễ.
+  { id: 'ready', at: 490, msg: C.ready.msg, replies: C.ready.replies },
+  { id: 'late', at: 505, msg: C.late.msg, replies: C.late.replies },
 ]
 
 export const ESCALATE_AFTER = 6

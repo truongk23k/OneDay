@@ -34,7 +34,8 @@ test('oversleeping shows the oversleep card, and Chơi lại starts over', async
       <EndCard />
     </>,
   )
-  for (let i = 0; i < 6; i++) await userEvent.click(screen.getByRole('button', { name: 'Báo lại 5 phút' }))
+  // Ngủ tới 8:15: chín lần báo lại.
+  for (let i = 0; i < 9; i++) await userEvent.click(screen.getByRole('button', { name: 'Báo lại 5 phút' }))
   expect(screen.getByText('Ngủ quên!')).toBeVisible()
   await userEvent.click(screen.getByRole('button', { name: 'Chơi lại' }))
   expect(useStory.getState().s.phase).toBe('alarm')

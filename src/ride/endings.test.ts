@@ -20,11 +20,12 @@ test('everything right, on time, Em happy → model employee, national boyfriend
   expect(pickEnding(done()).id).toBe('perfect')
 })
 
-test('arriving after 8:30 → the boss is waiting at the door', () => {
-  expect(pickEnding(done({ minutes: 511 })).id).toBe('late')
+test('arriving after 9:00 → the boss is waiting at the door', () => {
+  expect(pickEnding(done({ minutes: 530 })).id).not.toBe('late')
+  expect(pickEnding(done({ minutes: 541 })).id).toBe('late')
 })
 
-test('Em upset (low mood or dropped after 8:25) → "Mai em tự đi làm ko cần đón"', () => {
+test('Em upset (low mood or dropped after 8:45) → "Mai em tự đi làm ko cần đón"', () => {
   const e = pickEnding(done({ mood: 30 }))
   expect(e.id).toBe('emUpset')
   expect(e.emText).toBe('Mai em tự đi làm ko cần đón')
@@ -32,7 +33,7 @@ test('Em upset (low mood or dropped after 8:25) → "Mai em tự đi làm ko c�
 })
 
 test('priority: overslept > late > Em upset > fined > perfect, others as extra lines', () => {
-  const e = pickEnding(done({ minutes: 515, mood: 20, busts: 1, fines: 4000 }))
+  const e = pickEnding(done({ minutes: 545, mood: 20, busts: 1, fines: 4000 }))
   expect(e.id).toBe('late')
   expect(e.also).toEqual(['emUpset', 'busted'])
   expect(pickEnding({ ...initialState(1), phase: 'overslept' }).id).toBe('overslept')
@@ -49,10 +50,10 @@ test('perfect also needs Anh to smell nice', () => {
 
 test('a police fine shows up as its own ending line', () => {
   expect(pickEnding(done({ fines: 4000, busts: 1 })).id).toBe('busted')
-  const e = pickEnding(done({ minutes: 512, fines: 400, busts: 1 }))
+  const e = pickEnding(done({ minutes: 542, fines: 400, busts: 1 }))
   expect(e.also).toContain('busted')
 })
 
 test('late but the boss was warned → a softer ending', () => {
-  expect(pickEnding(done({ minutes: 512, warnedBoss: true })).id).toBe('lateWarned')
+  expect(pickEnding(done({ minutes: 542, warnedBoss: true })).id).toBe('lateWarned')
 })
