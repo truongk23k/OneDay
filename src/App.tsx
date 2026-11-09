@@ -25,6 +25,7 @@ import { TouchControls } from './ui/TouchControls'
 import { Wardrobe } from './ui/Wardrobe'
 import { WashGame } from './ui/WashGame'
 import { installMultiTouchTap } from './ui/multiTouch'
+import { lockZoom } from './ui/zoomLock'
 
 // Cảnh phố chỉ tải khi ra khỏi phòng, để lần vào game đầu nhẹ hơn.
 const StreetScene = lazy(() => import('./ride/StreetScene'))
@@ -50,6 +51,8 @@ export default function App() {
   useEffect(unlockAudio, [])
   // Cảm ứng: vừa giữ joystick / ga vừa bấm nút khác vẫn ăn (iPhone).
   useEffect(() => (isTouch ? installMultiTouchTap() : undefined), [isTouch])
+  // iPhone bỏ qua lệnh cấm zoom của trang: chặn chụm hai ngón và chạm đúp bằng tay.
+  useEffect(() => (isTouch ? lockZoom() : undefined), [isTouch])
 
   if (!webgl) return <div className="no-webgl">{S.noWebGL}</div>
 
