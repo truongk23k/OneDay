@@ -24,7 +24,15 @@
   --st: max(8px, env(safe-area-inset-top));
   --sb: max(10px, env(safe-area-inset-bottom));
   --btn: 46px;
+  /* Chiều cao màn hình thật (trừ thanh địa chỉ Safari) để tính cỡ điện thoại. */
+  --vh: 100vh;
   color-scheme: dark;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --vh: 100dvh;
+  }
 }
 
 html,
@@ -894,12 +902,12 @@ kbd {
 
 /* ---------- Điện thoại (dáng iPhone 13 xanh lá, không logo) ---------- */
 .phone {
+  /* Cỡ cố định theo chiều cao màn hình, tỉ lệ 10:17 (không dựa vào aspect-ratio: Safari tính khác, máy bị dẹt). */
+  --ph: min(calc(var(--vh) - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 620px);
   box-sizing: border-box;
-  height: min(100%, 620px);
-  aspect-ratio: 10 / 17;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 0;
+  flex: none;
+  height: var(--ph);
+  width: calc(var(--ph) * 10 / 17);
   display: flex;
   flex-direction: column;
   padding: 8px;
@@ -2728,17 +2736,16 @@ kbd {
 .phone-dock {
   position: absolute;
   z-index: 45;
-  right: var(--sr);
+  right: calc(var(--sr) + var(--btn) + 10px);
   bottom: var(--sb);
-  top: calc(var(--st) + var(--btn) + 12px);
   display: flex;
   align-items: flex-end;
   pointer-events: none;
 }
 
 .phone-dock .phone {
+  --ph: min(calc(var(--vh) - var(--st) - var(--sb)), 560px);
   position: relative;
-  height: min(100%, 560px);
   pointer-events: auto;
 }
 
@@ -2988,4 +2995,54 @@ kbd {
 
 .quest li.done .quest-due {
   opacity: 0.5;
+}
+
+/* Màn hình rất thấp: icon app nhỏ lại để màn hình chính vừa khít điện thoại. */
+@media (max-height: 360px) {
+  .phone-status {
+    height: 24px;
+  }
+
+  .phone-home {
+    gap: 5px 2px;
+    padding: 4px 6px;
+  }
+
+  .app-tile {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .app-tile svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app-name {
+    font-size: 10px;
+  }
+
+  .phone-homebar {
+    height: 16px;
+  }
+
+  .phone-homebar::after {
+    top: 5px;
+  }
+}
+
+/* Trong điện thoại: cuộn được nhưng không hiện thanh cuộn (giống máy thật). */
+.phone-home,
+.phone .app-body,
+.phone .chat-log,
+.phone .chat-replies {
+  scrollbar-width: none;
+}
+
+.phone-home::-webkit-scrollbar,
+.phone .app-body::-webkit-scrollbar,
+.phone .chat-log::-webkit-scrollbar,
+.phone .chat-replies::-webkit-scrollbar {
+  display: none;
 }
