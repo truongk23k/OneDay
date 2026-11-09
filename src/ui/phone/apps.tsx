@@ -1,5 +1,6 @@
 import {
   Camera,
+  Check,
   ChevronLeft,
   CircleCheck,
   Circle,
@@ -246,11 +247,13 @@ function BankQr() {
         <div className="bank-qr-number">{B.number}</div>
         <div className="bank-qr-bank">{B.bankName}</div>
       </div>
-      <button className="btn btn-bank btn-block" onClick={() => void copyText(B.number).then(setCopied)}>
-        <Copy aria-hidden />
+      <button
+        className={copied ? 'btn btn-grap btn-block bank-copy' : 'btn btn-bank btn-block bank-copy'}
+        onClick={() => void copyText(B.number).then(setCopied)}
+      >
+        {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
         {copied ? B.copied : B.copy}
       </button>
-      <p className="muted">{B.qrNote}</p>
     </>
   )
 }

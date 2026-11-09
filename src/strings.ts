@@ -354,9 +354,8 @@ export const S = {
       owner: 'LAI VAN TRUONG',
       number: '4820875900',
       bankName: 'BIDV',
-      qrNote: 'Thích game thì ủng hộ mình ly cà phê nha ☕ Chơi trên điện thoại thì chụp màn hình rồi mở app ngân hàng quét ảnh.',
       copy: 'Chép số tài khoản',
-      copied: 'Đã chép số tài khoản ✓',
+      copied: 'Đã chép số tài khoản',
     },
     grab: {
       food: 'GrapFood',

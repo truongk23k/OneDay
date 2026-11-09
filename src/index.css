@@ -1441,6 +1441,11 @@ kbd {
   color: #6b6b72;
 }
 
+/* Nút chép: luôn 1 dòng (chữ "Đã chép…" không bị xuống dòng trên điện thoại nhỏ) */
+.btn.bank-copy {
+  white-space: nowrap;
+}
+
 .btn-bank {
   --c1: #7b79ff;
   --c2: #4a48d6;
