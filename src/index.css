@@ -2997,41 +2997,6 @@ kbd {
   opacity: 0.5;
 }
 
-/* Màn hình rất thấp: icon app nhỏ lại để màn hình chính vừa khít điện thoại. */
-@media (max-height: 360px) {
-  .phone-status {
-    height: 24px;
-  }
-
-  .phone-home {
-    gap: 5px 2px;
-    padding: 4px 6px;
-  }
-
-  .app-tile {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-  }
-
-  .app-tile svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .app-name {
-    font-size: 10px;
-  }
-
-  .phone-homebar {
-    height: 16px;
-  }
-
-  .phone-homebar::after {
-    top: 5px;
-  }
-}
-
 /* Trong điện thoại: cuộn được nhưng không hiện thanh cuộn (giống máy thật). */
 .phone-home,
 .phone .app-body,
@@ -3045,4 +3010,316 @@ kbd {
 .phone .chat-log::-webkit-scrollbar,
 .phone .chat-replies::-webkit-scrollbar {
   display: none;
+}
+
+/* ---------- Bên trong điện thoại: co giãn theo cỡ máy (container query), không theo màn hình ngoài ----------
+   cqw/cqh = % chiều rộng/cao màn hình điện thoại. Máy rộng từ ~160px (điện thoại thấp) tới ~310px (PC). */
+.phone-screen {
+  container: phone / size;
+}
+
+.phone .phone-status {
+  height: clamp(22px, 15cqw, 32px);
+  padding: 2px 9cqw 0 11cqw;
+  font-size: clamp(9px, 5.2cqw, 12px);
+}
+
+.phone .phone-status-icons svg {
+  width: clamp(9px, 5.4cqw, 13px);
+  height: clamp(9px, 5.4cqw, 13px);
+}
+
+.phone .phone-screen::before {
+  top: clamp(5px, 3cqw, 8px);
+  height: clamp(11px, 7.5cqw, 18px);
+}
+
+.phone .phone-home {
+  gap: clamp(3px, 2.6cqh, 16px) clamp(2px, 2cqw, 8px);
+  padding: clamp(4px, 2.6cqh, 14px) 4cqw;
+}
+
+.phone .app-tile {
+  width: clamp(30px, min(25cqw, 12.5cqh), 60px);
+  height: clamp(30px, min(25cqw, 12.5cqh), 60px);
+  border-radius: 28%;
+}
+
+.phone .app-tile svg {
+  width: 55%;
+  height: 55%;
+}
+
+.phone .app-name {
+  font-size: clamp(9px, 5.4cqw, 12.5px);
+}
+
+.phone .phone-homebar {
+  height: clamp(14px, 9cqw, 22px);
+}
+
+.phone .phone-homebar::after {
+  top: 45%;
+  height: clamp(4px, 2.2cqw, 5px);
+}
+
+.phone .app-bar {
+  padding: 2px 4cqw 4px 1cqw;
+}
+
+.phone .app-back {
+  width: clamp(26px, 16cqw, 36px);
+  height: clamp(26px, 16cqw, 36px);
+}
+
+.phone .app-back .glyph {
+  width: 60%;
+  height: 60%;
+}
+
+.phone .app-title {
+  font-size: clamp(13px, 7.6cqw, 17px);
+}
+
+.phone .app-sub {
+  font-size: clamp(9px, 5cqw, 11px);
+}
+
+.phone .app-body {
+  gap: clamp(6px, 4cqw, 12px);
+  padding: clamp(6px, 4.5cqw, 14px);
+  font-size: clamp(11px, 6.4cqw, 14px);
+}
+
+.phone .muted {
+  font-size: clamp(10px, 5.6cqw, 12.5px);
+}
+
+.phone .btn {
+  min-height: clamp(34px, 21cqw, 48px);
+  padding: 4px 4cqw 2px;
+  border-radius: clamp(10px, 6cqw, 16px);
+  font-size: clamp(12.5px, 7.4cqw, 17px);
+}
+
+.phone .btn svg {
+  width: clamp(14px, 8cqw, 20px);
+  height: clamp(14px, 8cqw, 20px);
+}
+
+/* Mes */
+.phone .chat-log {
+  gap: clamp(4px, 3cqw, 8px);
+  padding: clamp(6px, 4.5cqw, 12px);
+}
+
+.phone .bubble {
+  padding: clamp(5px, 3.2cqw, 8px) clamp(8px, 5.5cqw, 12px);
+  font-size: clamp(11.5px, 6.6cqw, 14.5px);
+}
+
+.phone .chat-replies {
+  gap: clamp(4px, 2.6cqw, 7px);
+  padding: clamp(5px, 3.6cqw, 9px) clamp(6px, 4.5cqw, 12px);
+}
+
+.phone .reply {
+  min-height: clamp(32px, 19cqw, 42px);
+  padding: 4px clamp(8px, 5cqw, 12px);
+  font-size: clamp(11px, 6.3cqw, 14px);
+}
+
+/* Điện thoại: danh bạ + cuộc gọi */
+.phone .contacts {
+  gap: clamp(4px, 3cqw, 8px);
+  padding: clamp(5px, 4cqw, 10px);
+}
+
+.phone .contacts li {
+  gap: clamp(6px, 4cqw, 10px);
+}
+
+.phone .avatar {
+  width: clamp(28px, 17cqw, 40px);
+  height: clamp(28px, 17cqw, 40px);
+  font-size: clamp(12px, 7cqw, 16px);
+}
+
+.phone .avatar.small {
+  width: clamp(24px, 14cqw, 32px);
+  height: clamp(24px, 14cqw, 32px);
+  font-size: clamp(11px, 6cqw, 14px);
+}
+
+.phone .avatar.big {
+  width: clamp(50px, min(36cqw, 22cqh), 92px);
+  height: clamp(50px, min(36cqw, 22cqh), 92px);
+  font-size: clamp(22px, 15cqw, 36px);
+}
+
+.phone .contact-name {
+  font-size: clamp(12px, 7cqw, 15px);
+}
+
+.phone .contact-name small {
+  font-size: clamp(9.5px, 5.2cqw, 11.5px);
+}
+
+.phone .dial {
+  width: clamp(34px, 21cqw, 46px);
+  height: clamp(34px, 21cqw, 46px);
+}
+
+.phone .dial svg {
+  width: 45%;
+  height: 45%;
+}
+
+.phone .call-screen {
+  gap: clamp(4px, 3cqh, 10px);
+  padding: 4cqw;
+}
+
+.phone .call-name {
+  font-size: clamp(16px, 10cqw, 23px);
+}
+
+.phone .call-state,
+.phone .call-text {
+  font-size: clamp(11px, 6.4cqw, 14px);
+}
+
+.phone .hang-up {
+  width: clamp(44px, 28cqw, 62px);
+  height: clamp(44px, 28cqw, 62px);
+  margin-top: clamp(4px, 3cqh, 12px);
+}
+
+.phone .hang-up svg {
+  width: 45%;
+  height: 45%;
+}
+
+/* Thời tiết, ngân hàng, Grap, Face bút, nhạc */
+.phone .weather-icon {
+  width: clamp(38px, min(28cqw, 18cqh), 78px);
+  height: clamp(38px, min(28cqw, 18cqh), 78px);
+}
+
+.phone .weather-temp {
+  font-size: clamp(28px, min(20cqw, 12cqh), 54px);
+}
+
+.phone .weather-title {
+  font-size: clamp(13px, 8cqw, 18px);
+}
+
+.phone .bank-card {
+  padding: clamp(8px, 6cqw, 16px);
+  border-radius: clamp(12px, 7cqw, 20px);
+}
+
+.phone .bank-balance {
+  font-size: clamp(17px, 11.5cqw, 28px);
+}
+
+.phone .tabs [role='tab'] {
+  min-height: clamp(28px, 17cqw, 38px);
+  font-size: clamp(11px, 6.4cqw, 14px);
+}
+
+.phone .food-card {
+  gap: clamp(6px, 4cqw, 12px);
+  padding: clamp(6px, 4.5cqw, 12px);
+}
+
+.phone .food-pic {
+  width: clamp(38px, 24cqw, 60px);
+  height: clamp(38px, 24cqw, 60px);
+  font-size: clamp(20px, 14cqw, 34px);
+}
+
+.phone .post {
+  padding: clamp(7px, 5cqw, 12px);
+}
+
+.phone .like {
+  min-height: clamp(28px, 17cqw, 36px);
+  font-size: clamp(11px, 6.2cqw, 13.5px);
+}
+
+.phone .disc {
+  width: clamp(64px, min(52cqw, 34cqh), 140px);
+  height: clamp(64px, min(52cqw, 34cqh), 140px);
+}
+
+.phone .track {
+  font-size: clamp(13px, 8cqw, 18px);
+}
+
+.phone .round-btn {
+  width: clamp(40px, 25cqw, 58px);
+  height: clamp(40px, 25cqw, 58px);
+}
+
+.phone .round-btn svg {
+  width: 42%;
+  height: 42%;
+}
+
+.phone .mail-list button {
+  min-height: clamp(40px, 26cqw, 56px);
+  padding: 4px 5cqw;
+}
+
+.phone .mail-subject {
+  font-size: clamp(13.5px, 8cqw, 18px);
+}
+
+/* Camera */
+.phone .camera-controls {
+  padding: clamp(5px, 4cqw, 12px) 4cqw clamp(3px, 2cqw, 8px);
+}
+
+.phone .shutter {
+  width: clamp(44px, 30cqw, 68px);
+  height: clamp(44px, 30cqw, 68px);
+  border-width: clamp(3px, 2.4cqw, 5px);
+}
+
+.phone .cam-thumb,
+.phone .cam-flip {
+  width: clamp(32px, 20cqw, 46px);
+  height: clamp(32px, 20cqw, 46px);
+}
+
+.phone .cam-mode {
+  font-size: clamp(9px, 5cqw, 11px);
+}
+
+.phone .camera-buttons .btn {
+  font-size: clamp(11.5px, 6.6cqw, 15px);
+}
+
+/* Báo thức */
+.phone .alarm-time {
+  font-size: clamp(32px, min(24cqw, 16cqh), 66px);
+}
+
+.phone .alarm-label,
+.phone .alarm-weather,
+.phone .alarm-line {
+  font-size: clamp(10.5px, 6cqw, 14px);
+}
+
+.phone .alarm-buttons {
+  gap: clamp(5px, 3cqw, 9px);
+}
+
+.phone .app-icon {
+  gap: clamp(2px, 1.2cqh, 5px);
+}
+
+.phone .app-name {
+  line-height: 1.15;
 }

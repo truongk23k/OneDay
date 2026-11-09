@@ -24,6 +24,7 @@ import { RotatePrompt } from './ui/RotatePrompt'
 import { TouchControls } from './ui/TouchControls'
 import { Wardrobe } from './ui/Wardrobe'
 import { WashGame } from './ui/WashGame'
+import { installMultiTouchTap } from './ui/multiTouch'
 
 // Cảnh phố chỉ tải khi ra khỏi phòng, để lần vào game đầu nhẹ hơn.
 const StreetScene = lazy(() => import('./ride/StreetScene'))
@@ -47,6 +48,8 @@ export default function App() {
   // Chỉ khi có ?debug: mở store ra console để thử nhanh từng màn.
   if (debug) Object.assign(window, { __story: useStory, __world: useWorld, __ride: useRide })
   useEffect(unlockAudio, [])
+  // Cảm ứng: vừa giữ joystick / ga vừa bấm nút khác vẫn ăn (iPhone).
+  useEffect(() => (isTouch ? installMultiTouchTap() : undefined), [isTouch])
 
   if (!webgl) return <div className="no-webgl">{S.noWebGL}</div>
 
