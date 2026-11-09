@@ -4,6 +4,7 @@ import {
   CircleCheck,
   Circle,
   CloudRain,
+  Copy,
   Download,
   Headphones,
   Images,
@@ -11,6 +12,7 @@ import {
   Phone as PhoneIcon,
   PhoneOff,
   Play,
+  QrCode,
   SkipForward,
   SwitchCamera,
   Sun,
@@ -34,6 +36,7 @@ import { S } from '../../strings'
 import { BackGlyph } from '../GameIcons'
 import { MapSvg } from '../RideMap'
 import { VolumeSliders } from '../VolumeSliders'
+import myQr from './img/my-qr.webp'
 import { usePhone, type Contact } from './phoneStore'
 
 export const money = (thousands: number) => `${(thousands * 1000).toLocaleString('vi-VN')}đ`
@@ -204,13 +207,82 @@ export function WeatherApp() {
   )
 }
 
+// Chép chữ: trang chạy http qua LAN (không "secure context") thì không có navigator.clipboard → dùng execCommand.
+async function copyText(text: string) {
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    /* thử cách cũ bên dưới */
+  }
+  const box = document.createElement('textarea')
+  box.value = text
+  box.setAttribute('readonly', '')
+  box.style.cssText = 'position:fixed;top:0;left:0;opacity:0'
+  document.body.appendChild(box)
+  box.select()
+  box.setSelectionRange(0, text.length)
+  let ok = false
+  try {
+    ok = document.execCommand('copy')
+  } catch {
+    ok = false
+  }
+  box.remove()
+  return ok
+}
+
+// My QR: mã VietQR thật của tác giả để người chơi ủng hộ (chỉ ảnh mã QR, tên/số TK/ngân hàng vẽ bằng chữ).
+function BankQr() {
+  const B = S.phone.bank
+  const [copied, setCopied] = useState(false)
+  return (
+    <>
+      <div className="bank-qr-card">
+        <img className="bank-qr-img" src={myQr} alt={B.qrAlt} draggable={false} />
+        <div className="bank-qr-owner">{B.owner}</div>
+        <div className="bank-qr-number">{B.number}</div>
+        <div className="bank-qr-bank">{B.bankName}</div>
+      </div>
+      <button className="btn btn-bank btn-block" onClick={() => void copyText(B.number).then(setCopied)}>
+        <Copy aria-hidden />
+        {copied ? B.copied : B.copy}
+      </button>
+      <p className="muted">{B.qrNote}</p>
+    </>
+  )
+}
+
 export function BankApp() {
   const s = useStory((st) => st.s)
+  const [tab, setTab] = useState<'account' | 'qr'>('account')
   const rows: { label: string; amount: number }[] = []
   if (s.breakfast) rows.push({ label: S.phone.bank.food, amount: -FOOD_PRICE })
   if (s.fines) rows.push({ label: S.phone.bank.fine, amount: -s.fines })
+  const tabs = (
+    <div className="tabs" role="tablist">
+      <button role="tab" aria-selected={tab === 'account'} onClick={() => setTab('account')}>
+        {S.phone.bank.tabAccount}
+      </button>
+      <button role="tab" aria-selected={tab === 'qr'} onClick={() => setTab('qr')}>
+        <QrCode aria-hidden />
+        {S.phone.bank.tabQr}
+      </button>
+    </div>
+  )
+  if (tab === 'qr') {
+    return (
+      <div className="app-body bank">
+        {tabs}
+        <BankQr />
+      </div>
+    )
+  }
   return (
     <div className="app-body bank">
+      {tabs}
       <div className="bank-card">
         <div className="bank-label">{S.phone.bank.balance}</div>
         <div className={s.money < 0 ? 'bank-balance negative' : 'bank-balance'}>{money(s.money)}</div>

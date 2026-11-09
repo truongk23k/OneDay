@@ -37,6 +37,24 @@ test('ordering breakfast for Em from the food app', async () => {
   expect(screen.getByText(/Đã đặt!/)).toBeVisible()
 })
 
+test('the bank app has a My QR tab with the support QR and a button to copy the account number', async () => {
+  const user = userEvent.setup()
+  act(() => useStory.getState().dispatch({ type: 'open', overlay: 'phone' }))
+  usePhone.setState({ app: 'bank' })
+  render(<Phone />)
+  expect(screen.getByText('Số dư')).toBeVisible()
+  await user.click(screen.getByRole('tab', { name: 'My QR' }))
+  expect(screen.getByRole('img', { name: /QR/ })).toHaveAttribute('src', expect.stringContaining('my-qr'))
+  expect(screen.getByText('LAI VAN TRUONG')).toBeVisible()
+  expect(screen.getByText('4820875900')).toBeVisible()
+  expect(screen.getByText('BIDV')).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Chép số tài khoản' }))
+  expect(await navigator.clipboard.readText()).toBe('4820875900')
+  expect(screen.getByRole('button', { name: /Đã chép/ })).toBeVisible()
+  await user.click(screen.getByRole('tab', { name: 'Tài khoản' }))
+  expect(screen.getByText('Số dư')).toBeVisible()
+})
+
 test('the chat shows Em’s message and replying updates the conversation', async () => {
   act(() => useStory.getState().dispatch({ type: 'open', overlay: 'phone' }))
   usePhone.setState({ app: 'messages' })

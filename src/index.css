@@ -1381,6 +1381,72 @@ kbd {
   white-space: nowrap;
 }
 
+.bank .tabs [role='tab'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.bank .tabs [role='tab'] svg {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.bank .tabs [aria-selected='true'] {
+  background: #5e5ce6;
+}
+
+/* My QR: thẻ trắng như app ngân hàng thật */
+.bank-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 12px 14px;
+  border-radius: var(--r-lg);
+  background: #fff;
+  color: #1c1c1e;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.bank-qr-img {
+  display: block;
+  width: min(100%, 220px);
+  height: auto;
+  aspect-ratio: 1;
+  margin-bottom: 6px;
+}
+
+.bank-qr-owner {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.bank-qr-number {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: #2d2bb0;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.bank-qr-bank {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b6b72;
+}
+
+.btn-bank {
+  --c1: #7b79ff;
+  --c2: #4a48d6;
+  --rim: #24227a;
+}
+
 /* Grap */
 .tabs {
   display: flex;
@@ -3227,6 +3293,27 @@ kbd {
 
 .phone .bank-balance {
   font-size: clamp(17px, 11.5cqw, 28px);
+}
+
+.phone .bank-qr-card {
+  padding: clamp(8px, 6cqw, 16px);
+  border-radius: clamp(12px, 7cqw, 20px);
+}
+
+.phone .bank-qr-img {
+  width: min(100%, 80cqw, 36cqh);
+}
+
+.phone .bank-qr-owner {
+  font-size: clamp(12px, 7cqw, 16px);
+}
+
+.phone .bank-qr-number {
+  font-size: clamp(13px, 8.4cqw, 20px);
+}
+
+.phone .bank-qr-bank {
+  font-size: clamp(10px, 5.6cqw, 13px);
 }
 
 .phone .tabs [role='tab'] {

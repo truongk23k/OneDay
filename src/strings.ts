@@ -347,6 +347,16 @@ export const S = {
       fine: 'Nộp phạt CSGT',
       empty: 'Chưa có giao dịch nào.',
       negative: 'Tài khoản âm rồi… cuối tháng ăn mì tôm 🍜',
+      tabAccount: 'Tài khoản',
+      tabQr: 'My QR',
+      // Tài khoản thật của tác giả: người chơi quét để ủng hộ.
+      qrAlt: 'Mã QR chuyển khoản ủng hộ',
+      owner: 'LAI VAN TRUONG',
+      number: '4820875900',
+      bankName: 'BIDV',
+      qrNote: 'Thích game thì ủng hộ mình ly cà phê nha ☕ Chơi trên điện thoại thì chụp màn hình rồi mở app ngân hàng quét ảnh.',
+      copy: 'Chép số tài khoản',
+      copied: 'Đã chép số tài khoản ✓',
     },
     grab: {
       food: 'GrapFood',
