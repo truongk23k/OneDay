@@ -4,210 +4,12 @@ import { playCue } from '../../audio/sounds'
 import { useGame } from '../../store'
 import { format } from '../../story/clock'
 import { MOBA, maxHp, newMatch, stepMatch, type Match, type MatchEvent, type MatchInput } from '../../story/moba'
+import { drawScene, type Floater, type Fx } from './mobaArt'
 import { useStory } from '../../story/store'
 import { S } from '../../strings'
 import { usePhone } from './phoneStore'
 
-type Floater = { x: number; y: number; text: string; color: string; age: number }
-type Fx = { kind: 'spin' | 'dash' | 'ult' | 'enemySkill'; x: number; age: number; from?: number }
 type Banner = { text: string; color: string; age: number }
-
-// ---------- Vẽ trận đấu (canvas) ----------
-function drawScene(ctx: CanvasRenderingContext2D, w: number, h: number, m: Match, t: number, fx: Fx[], floaters: Floater[], shake: number) {
-  const X = (x: number) => x * w
-  // Làn đường nằm trên khu nút điều khiển (nửa dưới là cỏ, nút đặt lên đó).
-  const ground = h * 0.56
-  ctx.save()
-  if (shake > 0) ctx.translate((Math.random() - 0.5) * shake * 10, (Math.random() - 0.5) * shake * 8)
-  // Trời hoàng hôn, núi xa, cỏ, làn đường lát đá.
-  const sky = ctx.createLinearGradient(0, 0, 0, ground)
-  sky.addColorStop(0, '#2b1d5c')
-  sky.addColorStop(0.6, '#a2477a')
-  sky.addColorStop(1, '#f2a65a')
-  ctx.fillStyle = sky
-  ctx.fillRect(-20, -20, w + 40, ground + 20)
-  ctx.fillStyle = '#3a2a5e'
-  ctx.beginPath()
-  ctx.moveTo(-20, ground)
-  for (let i = 0; i <= 8; i++) ctx.lineTo((i / 8) * w, ground - h * (0.18 + 0.12 * Math.abs(Math.sin(i * 1.7))))
-  ctx.lineTo(w + 20, ground)
-  ctx.fill()
-  ctx.fillStyle = '#2f6b3a'
-  ctx.fillRect(-20, ground - h * 0.04, w + 40, h)
-  ctx.fillStyle = '#8b7a5c'
-  ctx.fillRect(-20, ground - h * 0.02, w + 40, h * 0.13)
-  ctx.fillStyle = 'rgba(0,0,0,0.12)'
-  for (let i = 0; i < 24; i++) ctx.fillRect((i / 24) * w + 3, ground + h * 0.04, w / 40, 2)
-
-  const bar = (cx: number, y: number, bw: number, v: number, color: string) => {
-    ctx.fillStyle = 'rgba(0,0,0,0.65)'
-    ctx.fillRect(cx - bw / 2 - 1, y - 1, bw + 2, 6)
-    ctx.fillStyle = color
-    ctx.fillRect(cx - bw / 2, y, bw * Math.max(0, Math.min(1, v)), 4)
-  }
-
-  // Trụ: bệ đá, cột, pha lê phát sáng nhấp nháy.
-  const tower = (x: number, hp: number, ally: boolean) => {
-    const tx = X(x)
-    const c = ally ? '#4aa8ff' : '#ff5b4d'
-    if (hp <= 0) {
-      ctx.fillStyle = '#4a4458'
-      ctx.fillRect(tx - h * 0.07, ground - h * 0.08, h * 0.14, h * 0.08)
-      return
-    }
-    ctx.fillStyle = '#5b556b'
-    ctx.fillRect(tx - h * 0.08, ground - h * 0.08, h * 0.16, h * 0.08)
-    ctx.fillStyle = '#7a7390'
-    ctx.fillRect(tx - h * 0.04, ground - h * 0.24, h * 0.08, h * 0.18)
-    const glow = 0.6 + 0.4 * Math.sin(t * 4 + (ally ? 0 : 1))
-    ctx.fillStyle = c
-    ctx.shadowColor = c
-    ctx.shadowBlur = 14 * glow
-    ctx.beginPath()
-    ctx.moveTo(tx, ground - h * 0.36)
-    ctx.lineTo(tx + h * 0.05, ground - h * 0.29)
-    ctx.lineTo(tx, ground - h * 0.22)
-    ctx.lineTo(tx - h * 0.05, ground - h * 0.29)
-    ctx.fill()
-    ctx.shadowBlur = 0
-    bar(tx, ground - h * 0.42, h * 0.26, hp / MOBA.tower.hp, ally ? '#4be36f' : '#ff4d4d')
-  }
-  tower(MOBA.tower.allyX, m.towers.ally, true)
-  tower(MOBA.tower.enemyX, m.towers.enemy, false)
-
-  // Lính: thân tròn nhún theo bước, mũ, thanh máu nhỏ.
-  for (const n of m.minions) {
-    const cx = X(n.x)
-    const bob = Math.abs(Math.sin(t * 9 + n.id)) * h * 0.015
-    const r = h * 0.04
-    const cy = ground + h * 0.02 - r - bob
-    ctx.fillStyle = n.side === 'ally' ? '#4aa8ff' : '#ff6b5e'
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)'
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-    ctx.fillStyle = n.side === 'ally' ? '#1f4fbf' : '#8c1f14'
-    ctx.beginPath()
-    ctx.arc(cx, cy - r * 0.3, r * 0.75, Math.PI, 0)
-    ctx.fill()
-    bar(cx, cy - r - h * 0.05, h * 0.09, n.hp / MOBA.minion.hp, n.side === 'ally' ? '#4be36f' : '#ff4d4d')
-  }
-
-  // Tướng: thân, áo choàng, kiếm vung khi đánh; tên + cấp; chết thì mờ đi chờ hồi sinh.
-  const hero = (x: number, hp: number, max: number, mine: boolean, dead: number, label: string, swing: number, lift = 0) => {
-    const cx = X(x)
-    const r = h * 0.065
-    const cy = ground + h * 0.01 - r
-    const top = cy - r - h * (0.08 + lift)
-    ctx.globalAlpha = dead > 0 ? 0.35 : 1
-    ctx.fillStyle = mine ? '#1f6fe0' : '#7a2b9c'
-    ctx.beginPath()
-    ctx.moveTo(cx - r * 0.9 * (mine ? 1 : -1), cy - r * 0.2)
-    ctx.lineTo(cx - r * 1.8 * (mine ? 1 : -1), cy + r * 1.1)
-    ctx.lineTo(cx - r * 0.2 * (mine ? 1 : -1), cy + r * 0.9)
-    ctx.fill()
-    ctx.fillStyle = mine ? '#4aa8ff' : '#c056e8'
-    ctx.strokeStyle = mine ? '#ffd23f' : '#ff4d4d'
-    ctx.lineWidth = 2.5
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-    if (!mine) {
-      ctx.fillStyle = '#f2e6c9'
-      for (const s of [-1, 1]) {
-        ctx.beginPath()
-        ctx.moveTo(cx + s * r * 0.5, cy - r * 0.8)
-        ctx.lineTo(cx + s * r * 0.9, cy - r * 1.6)
-        ctx.lineTo(cx + s * r * 0.15, cy - r * 0.95)
-        ctx.fill()
-      }
-    }
-    const dir = mine ? 1 : -1
-    const ang = -0.9 + swing * 2.2
-    ctx.strokeStyle = '#e8eef7'
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.moveTo(cx + dir * r * 0.7, cy)
-    ctx.lineTo(cx + dir * (r * 0.7 + Math.cos(ang) * r * 1.6), cy + Math.sin(ang) * r * 1.6)
-    ctx.stroke()
-    ctx.globalAlpha = 1
-    bar(cx, top, h * 0.18, hp / max, mine ? '#4be36f' : '#ff4d4d')
-    ctx.font = `800 ${Math.round(h * 0.055)}px 'Baloo 2', sans-serif`
-    ctx.textAlign = 'center'
-    ctx.fillStyle = '#fff'
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)'
-    ctx.lineWidth = 3
-    ctx.strokeText(label, cx, top - h * 0.02)
-    ctx.fillText(label, cx, top - h * 0.02)
-    if (dead > 0) {
-      ctx.font = `800 ${Math.round(h * 0.09)}px 'Baloo 2', sans-serif`
-      ctx.strokeText(String(Math.ceil(dead)), cx, cy + r * 0.3)
-      ctx.fillText(String(Math.ceil(dead)), cx, cy + r * 0.3)
-    }
-  }
-  const swing = Math.max(0, m.hero.cd0 / MOBA.hero.attackCd)
-  const enemyX = m.enemy.dead > 0 ? MOBA.tower.enemyX - 0.04 : m.enemy.x
-  // Hai tướng đứng sát nhau: đẩy tên + thanh máu của địch lên cao cho khỏi đè.
-  const lift = Math.abs(enemyX - m.hero.x) < 0.07 ? 0.11 : 0
-  hero(enemyX, m.enemy.hp, MOBA.hero.hp, false, m.enemy.dead, 'Địch', 1 - Math.max(0, m.enemy.cd0 / MOBA.enemy.attackCd), lift)
-  hero(m.hero.x, m.hero.hp, maxHp(m.hero.level), true, m.hero.dead, `Anh · ${m.hero.level}`, 1 - swing)
-  if (m.enemy.stun > 0) {
-    ctx.fillStyle = '#ffd23f'
-    for (let i = 0; i < 3; i++) {
-      const a = t * 6 + (i * Math.PI * 2) / 3
-      ctx.beginPath()
-      ctx.arc(X(m.enemy.x) + Math.cos(a) * h * 0.06, ground - h * 0.2 + Math.sin(a) * h * 0.02, h * 0.012, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
-
-  // Hiệu ứng chiêu.
-  for (const f of fx) {
-    const k = 1 - f.age
-    if (f.kind === 'spin' || f.kind === 'enemySkill') {
-      ctx.strokeStyle = f.kind === 'spin' ? `rgba(120, 210, 255, ${k})` : `rgba(200, 90, 255, ${k})`
-      ctx.lineWidth = 4 * k + 1
-      ctx.beginPath()
-      ctx.arc(X(f.x), ground - h * 0.06, X(MOBA.skill1.range) * (0.4 + f.age), 0, Math.PI * 2)
-      ctx.stroke()
-    } else if (f.kind === 'dash') {
-      const g = ctx.createLinearGradient(X(f.from ?? f.x), 0, X(f.x), 0)
-      g.addColorStop(0, 'rgba(255,255,255,0)')
-      g.addColorStop(1, `rgba(170, 230, 255, ${k})`)
-      ctx.fillStyle = g
-      ctx.fillRect(X(f.from ?? f.x), ground - h * 0.13, X(f.x) - X(f.from ?? f.x), h * 0.06)
-    } else if (f.kind === 'ult') {
-      ctx.strokeStyle = `rgba(255, 240, 140, ${k})`
-      ctx.lineWidth = 3
-      for (let i = 0; i < 5; i++) {
-        const bx = X(f.x + (i / 4) * MOBA.ult.range)
-        ctx.beginPath()
-        ctx.moveTo(bx, 0)
-        for (let s = 1; s <= 5; s++) ctx.lineTo(bx + (Math.random() - 0.5) * h * 0.12, (s / 5) * (ground - h * 0.05))
-        ctx.stroke()
-      }
-      ctx.fillStyle = `rgba(255, 245, 200, ${k * 0.35})`
-      ctx.fillRect(0, 0, w, h)
-    }
-  }
-  // Số sát thương bay lên.
-  ctx.textAlign = 'center'
-  for (const f of floaters) {
-    ctx.globalAlpha = 1 - f.age
-    ctx.font = `800 ${Math.round(h * 0.07)}px 'Baloo 2', sans-serif`
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)'
-    ctx.lineWidth = 3
-    const y = f.y - f.age * h * 0.15
-    ctx.strokeText(f.text, X(f.x), y)
-    ctx.fillStyle = f.color
-    ctx.fillText(f.text, X(f.x), y)
-  }
-  ctx.globalAlpha = 1
-  ctx.restore()
-}
 
 // ---------- Nút điều khiển ----------
 function HoldButton(props: { label: string; className: string; children: ReactNode; onHold: (on: boolean) => void }) {
@@ -257,6 +59,9 @@ export function MobaApp() {
   const floaters = useRef<Floater[]>([])
   const shake = useRef(0)
   const lastHitSound = useRef(0)
+  // Ai vừa trúng đòn (nháy trắng) và ai đang bước đi (để chân bước).
+  const flash = useRef(new Map<number, number>())
+  const lastX = useRef({ hero: 0, enemy: 0 })
   const [banner, setBanner] = useState<Banner | null>(null)
   const [hud, setHud] = useState(() => snapshot(newMatch()))
   const minute = useStory((st) => Math.floor(st.s.minutes))
@@ -269,9 +74,10 @@ export function MobaApp() {
     const say = (text: string, color: string) => setBanner({ text, color, age: performance.now() })
     const onEvents = (events: MatchEvent[], now: number) => {
       for (const e of events) {
+        const ch = canvas.current?.clientHeight ?? 160
+        if (e.kind === 'hit' && e.id !== undefined) flash.current.set(e.id, now)
         if (e.kind === 'hit' && e.amount) {
-          const h = canvas.current?.clientHeight ?? 160
-          floaters.current.push({ x: e.x + (Math.random() - 0.5) * 0.04, y: h * (0.3 + Math.random() * 0.06), text: String(e.amount), color: e.side === 'ally' ? '#ff6b5e' : '#ffffff', age: 0 })
+          floaters.current.push({ x: e.x + (Math.random() - 0.5) * 0.04, y: ch * (0.3 + Math.random() * 0.06), text: String(e.amount), color: e.side === 'ally' ? '#ff6b5e' : '#ffffff', age: 0, big: e.amount >= 50 })
           if (now - lastHitSound.current > 90) {
             lastHitSound.current = now
             playCue('slash')
@@ -298,7 +104,10 @@ export function MobaApp() {
           say(S.phone.moba.died, '#ff6b5e')
           playCue('death')
         }
+        if (e.kind === 'gold' && e.amount) floaters.current.push({ x: e.x, y: ch * 0.24, text: `+${e.amount}`, color: '#ffd23f', age: 0 })
+        if (e.kind === 'towerShot') fx.current.push({ kind: 'shot', x: e.x, from: e.side === 'ally' ? MOBA.tower.allyX : MOBA.tower.enemyX, side: e.side, age: 0 })
         if (e.kind === 'levelUp') {
+          fx.current.push({ kind: 'levelUp', x: e.x, age: 0 })
           say(`${S.phone.moba.levelUp} ${e.amount}!`, '#7be08a')
           playCue('levelUp')
         }
@@ -340,7 +149,14 @@ export function MobaApp() {
         const ctx = el.getContext('2d')
         if (ctx && r.width > 0) {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-          drawScene(ctx, r.width, r.height, m, now / 1000, fx.current, floaters.current, shake.current)
+          const look = {
+            flash: flash.current,
+            now,
+            heroMoving: Math.abs(m.hero.x - lastX.current.hero) > 1e-5,
+            enemyMoving: Math.abs(m.enemy.x - lastX.current.enemy) > 1e-5,
+          }
+          lastX.current = { hero: m.hero.x, enemy: m.enemy.x }
+          drawScene(ctx, r.width, r.height, m, now / 1000, fx.current, floaters.current, shake.current, look)
         }
       }
       setHud((h) => {
@@ -401,9 +217,14 @@ export function MobaApp() {
           <Coins aria-hidden /> {hud.gold}
         </span>
         <span className="moba-level">
-          {S.phone.moba.level} {hud.level}
-          <span className="moba-xp">
-            <span style={{ width: `${hud.xp * 100}%` }} />
+          <span className="moba-badge">{hud.level}</span>
+          <span className="moba-bars">
+            <span className="moba-hp">
+              <span style={{ width: `${hud.hp * 100}%` }} />
+            </span>
+            <span className="moba-xp">
+              <span style={{ width: `${hud.xp * 100}%` }} />
+            </span>
           </span>
         </span>
         <span className="moba-clock" title={S.phone.moba.hint}>
@@ -466,6 +287,7 @@ function snapshot(m: Match) {
   const lo = MOBA.levels[lv - 1]
   const hi = MOBA.levels[lv] ?? lo
   return {
+    hp: Math.round((m.hero.hp / maxHp(lv)) * 40) / 40,
     kills: m.kills,
     deaths: m.deaths,
     gold: m.hero.gold,

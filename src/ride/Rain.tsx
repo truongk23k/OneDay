@@ -6,11 +6,12 @@ import type { Part } from '../room/parts'
 import { mulberry32 } from '../story/rng'
 import { ROADS_X, ROADS_Z, ROAD_HALF } from './city'
 
-const DROPS = 900
+// Mưa nhẹ: ít hạt, vệt ngắn và mờ.
+const DROPS = 380
 const SPREAD = 26
 const TOP = 16
 const FALL = 22
-const STREAK = 0.55
+const STREAK = 0.3
 
 // Mưa: các vệt nước rơi trong một hộp quanh camera (một lệnh vẽ).
 function Drops() {
@@ -49,7 +50,7 @@ function Drops() {
 
   return (
     <lineSegments ref={ref} geometry={geom} frustumCulled={false}>
-      <lineBasicMaterial color="#d6e2ee" transparent opacity={0.5} />
+      <lineBasicMaterial color="#dfe8f1" transparent opacity={0.32} />
     </lineSegments>
   )
 }

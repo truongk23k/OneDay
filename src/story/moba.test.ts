@@ -63,13 +63,14 @@ test('Chém xoáy hits everything around; Lướt chém dashes forward through e
   expect(dash.minions.find((n) => n.id === 1)!.hp).toBeLessThan(200)
 })
 
-test('the ultimate is locked until level 3, then stuns and blasts everything ahead', () => {
+test('the ultimate is locked at level 1, then stuns and blasts everything ahead', () => {
   const enemy = { ...newMatch().enemy, x: 0.55 }
   const locked = quiet({ hero: { ...newMatch().hero, x: 0.4 }, enemy })
-  expect(stepMatch(locked, 1 / 30, { ...idle, ult: true }).match.enemy.hp).toBe(MOBA.hero.hp)
-  const lv3 = quiet({ hero: { ...newMatch().hero, x: 0.4, level: 3, xp: MOBA.levels[2] }, enemy })
+  expect(stepMatch(locked, 1 / 30, { ...idle, ult: true }).match.enemy.hp).toBe(MOBA.enemy.hp)
+  const lv = MOBA.ult.level
+  const lv3 = quiet({ hero: { ...newMatch().hero, x: 0.4, level: lv, xp: MOBA.levels[lv - 1] }, enemy })
   const r = stepMatch(lv3, 1 / 30, { ...idle, ult: true })
-  expect(r.match.enemy.hp).toBeLessThan(MOBA.hero.hp - 100)
+  expect(r.match.enemy.hp).toBeLessThan(MOBA.enemy.hp - 100)
   expect(r.match.enemy.stun).toBeGreaterThan(0)
   expect(r.events).toContainEqual(expect.objectContaining({ kind: 'ult' }))
 })
@@ -79,11 +80,12 @@ test('killing minions and the enemy hero gives gold and xp; the enemy comes back
   const r = stepMatch(m, 1 / 30, { ...idle, skill1: true })
   expect(r.match.enemy.dead).toBeGreaterThan(0)
   expect(r.match.hero.gold).toBe(MOBA.reward.minion.gold + MOBA.reward.hero.gold)
+  expect(r.events.filter((e) => e.kind === 'gold').map((e) => e.amount)).toEqual([MOBA.reward.minion.gold, MOBA.reward.hero.gold])
   expect(r.match.kills).toBe(1)
   expect(r.events).toContainEqual(expect.objectContaining({ kind: 'heroKill' }))
   const later = run(r.match, MOBA.respawn + 0.5)
   expect(later.enemy.dead).toBe(0)
-  expect(later.enemy.hp).toBe(MOBA.hero.hp)
+  expect(later.enemy.hp).toBe(MOBA.enemy.hp)
 })
 
 test('xp levels the hero up and makes him hit harder', () => {
@@ -122,4 +124,36 @@ test('destroying the enemy tower wins; losing yours loses; a finished match stay
   expect(run(falling, 2).result).toBe('lose')
   const done = { ...newMatch(), result: 'win' as const }
   expect(stepMatch(done, 1, { ...idle, attack: true }).match).toBe(done)
+})
+
+test('towers shoot visibly: a shot event goes from the tower to its target', () => {
+  const m = quiet({ hero: { ...newMatch().hero, x: MOBA.tower.enemyX - 0.05 }, enemy: { ...newMatch().enemy, dead: 99 } })
+  const r = stepMatch(m, 1 / 30, idle)
+  expect(r.events).toContainEqual(expect.objectContaining({ kind: 'towerShot', side: 'enemy', x: m.hero.x }))
+})
+
+test('out of a fight the hero slowly heals', () => {
+  const m = quiet({ hero: { ...newMatch().hero, x: 0.5, hp: 100 }, enemy: { ...newMatch().enemy, dead: 99 } })
+  expect(run(m, 3).hero.hp).toBeGreaterThan(100)
+})
+
+// Người mới chơi: cứ đi tới và giữ đánh, có chiêu là bấm, máu yếu thì lùi về hồi.
+function beginner(seconds: number) {
+  let m = newMatch()
+  let retreat = false
+  for (let i = 0; i < seconds * 30 && !m.result; i++) {
+    const h = m.hero
+    const max = MOBA.hero.hp + MOBA.hero.hpPerLevel * (h.level - 1)
+    if (h.hp < max * 0.35) retreat = true
+    if (h.hp > max * 0.9) retreat = false
+    m = stepMatch(m, 1 / 30, { move: retreat ? -1 : 1, attack: true, skill1: !retreat, skill2: !retreat, ult: !retreat }).match
+  }
+  return m
+}
+
+test('a beginner who just pushes and attacks wins within a few minutes, but not instantly', () => {
+  const m = beginner(240)
+  expect(m.result).toBe('win')
+  expect(m.time).toBeGreaterThan(40)
+  expect(m.time).toBeLessThan(180)
 })

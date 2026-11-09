@@ -1,24 +1,29 @@
 // "Liên Quậy" — mini-game đánh đường giữa trong điện thoại, kiểu Liên Quân thu nhỏ.
 // Làn đi từ 0 (trụ nhà, phe xanh) tới 1 (trụ địch, phe đỏ). Có tướng địch AI, lính hai phe, trụ, 4 chiêu,
 // lên cấp, vàng. Hàm thuần: một bước thời gian trả về trận mới và các sự kiện (để vẽ hiệu ứng, phát tiếng).
+// Cân bằng cho người chơi bình thường (test "người mới" trong moba.test.ts giữ cho game không khó lại).
 export const MOBA = {
-  hero: { hp: 300, hpPerLevel: 45, speed: 0.15, attack: 22, perLevel: 0.2, range: 0.07, attackCd: 0.45 },
-  skill1: { dmg: 55, range: 0.1, cd: 5 },
-  skill2: { dmg: 45, dist: 0.16, cd: 7 },
-  ult: { dmg: 160, range: 0.28, cd: 14, stun: 1.6, level: 3 },
-  enemy: { speed: 0.11, attack: 18, range: 0.07, attackCd: 0.6, skillDmg: 45, skillRange: 0.1, skillCd: 6, retreatAt: 0.3 },
-  minion: { hp: 80, speed: 0.07, attack: 9, range: 0.03, cd: 0.8 },
-  tower: { hp: 600, allyX: 0.06, enemyX: 0.94, range: 0.13, dmg: 45, cd: 1 },
-  wave: { every: 10, count: 3, gap: 0.035, first: 2 },
-  respawn: 4,
-  regenHome: 30,
-  levels: [0, 60, 160, 300],
+  hero: { hp: 380, hpPerLevel: 50, speed: 0.15, attack: 28, perLevel: 0.2, range: 0.08, attackCd: 0.42 },
+  skill1: { dmg: 60, range: 0.11, cd: 4.5 },
+  skill2: { dmg: 50, dist: 0.16, cd: 6 },
+  ult: { dmg: 170, range: 0.28, cd: 12, stun: 1.8, level: 2 },
+  enemy: { hp: 260, speed: 0.1, attack: 12, range: 0.07, attackCd: 0.7, skillDmg: 30, skillRange: 0.1, skillCd: 8, retreatAt: 0.4 },
+  minion: { hp: 80, speed: 0.07, attack: 8, range: 0.03, cd: 0.8 },
+  // Trụ có giáp: tướng đánh trụ khi không có lính phe mình đứng cạnh chỉ gây một nửa sát thương.
+  tower: { hp: 900, allyX: 0.06, enemyX: 0.94, range: 0.13, dmg: 30, cd: 1.1, armor: 0.5 },
+  wave: { every: 8, count: 3, gap: 0.035, first: 2 },
+  respawn: 3,
+  regenHome: 35,
+  // Không trúng đòn một lúc thì tự hồi máu chậm.
+  regenCalm: 6,
+  calmAfter: 2.5,
+  levels: [0, 40, 110, 220],
   reward: { minion: { gold: 15, xp: 20 }, hero: { gold: 150, xp: 100 } },
 }
 
 export type Side = 'ally' | 'enemy'
 export type Minion = { id: number; side: Side; x: number; hp: number; cd: number }
-export type Hero = { x: number; hp: number; level: number; xp: number; gold: number; cd0: number; cd1: number; cd2: number; cdU: number; dead: number }
+export type Hero = { x: number; hp: number; level: number; xp: number; gold: number; cd0: number; cd1: number; cd2: number; cdU: number; dead: number; calm: number }
 export type EnemyHero = { x: number; hp: number; cd0: number; cdS: number; dead: number; stun: number }
 export type Match = {
   hero: Hero
@@ -35,11 +40,13 @@ export type Match = {
 }
 export type MatchInput = { move: number; attack: boolean; skill1: boolean; skill2: boolean; ult: boolean }
 export type MatchEvent = {
-  kind: 'hit' | 'kill' | 'heroKill' | 'death' | 'levelUp' | 'skill' | 'ult' | 'towerHit' | 'towerDown' | 'enemySkill'
+  kind: 'hit' | 'kill' | 'heroKill' | 'death' | 'levelUp' | 'skill' | 'ult' | 'towerHit' | 'towerDown' | 'enemySkill' | 'towerShot' | 'gold'
   x: number
   amount?: number
   // Phe bị trúng đòn (để tô màu số sát thương).
   side?: Side
+  // Ai trúng đòn: id lính, -1 tướng mình, -2 tướng địch (để nháy trắng).
+  id?: number
 }
 
 const HOME_X = 0.1
@@ -50,8 +57,8 @@ export const levelFor = (xp: number) => MOBA.levels.filter((t) => xp >= t).lengt
 export const maxHp = (level: number) => MOBA.hero.hp + MOBA.hero.hpPerLevel * (level - 1)
 
 export const newMatch = (): Match => ({
-  hero: { x: HOME_X, hp: MOBA.hero.hp, level: 1, xp: 0, gold: 0, cd0: 0, cd1: 0, cd2: 0, cdU: 0, dead: 0 },
-  enemy: { x: ENEMY_HOME, hp: MOBA.hero.hp, cd0: 0, cdS: 0, dead: 0, stun: 0 },
+  hero: { x: HOME_X, hp: MOBA.hero.hp, level: 1, xp: 0, gold: 0, cd0: 0, cd1: 0, cd2: 0, cdU: 0, dead: 0, calm: 0 },
+  enemy: { x: ENEMY_HOME, hp: MOBA.enemy.hp, cd0: 0, cdS: 0, dead: 0, stun: 0 },
   minions: [],
   towers: { ally: MOBA.tower.hp, enemy: MOBA.tower.hp },
   towerCd: { ally: 0, enemy: 0 },
@@ -89,8 +96,9 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
   const enemyAlive = e.dead === 0
 
   // Ai gây đòn chí mạng cho lính / tướng địch thì nhận thưởng (chỉ tướng của mình mới có vàng, kinh nghiệm).
-  const reward = (r: { gold: number; xp: number }) => {
+  const reward = (r: { gold: number; xp: number }, x: number) => {
     h.gold += r.gold
+    ev.push({ kind: 'gold', x, amount: r.gold })
     const before = h.level
     h.xp += r.xp
     h.level = levelFor(h.xp)
@@ -103,28 +111,29 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
   const hitMinion = (n: Minion, dmg: number, byHero: boolean) => {
     if (n.hp <= 0) return
     n.hp -= dmg
-    ev.push({ kind: 'hit', x: n.x, amount: Math.round(dmg), side: n.side })
+    ev.push({ kind: 'hit', x: n.x, amount: Math.round(dmg), side: n.side, id: n.id })
     if (n.hp <= 0) {
       ev.push({ kind: 'kill', x: n.x, side: n.side })
-      if (byHero && n.side === 'enemy') reward(MOBA.reward.minion)
+      if (byHero && n.side === 'enemy') reward(MOBA.reward.minion, n.x)
     }
   }
   const hitEnemyHero = (dmg: number, byHero: boolean) => {
     if (e.dead > 0) return
     e.hp -= dmg
-    ev.push({ kind: 'hit', x: e.x, amount: Math.round(dmg), side: 'enemy' })
+    ev.push({ kind: 'hit', x: e.x, amount: Math.round(dmg), side: 'enemy', id: -2 })
     if (e.hp <= 0) {
       e.hp = 0
       e.dead = MOBA.respawn
       m.kills++
       ev.push({ kind: 'heroKill', x: e.x })
-      if (byHero) reward(MOBA.reward.hero)
+      if (byHero) reward(MOBA.reward.hero, e.x)
     }
   }
   const hitHero = (dmg: number) => {
     if (h.dead > 0) return
     h.hp -= dmg
-    ev.push({ kind: 'hit', x: h.x, amount: Math.round(dmg), side: 'ally' })
+    h.calm = 0
+    ev.push({ kind: 'hit', x: h.x, amount: Math.round(dmg), side: 'ally', id: -1 })
     if (h.hp <= 0) {
       h.hp = 0
       h.dead = MOBA.respawn
@@ -132,7 +141,10 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
       ev.push({ kind: 'death', x: h.x })
     }
   }
-  const hitTower = (side: Side, dmg: number) => {
+  const hitTower = (side: Side, raw: number, byHero = false) => {
+    const tx0 = side === 'ally' ? MOBA.tower.allyX : MOBA.tower.enemyX
+    const escort = m.minions.some((n) => n.side !== side && n.hp > 0 && Math.abs(n.x - tx0) <= MOBA.tower.range)
+    const dmg = byHero && !escort ? raw * MOBA.tower.armor : raw
     m.towers[side] = Math.max(0, m.towers[side] - dmg)
     const x = side === 'ally' ? MOBA.tower.allyX : MOBA.tower.enemyX
     ev.push({ kind: 'towerHit', x, amount: Math.round(dmg), side })
@@ -149,7 +161,9 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
     }
   } else {
     h.x = Math.max(0.04, Math.min(MAX_X, h.x + Math.sign(input.move) * MOBA.hero.speed * dt))
-    if (h.x < 0.14) h.hp = Math.min(maxHp(h.level), h.hp + MOBA.regenHome * dt)
+    h.calm += dt
+    const regen = (h.x < 0.14 ? MOBA.regenHome : 0) + (h.calm > MOBA.calmAfter ? MOBA.regenCalm : 0)
+    h.hp = Math.min(maxHp(h.level), h.hp + regen * dt)
     if (input.attack && h.cd0 === 0) {
       h.cd0 = MOBA.hero.attackCd
       const dmg = MOBA.hero.attack * power
@@ -157,7 +171,7 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
       const near = enemiesNear(h.x, MOBA.hero.range).sort((a, b) => Math.abs(a.x - h.x) - Math.abs(b.x - h.x))[0]
       if (near) hitMinion(near, dmg, true)
       else if (enemyAlive && Math.abs(e.x - h.x) <= MOBA.hero.range) hitEnemyHero(dmg, true)
-      else if (MOBA.tower.enemyX - h.x <= MOBA.hero.range) hitTower('enemy', dmg)
+      else if (MOBA.tower.enemyX - h.x <= MOBA.hero.range) hitTower('enemy', dmg, true)
     }
     if (input.skill1 && h.cd1 === 0) {
       h.cd1 = MOBA.skill1.cd
@@ -165,7 +179,7 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
       const dmg = MOBA.skill1.dmg * power
       for (const n of enemiesNear(h.x, MOBA.skill1.range)) hitMinion(n, dmg, true)
       if (enemyAlive && Math.abs(e.x - h.x) <= MOBA.skill1.range) hitEnemyHero(dmg, true)
-      if (MOBA.tower.enemyX - h.x <= MOBA.skill1.range) hitTower('enemy', dmg * 0.5)
+      if (MOBA.tower.enemyX - h.x <= MOBA.skill1.range) hitTower('enemy', dmg * 0.5, true)
     }
     if (input.skill2 && h.cd2 === 0) {
       h.cd2 = MOBA.skill2.cd
@@ -193,13 +207,13 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
     e.dead = tick(e.dead)
     if (e.dead === 0) {
       e.x = ENEMY_HOME
-      e.hp = MOBA.hero.hp
+      e.hp = MOBA.enemy.hp
     }
   } else if (e.stun > 0) {
     e.stun = tick(e.stun)
   } else {
-    if (e.x > MOBA.tower.enemyX - 0.12) e.hp = Math.min(MOBA.hero.hp, e.hp + MOBA.regenHome * dt)
-    const low = e.hp < MOBA.hero.hp * MOBA.enemy.retreatAt
+    if (e.x > MOBA.tower.enemyX - 0.12) e.hp = Math.min(MOBA.enemy.hp, e.hp + MOBA.regenHome * dt)
+    const low = e.hp < MOBA.enemy.hp * MOBA.enemy.retreatAt
     // Mục tiêu gần nhất: lính xanh, tướng mình, trụ xanh.
     const allies = m.minions.filter((n) => n.side === 'ally' && n.hp > 0)
     const nearMinion = allies.sort((a, b) => Math.abs(a.x - e.x) - Math.abs(b.x - e.x))[0]
@@ -264,10 +278,16 @@ export function stepMatch(prev: Match, dt: number, input: MatchInput): { match: 
     const target = m.minions
       .filter((n) => n.side === foe && n.hp > 0 && Math.abs(n.x - tx) <= MOBA.tower.range)
       .sort((a, b) => Math.abs(a.x - tx) - Math.abs(b.x - tx))[0]
-    if (target) hitMinion(target, MOBA.tower.dmg, false)
-    else if (side === 'enemy' && h.dead === 0 && Math.abs(h.x - tx) <= MOBA.tower.range) hitHero(MOBA.tower.dmg)
-    else if (side === 'ally' && e.dead === 0 && Math.abs(e.x - tx) <= MOBA.tower.range) hitEnemyHero(MOBA.tower.dmg, false)
-    else return
+    if (target) {
+      ev.push({ kind: 'towerShot', x: target.x, side })
+      hitMinion(target, MOBA.tower.dmg, false)
+    } else if (side === 'enemy' && h.dead === 0 && Math.abs(h.x - tx) <= MOBA.tower.range) {
+      ev.push({ kind: 'towerShot', x: h.x, side })
+      hitHero(MOBA.tower.dmg)
+    } else if (side === 'ally' && e.dead === 0 && Math.abs(e.x - tx) <= MOBA.tower.range) {
+      ev.push({ kind: 'towerShot', x: e.x, side })
+      hitEnemyHero(MOBA.tower.dmg, false)
+    } else return
     m.towerCd[side] = MOBA.tower.cd
   }
   towerShoot('ally')

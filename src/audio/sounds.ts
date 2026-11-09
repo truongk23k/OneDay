@@ -250,7 +250,7 @@ export const shower = bed(0.16, [{ type: 'highpass', f: 900 }, { type: 'lowpass'
 export const stove = bed(0.05, [{ type: 'highpass', f: 2600 }], () =>
   sprinkle(0.06, 0.25, () => noise({ dur: 0.012, gain: 0.05, filter: { type: 'highpass', f: 3000 }, bus: 'amb' }))(),
 )
-export const rain = bed(0.14, [{ type: 'highpass', f: 500 }, { type: 'lowpass', f: 5200 }], () =>
+export const rain = bed(0.07, [{ type: 'highpass', f: 500 }, { type: 'lowpass', f: 5200 }], () =>
   sprinkle(0.05, 0.2, () => noise({ dur: 0.01, gain: 0.03, filter: { type: 'highpass', f: 2500 }, bus: 'amb' }))(),
 )
 export const roomAmbience = bed(0.06, [{ type: 'lowpass', f: 320 }], () => sprinkle(2, 6, chirp)())

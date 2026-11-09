@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useGame } from '../store'
 import { HelpPanel } from './HelpPanel'
@@ -72,4 +72,15 @@ test('help has a background music switch', async () => {
   await userEvent.click(screen.getByRole('switch', { name: /Nhạc nền/ }))
   expect(useSettings.getState().music).toBe(!before)
   useSettings.getState().setMusic(before)
+})
+
+test('help has volume sliders for music, effects and ambience', async () => {
+  render(<HelpPanel isTouch={false} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Hướng dẫn' }))
+  const sfx = screen.getByRole('slider', { name: /Hiệu ứng/ })
+  fireEvent.change(sfx, { target: { value: '40' } })
+  expect(useSettings.getState().volume.sfx).toBeCloseTo(0.4)
+  expect(screen.getByRole('slider', { name: /Nhạc nền/ })).toBeVisible()
+  expect(screen.getByRole('slider', { name: /Tiếng nền/ })).toBeVisible()
+  useSettings.getState().setVolume('sfx', 1)
 })

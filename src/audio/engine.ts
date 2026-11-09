@@ -1,7 +1,26 @@
 import { create } from 'zustand'
 
 // Bộ trộn âm thanh: một AudioContext, ba đường (hiệu ứng, nhạc, tiếng nền) và cài đặt bật/tắt (nhớ trong máy).
-type Settings = { sound: boolean; music: boolean; setSound: (on: boolean) => void; setMusic: (on: boolean) => void }
+export type Bus = 'sfx' | 'music' | 'amb'
+export type Volume = Record<Bus, number>
+type Settings = {
+  sound: boolean
+  music: boolean
+  // Âm lượng từng nhóm (0..1): nhạc nền, hiệu ứng, tiếng nền (mưa, phố, chim).
+  volume: Volume
+  setSound: (on: boolean) => void
+  setMusic: (on: boolean) => void
+  setVolume: (bus: Bus, v: number) => void
+}
+
+const DEFAULT_VOLUME: Volume = { sfx: 1, music: 0.6, amb: 0.6 }
+function loadVolume(): Volume {
+  try {
+    return { ...DEFAULT_VOLUME, ...JSON.parse(localStorage.getItem('oneday.volume') ?? '{}') }
+  } catch {
+    return { ...DEFAULT_VOLUME }
+  }
+}
 
 const load = (key: string) => {
   try {
@@ -18,9 +37,19 @@ const save = (key: string, on: boolean) => {
   }
 }
 
-export const useSettings = create<Settings>()((set) => ({
+export const useSettings = create<Settings>()((set, get) => ({
   sound: load('oneday.sound'),
   music: load('oneday.music'),
+  volume: loadVolume(),
+  setVolume: (bus, v) => {
+    const volume = { ...get().volume, [bus]: Math.max(0, Math.min(1, v)) }
+    try {
+      localStorage.setItem('oneday.volume', JSON.stringify(volume))
+    } catch {
+      // Chế độ ẩn danh: chỉ nhớ trong lượt chơi này.
+    }
+    set({ volume })
+  },
   setSound: (sound) => {
     save('oneday.sound', sound)
     set({ sound })
@@ -31,8 +60,8 @@ export const useSettings = create<Settings>()((set) => ({
   },
 }))
 
-export type Bus = 'sfx' | 'music' | 'amb'
-const LEVEL: Record<Bus, number> = { sfx: 0.9, music: 0.32, amb: 0.5 }
+// Mức gốc của từng nhóm (nhân với âm lượng người chơi chọn): hiệu ứng rõ nhất, nhạc và tiếng nền nhỏ hơn.
+const LEVEL: Record<Bus, number> = { sfx: 1.1, music: 0.4, amb: 0.45 }
 
 type Mixer = { ctx: AudioContext; master: GainNode; bus: Record<Bus, GainNode>; noise: AudioBuffer }
 let mixer: Mixer | null = null
@@ -59,11 +88,13 @@ function build(ctx: AudioContext): Mixer {
 }
 
 function applyLevels(m: Mixer) {
-  const { sound, music } = useSettings.getState()
+  const { sound, music, volume } = useSettings.getState()
   const t = m.ctx.currentTime
-  m.bus.sfx.gain.setTargetAtTime(sound ? LEVEL.sfx : 0, t, 0.05)
-  m.bus.amb.gain.setTargetAtTime(sound ? LEVEL.amb : 0, t, 0.05)
-  m.bus.music.gain.setTargetAtTime(music ? LEVEL.music : 0, t, 0.05)
+  // Thanh trượt nghe theo tai người (bình phương) cho dễ chỉnh nhỏ.
+  const level = (b: Bus, on: boolean) => (on ? LEVEL[b] * volume[b] ** 2 : 0)
+  m.bus.sfx.gain.setTargetAtTime(level('sfx', sound), t, 0.05)
+  m.bus.amb.gain.setTargetAtTime(level('amb', sound), t, 0.05)
+  m.bus.music.gain.setTargetAtTime(level('music', music), t, 0.05)
 }
 
 useSettings.subscribe(() => {

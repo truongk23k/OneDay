@@ -453,6 +453,7 @@ export const S = {
     checkpoint: 'Chốt CSGT',
     checkpointAhead: 'Phía trước có chốt CSGT — nhớ đủ mũ bảo hiểm, đừng bốc đầu!',
   },
+  volume: { sfx: 'Hiệu ứng', music: 'Nhạc nền', amb: 'Tiếng nền (mưa, phố)' },
   rotate: 'Xoay ngang điện thoại để chơi nhé',
   noWebGL:
     'Trình duyệt này chưa hỗ trợ đồ họa 3D (WebGL2). Bạn thử mở bằng Chrome hoặc Safari bản mới nhé.',

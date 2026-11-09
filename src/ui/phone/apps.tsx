@@ -33,6 +33,7 @@ import { useStory } from '../../story/store'
 import { S } from '../../strings'
 import { BackGlyph } from '../GameIcons'
 import { MapSvg } from '../RideMap'
+import { VolumeSliders } from '../VolumeSliders'
 import { usePhone, type Contact } from './phoneStore'
 
 export const money = (thousands: number) => `${(thousands * 1000).toLocaleString('vi-VN')}đ`
@@ -515,6 +516,7 @@ export function SettingsApp() {
         <span>{S.phone.settings.music}</span>
         <span className={musicOn ? 'switch on' : 'switch'} aria-hidden />
       </button>
+      <VolumeSliders />
       <p className="muted">{S.phone.settings.about}</p>
     </div>
   )

@@ -2,6 +2,7 @@ import { AudioWaveform, Volume2, VolumeX } from 'lucide-react'
 import { useEffect } from 'react'
 import { keys } from '../player/input'
 import { useSettings } from '../audio/engine'
+import { VolumeSliders } from './VolumeSliders'
 import { useGame } from '../store'
 import { useStory } from '../story/store'
 import { S } from '../strings'
@@ -64,6 +65,7 @@ export function HelpPanel({ isTouch }: { isTouch: boolean }) {
               <span>{S.help.music}</span>
               <span className={musicOn ? 'switch on' : 'switch'} aria-hidden />
             </button>
+            <VolumeSliders />
             <button className="btn btn-primary btn-block help-resume" onClick={() => setOpen(false)}>
               {S.help.resume}
             </button>
