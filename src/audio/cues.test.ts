@@ -1,5 +1,5 @@
 import { initialState, reducer, type StoryState } from '../story/state'
-import { loopsFor, storyCues, worldCues, type WorldView } from './cues'
+import { isRinging, loopsFor, nearness, storyCues, worldCues, type WorldView } from './cues'
 
 const room = (over: Partial<StoryState> = {}): StoryState => ({ ...initialState(1), phase: 'room', ...over })
 const world: WorldView = { bathDoorOpen: true, lightsOn: true, fridgeOpen: false, stoveOn: false, water: { lavabo: false, sink: false, shower: false }, pose: null }
@@ -118,4 +118,23 @@ test('replying to Em plays the sent whoosh', () => {
   s = reducer(s, { type: 'tick', realDt: 0 })
   const sent = reducer(s, { type: 'chatReply', index: 0 })
   expect(storyCues(s, sent)).toContain('sent')
+})
+
+describe('what keeps sounding', () => {
+  test('running water and the stove are loud up close and fade with distance', () => {
+    expect(nearness({ x: 1, z: 1 }, { x: 1, z: 1 })).toBe(1)
+    expect(nearness({ x: 1, z: 1 }, { x: 1, z: 4 })).toBeCloseTo(0.5)
+    expect(nearness({ x: 1, z: 1 }, { x: 1, z: 7 })).toBe(0)
+  })
+
+  test('calling Em at her door rings only until she picks up', () => {
+    const call = { who: 'em' as const, phase: 'ringing' as const, text: null }
+    const street: StoryState = { ...initialState(1), phase: 'street', stage: 'toEm' }
+    expect(isRinging(street, 'ringing', call)).toBe(true)
+    expect(isRinging(street, 'coming', call)).toBe(false)
+    expect(isRinging({ ...street, stage: 'withEm' }, 'aboard', call)).toBe(false)
+    expect(isRinging(room(), 'home', { who: 'boss', phase: 'ringing', text: null })).toBe(true)
+    expect(isRinging(room(), 'home', { who: 'boss', phase: 'talking', text: 'x' })).toBe(false)
+    expect(isRinging(room(), 'home', null)).toBe(false)
+  })
 })

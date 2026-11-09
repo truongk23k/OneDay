@@ -124,3 +124,24 @@ export function loopsFor(s: StoryState, w: WorldView, r: { police: boolean; ring
     stove: inRoom && w.stoveOn,
   }
 }
+
+// Chỗ phát ra tiếng nước / bếp trong phòng (để tiếng to nhỏ theo khoảng cách).
+export const SOURCES = {
+  lavabo: { x: 3.75, z: 0.3 },
+  sink: { x: 0.4, z: 0.8 },
+  shower: { x: 3.75, z: 1.12 },
+  stove: { x: 1.0, z: 0.7 },
+}
+
+// 1 khi đứng sát (trong vòng 1 m), nhỏ dần, im hẳn khi cách 5 m.
+export function nearness(p: { x: number; z: number }, src: { x: number; z: number }): number {
+  const d = Math.hypot(p.x - src.x, p.z - src.z)
+  return Math.max(0, Math.min(1, 1 - (d - 1) / 4))
+}
+
+// Chuông điện thoại: gọi Em ở cửa nhà thì chỉ reo tới lúc Em bắt máy; các cuộc khác theo trạng thái cuộc gọi.
+export function isRinging(s: StoryState, em: string, call: { who: string; phase: 'ringing' | 'talking'; text?: string | null } | null): boolean {
+  if (!call || call.phase !== 'ringing') return false
+  if (call.who === 'em' && s.phase === 'street') return s.stage === 'toEm' && em === 'ringing'
+  return true
+}

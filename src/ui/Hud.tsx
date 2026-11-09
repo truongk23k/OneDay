@@ -95,14 +95,20 @@ export function InteractPrompt({ targetId, isTouch }: { targetId: string | null;
       if (a.type === 'pee') w.play('pee', 3)
       if (a.type === 'poop') w.play('poop', 4.5)
       if (a.type === 'cook') {
-        if (!w.stoveOn) w.toggleStove()
+        if (!w.stoveOn) {
+          w.toggleStove()
+          setTimeout(() => useWorld.getState().stoveOn && useWorld.getState().toggleStove(), 4500)
+        }
         w.play('cook', 4.5)
       }
       if (a.type === 'pullup') w.play('pullup', 3.5)
       if (a.type === 'flex') w.play('flex', 2.5)
       if (a.type === 'nap') w.play('lie', 3.5)
       if (a.type === 'bathe') {
-        if (!w.water.shower) w.toggleWater('shower')
+        if (!w.water.shower) {
+          w.toggleWater('shower')
+          setTimeout(() => useWorld.getState().water.shower && useWorld.getState().toggleWater('shower'), 3500)
+        }
         w.play('bathe', 3.5)
       }
       const hadKeys = useStory.getState().s.tasks.keys

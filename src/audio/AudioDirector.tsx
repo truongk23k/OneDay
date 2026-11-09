@@ -3,7 +3,8 @@ import { useWorld } from '../room/world'
 import { useRide } from '../ride/store'
 import { useStory } from '../story/store'
 import { usePhone } from '../ui/phone/phoneStore'
-import { loopsFor, storyCues, worldCues, type WorldView } from './cues'
+import { player as anh } from '../story/interact'
+import { isRinging, loopsFor, nearness, SOURCES, storyCues, worldCues, type WorldView } from './cues'
 import { useSettings } from './engine'
 import { music } from './music'
 import { alarm, playCue, rain, ringtone, roomAmbience, shower, siren, stove, streetAmbience, tap, engine } from './sounds'
@@ -26,14 +27,18 @@ function syncLoops() {
   const s = useStory.getState().s
   const ride = useRide.getState()
   const call = usePhone.getState().call
-  const ringing = call?.phase === 'ringing' && (call.who !== 'em' || s.phase !== 'street' || ride.em !== 'coming')
+  const ringing = isRinging(s, ride.em, call)
   const chasing = s.phase === 'street' && s.stage !== 'done' && ride.police.mode === 'chase'
   const l = loopsFor(s, worldView(useWorld.getState()), { police: chasing, ringing })
   alarm.set(l.alarm)
   ringtone.set(l.ringtone)
+  const w = useWorld.getState()
   tap.set(l.tap)
+  tap.level(Math.max(w.water.lavabo ? nearness(anh, SOURCES.lavabo) : 0, w.water.sink ? nearness(anh, SOURCES.sink) : 0))
   shower.set(l.shower)
+  shower.level(nearness(anh, SOURCES.shower))
   stove.set(l.stove)
+  stove.level(nearness(anh, SOURCES.stove))
   rain.set(l.rain)
   roomAmbience.set(l.ambience === 'room')
   streetAmbience.set(l.ambience === 'street')

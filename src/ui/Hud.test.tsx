@@ -84,3 +84,14 @@ test('the checklist puts the three must-dos first, and says when Anh is ready to
   rerender(<Checklist />)
   expect(screen.getByText('Sẵn sàng ra cửa!')).toBeVisible()
 })
+
+test('cooking or showering turns the stove / shower back off when done', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  useWorld.getState().reset()
+  render(<InteractPrompt targetId="kitchen" isTouch={true} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Nấu mì' }))
+  expect(useWorld.getState().stoveOn).toBe(true)
+  act(() => vi.advanceTimersByTime(5000))
+  expect(useWorld.getState().stoveOn).toBe(false)
+  vi.useRealTimers()
+})

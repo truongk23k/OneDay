@@ -87,7 +87,7 @@ export function mallet(f: number, at = 0, gain = 0.18, bus: Bus = 'sfx') {
 export const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
 
 // Vòng lặp: dựng các nút khi bật, tắt dần khi tắt. build trả về nút ra (gain) và hàm dọn dẹp.
-type Built = { out: GainNode; sources: AudioScheduledSourceNode[]; cleanup?: () => void }
+type Built = { out: GainNode; sources: AudioScheduledSourceNode[]; cleanup?: () => void; base?: number }
 export function loop(build: (ctx: AudioContext, bus: Record<Bus, GainNode>, noiseBuf: AudioBuffer) => Built) {
   let live: Built | null = null
   return {
@@ -116,6 +116,12 @@ export function loop(build: (ctx: AudioContext, bus: Record<Bus, GainNode>, nois
     },
     get node() {
       return live
+    },
+    // Chỉnh độ to (0..1) so với mức gốc, ví dụ theo khoảng cách tới vòi nước.
+    level(v: number) {
+      const m = audio()
+      if (!m || !live || live.base === undefined) return
+      live.out.gain.setTargetAtTime(live.base * v, m.ctx.currentTime, 0.15)
     },
   }
 }

@@ -212,7 +212,7 @@ function bed(gain: number, filters: Parameters<typeof noiseBed>[3], extra?: (ctx
     out.gain.setTargetAtTime(gain, ctx.currentTime, 0.2)
     out.connect(bus.amb)
     const src = noiseBed(ctx, buf, out, filters)
-    return { out, sources: [src], cleanup: extra?.(ctx, out) }
+    return { out, sources: [src], cleanup: extra?.(ctx, out), base: gain }
   })
 }
 
@@ -253,8 +253,8 @@ export const stove = bed(0.05, [{ type: 'highpass', f: 2600 }], () =>
 export const rain = bed(0.07, [{ type: 'highpass', f: 500 }, { type: 'lowpass', f: 5200 }], () =>
   sprinkle(0.05, 0.2, () => noise({ dur: 0.01, gain: 0.03, filter: { type: 'highpass', f: 2500 }, bus: 'amb' }))(),
 )
-export const roomAmbience = bed(0.06, [{ type: 'lowpass', f: 320 }], () => sprinkle(2, 6, chirp)())
-export const streetAmbience = bed(0.12, [{ type: 'lowpass', f: 650 }], () => sprinkle(5, 12, farHonk)())
+export const roomAmbience = bed(0, [{ type: 'lowpass', f: 320 }], () => sprinkle(2, 6, chirp)())
+export const streetAmbience = bed(0.07, [{ type: 'lowpass', f: 650 }], () => sprinkle(5, 12, farHonk)())
 
 // Còi hú CSGT hai tông lên xuống.
 export const siren = loop((ctx, bus) => {
@@ -314,7 +314,9 @@ export const engine = {
     const t = m.ctx.currentTime
     a.frequency.setTargetAtTime(f, t, 0.08)
     b.frequency.setTargetAtTime(f / 2, t, 0.08)
-    live.out.gain.setTargetAtTime(0.05 + Math.min(1, rev) * 0.07, t, 0.1)
+    // Đứng yên không ga: ngắt máy tạm thời, im hẳn.
+    const idle = Math.abs(speed) < 0.3 && throttle === 0
+    live.out.gain.setTargetAtTime(idle ? 0 : 0.04 + Math.min(1, rev) * 0.07, t, idle ? 0.35 : 0.1)
     engineFilter?.frequency.setTargetAtTime(300 + rev * 900, t, 0.1)
   },
 }
