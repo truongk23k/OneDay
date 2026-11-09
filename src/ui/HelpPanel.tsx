@@ -1,7 +1,7 @@
-import { Volume2, VolumeX } from 'lucide-react'
+import { AudioWaveform, Volume2, VolumeX } from 'lucide-react'
 import { useEffect } from 'react'
 import { keys } from '../player/input'
-import { useSettings } from '../sfx'
+import { useSettings } from '../audio/engine'
 import { useGame } from '../store'
 import { useStory } from '../story/store'
 import { S } from '../strings'
@@ -27,6 +27,8 @@ export function HelpPanel({ isTouch }: { isTouch: boolean }) {
   const phase = useStory((st) => st.s.phase)
   const sound = useSettings((s) => s.sound)
   const setSound = useSettings((s) => s.setSound)
+  const musicOn = useSettings((s) => s.music)
+  const setMusic = useSettings((s) => s.setMusic)
   const street = phase === 'street'
   const controls = street ? (isTouch ? S.help.rideTouch : S.help.rideDesktop) : isTouch ? S.help.touch : S.help.desktop
 
@@ -56,6 +58,11 @@ export function HelpPanel({ isTouch }: { isTouch: boolean }) {
               {sound ? <Volume2 aria-hidden /> : <VolumeX aria-hidden />}
               <span>{S.help.sound}</span>
               <span className={sound ? 'switch on' : 'switch'} aria-hidden />
+            </button>
+            <button className="setting-row" role="switch" aria-checked={musicOn} onClick={() => setMusic(!musicOn)}>
+              <AudioWaveform aria-hidden />
+              <span>{S.help.music}</span>
+              <span className={musicOn ? 'switch on' : 'switch'} aria-hidden />
             </button>
             <button className="btn btn-primary btn-block help-resume" onClick={() => setOpen(false)}>
               {S.help.resume}

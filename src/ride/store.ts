@@ -7,6 +7,7 @@ import { newBike, stepBike, type BikeInput, type BikeState } from './bike'
 import { LIGHTS, MARKERS, POTHOLES, ROAD_HALF, ROADS_Z, SIDEWALK, STREET_COLLIDERS } from './city'
 import { CHECK_RADIUS, CHECK_WATCH, CHECKPOINT, helmetsShort, newPolice, startChase, stepPolice, type Police } from './police'
 import { arrivedAt, STOP_SPEED } from './rules'
+import { playCue } from '../audio/sounds'
 import { axisOf, lightState, newTraffic, stepTraffic, vehicleBox, type Vehicle } from './traffic'
 
 // Nút ga/phanh/rẽ trên điện thoại ghi vào đây; bàn phím đọc từ keys (W/S/A/D, mũi tên).
@@ -139,13 +140,20 @@ export function stepRide(dt: number, now: number) {
   // Đang bị giữ xe thì phanh dừng không tính là phanh gấp.
   for (const e of held ? [] : events) {
     if (e.kind === 'crash') {
-      if (now - lastCrash > CRASH_COOLDOWN) story.dispatch({ type: 'rideEvent', kind: 'crash' })
+      if (now - lastCrash > CRASH_COOLDOWN) {
+        playCue('crash')
+        story.dispatch({ type: 'rideEvent', kind: 'crash' })
+      }
       lastCrash = now
-    } else story.dispatch({ type: 'rideEvent', kind: e.kind })
+    } else {
+      if (e.kind === 'hardBrake') playCue('brake')
+      story.dispatch({ type: 'rideEvent', kind: e.kind })
+    }
   }
 
   const hole = POTHOLES.findIndex((p) => Math.hypot(p.x - state.x, p.z - state.z) < POTHOLE_RADIUS)
   if (hole >= 0 && hole !== lastPothole && Math.abs(state.speed) > POTHOLE_SPEED) {
+    playCue('pothole')
     story.dispatch({ type: 'rideEvent', kind: 'pothole' })
     lastPothole = hole
   } else if (hole < 0) lastPothole = -1
@@ -156,6 +164,7 @@ export function stepRide(dt: number, now: number) {
   if (light >= 0 && light !== ride.lastLight && Math.abs(state.speed) > RED_LIGHT_SPEED) {
     const axis = axisOf(-Math.sin(state.heading), -Math.cos(state.heading))
     if (lightState(light, time, axis) === 'red') {
+      playCue('honkedAt')
       story.dispatch({ type: 'rideEvent', kind: 'redLight' })
       if (ride.police.mode === 'off' && time >= ride.policeCooldown) {
         police = startChase(state, time, 'redLight')

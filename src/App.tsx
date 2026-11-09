@@ -2,7 +2,8 @@ import { Canvas } from '@react-three/fiber'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { isDebug } from './debug'
 import { DPR_CAP, hasWebGL2, isTouchDevice, pickQuality } from './device'
-import { unlockAudio } from './sfx'
+import { AudioDirector } from './audio/AudioDirector'
+import { unlockAudio } from './audio/engine'
 import { Player } from './player/Player'
 import { Room } from './room/Room'
 import { WardrobeScene } from './room/WardrobeScene'
@@ -87,6 +88,7 @@ export default function App() {
       <Phone />
       <EndCard />
       <HelpPanel isTouch={isTouch} />
+      <AudioDirector />
       <RotatePrompt />
     </>
   )

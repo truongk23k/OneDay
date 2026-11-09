@@ -1,4 +1,4 @@
-import { Bike, Check, ChevronLeft, ChevronRight, ChevronsUp, Heart, MapPin, Navigation2, OctagonX, Siren } from 'lucide-react'
+import { Bike, Check, ChevronLeft, ChevronRight, ChevronsUp, Heart, Megaphone, MapPin, Navigation2, OctagonX, Siren } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { LIGHTS, ROAD_HALF } from '../ride/city'
 import { nextTurn, routeTo, type Pt, type Route } from '../ride/nav'
@@ -7,7 +7,7 @@ import { STOP_RADIUS, targetFor } from '../ride/rules'
 import { rideInput, useRide } from '../ride/store'
 import { axisOf, lightState, type LightColor } from '../ride/traffic'
 import type { BikeState } from '../ride/bike'
-import { siren } from '../sfx'
+import { playCue } from '../audio/sounds'
 import { FINES, type PoliceReason, type Stage } from '../story/state'
 import { useGame } from '../store'
 import { useStory } from '../story/store'
@@ -66,6 +66,10 @@ function Pedals() {
 
   return (
     <>
+      <button className="pedal horn" aria-label={S.ride.horn} onPointerDown={() => playCue('horn')}>
+        <Megaphone aria-hidden />
+        <span>{S.ride.horn}</span>
+      </button>
       <div className="ride-steer">
         <button {...pedal('left', S.ride.left, <ChevronLeft aria-hidden />, 'steer')} />
         <button {...pedal('right', S.ride.right, <ChevronRight aria-hidden />, 'steer')} />
@@ -294,10 +298,14 @@ export function RideHud({ isTouch }: { isTouch: boolean }) {
   const atEmDoor = useRide((r) => r.atEmDoor)
   const em = useRide((r) => r.em)
   const canCall = phase === 'street' && stage === 'toEm' && atEmDoor && em === 'home'
-  // Còi hú khi CSGT đang đuổi; rời phố thì tắt.
-  const chasing = phase === 'street' && stage !== 'done' && nav.police !== null
-  useEffect(() => siren(chasing), [chasing])
-  useEffect(() => () => siren(false), [])
+  // Máy tính: phím H bấm còi.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'KeyH' && !e.repeat && useStory.getState().s.phase === 'street' && !useGame.getState().paused) playCue('horn')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   // Máy tính: E hoặc Space để mở điện thoại gọi Em khi đã đứng trước cửa.
   useEffect(() => {

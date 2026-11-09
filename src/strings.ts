@@ -14,9 +14,10 @@ export const S = {
       'Xoay camera: vuốt ở nửa bên phải màn hình',
       'Mở hướng dẫn: nút ?',
     ],
-    rideDesktop: ['Lái xe: W ga · S phanh · A/D rẽ · giữ Shift để bốc đầu', 'M: bản đồ lớn · E: mở điện thoại gọi Em khi đứng trước cửa', 'Esc: tạm dừng / hướng dẫn'],
+    rideDesktop: ['Lái xe: W ga · S phanh · A/D rẽ · giữ Shift để bốc đầu · H bấm còi', 'M: bản đồ lớn · E: mở điện thoại gọi Em khi đứng trước cửa', 'Esc: tạm dừng / hướng dẫn'],
     rideTouch: ['Nút ‹ › bên trái để rẽ', 'Bên phải: giữ Ga để chạy, Phanh để dừng, Bốc đầu để bốc đầu', 'Chạm bản đồ nhỏ để phóng to · nút điện thoại để gọi Em'],
     sound: 'Âm thanh',
+    music: 'Nhạc nền',
     controls: 'Điều khiển',
     sceneTitle: 'Màn này',
     scenes: {
@@ -202,9 +203,10 @@ export const S = {
     },
     light: { red: 'Đèn đỏ', yellow: 'Đèn vàng', green: 'Đèn xanh' },
     kmh: 'km/h',
-    keysHint: 'W ga · S phanh · A/D rẽ · Shift bốc đầu · M bản đồ · E gọi Em',
+    keysHint: 'W ga · S phanh · A/D rẽ · Shift bốc đầu · H còi · M bản đồ · E gọi Em',
     atStop: 'Tới nơi',
     direction: 'Hướng đi',
+    horn: 'Còi',
     left: 'Rẽ trái',
     right: 'Rẽ phải',
     gas: 'Ga',
@@ -383,7 +385,7 @@ export const S = {
       tooLate: 'Em tới chỗ làm rồi, đặt bây giờ không kịp nữa.',
       line: 'Đặt xôi cho Em rồi 🥰',
     },
-    music: { playing: 'Đang phát', paused: 'Đã dừng', play: 'Phát', pause: 'Dừng', next: 'Bài tiếp', off: 'Đang tắt âm thanh (Cài đặt)' },
+    music: { playing: 'Đang phát', paused: 'Đã dừng', play: 'Phát', pause: 'Dừng', next: 'Bài tiếp', off: 'Nhạc nền đang tắt' },
     mail: {
       inbox: 'Hộp thư',
       items: [
@@ -404,7 +406,7 @@ export const S = {
       back: 'Camera sau',
       file: 'oneday-anh-chup.jpg',
     },
-    settings: { sound: 'Âm thanh', on: 'Bật', off: 'Tắt', about: 'One Day · bản thử 0.4' },
+    settings: { sound: 'Âm thanh', music: 'Nhạc nền', on: 'Bật', off: 'Tắt', about: 'One Day · bản thử 0.4' },
   },
   police: {
     name: 'CSGT',

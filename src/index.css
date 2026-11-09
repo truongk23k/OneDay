@@ -3329,3 +3329,33 @@ kbd {
 .phone .app-name {
   line-height: 1.15;
 }
+
+/* Nút còi xe (trên cụm nút rẽ) */
+.pedal.horn {
+  --c1: #b48cff;
+  --c2: #7a4fe0;
+  --rim: #3f2484;
+  position: absolute;
+  z-index: 32;
+  left: var(--sl);
+  bottom: calc(var(--sb) + 76px + 12px);
+  flex-direction: row;
+  gap: 4px;
+  width: 92px;
+  height: 44px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.pedal.horn svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-height: 450px) {
+  .pedal.horn {
+    bottom: calc(var(--sb) + 66px + 10px);
+    width: 84px;
+    height: 40px;
+  }
+}

@@ -5,6 +5,7 @@ import {
   Circle,
   CloudRain,
   Download,
+  Headphones,
   Images,
   Pause,
   Phone as PhoneIcon,
@@ -22,7 +23,8 @@ import { MARKERS } from '../../ride/city'
 import { routeTo } from '../../ride/nav'
 import { targetFor } from '../../ride/rules'
 import { useRide } from '../../ride/store'
-import { music, TRACKS, useSettings } from '../../sfx'
+import { useSettings } from '../../audio/engine'
+import { music, TRACKS } from '../../audio/music'
 import { useGame } from '../../store'
 import { BEATS } from '../../story/chat'
 import { format } from '../../story/clock'
@@ -354,18 +356,26 @@ export function FaceApp() {
 export function MusicApp() {
   const playing = music((m) => m.playing)
   const track = music((m) => m.track)
-  const sound = useSettings((s) => s.sound)
-  const m = music.getState()
+  const on = useSettings((s) => s.music)
+  // Phát / dừng = bật / tắt nhạc nền của game; "Bài tiếp" đổi bài đang phát.
+  const toggle = () => {
+    const settings = useSettings.getState()
+    if (on && playing) settings.setMusic(false)
+    else {
+      settings.setMusic(true)
+      music.getState().play()
+    }
+  }
   return (
     <div className="app-body music-app">
       <div className={playing ? 'disc spin' : 'disc'} aria-hidden />
       <div className="track">{TRACKS[track].name}</div>
-      <div className="muted">{sound ? (playing ? S.phone.music.playing : S.phone.music.paused) : S.phone.music.off}</div>
+      <div className="muted">{!on ? S.phone.music.off : playing ? S.phone.music.playing : S.phone.music.paused}</div>
       <div className="music-buttons">
-        <button className="round-btn" aria-label={playing ? S.phone.music.pause : S.phone.music.play} disabled={!sound} onClick={() => (playing ? m.stop() : m.play())}>
-          {playing ? <Pause aria-hidden /> : <Play aria-hidden />}
+        <button className="round-btn" aria-label={on && playing ? S.phone.music.pause : S.phone.music.play} onClick={toggle}>
+          {on && playing ? <Pause aria-hidden /> : <Play aria-hidden />}
         </button>
-        <button className="round-btn" aria-label={S.phone.music.next} disabled={!sound} onClick={m.next}>
+        <button className="round-btn" aria-label={S.phone.music.next} onClick={() => music.getState().next()}>
           <SkipForward aria-hidden />
         </button>
       </div>
@@ -491,13 +501,19 @@ export function CameraApp() {
 
 export function SettingsApp() {
   const sound = useSettings((s) => s.sound)
-  const setSound = useSettings((s) => s.setSound)
+  const musicOn = useSettings((s) => s.music)
+  const { setSound, setMusic } = useSettings.getState()
   return (
     <div className="app-body settings">
       <button className="setting-row" role="switch" aria-checked={sound} onClick={() => setSound(!sound)}>
         {sound ? <Volume2 aria-hidden /> : <VolumeX aria-hidden />}
         <span>{S.phone.settings.sound}</span>
         <span className={sound ? 'switch on' : 'switch'} aria-hidden />
+      </button>
+      <button className="setting-row" role="switch" aria-checked={musicOn} onClick={() => setMusic(!musicOn)}>
+        <Headphones aria-hidden />
+        <span>{S.phone.settings.music}</span>
+        <span className={musicOn ? 'switch on' : 'switch'} aria-hidden />
       </button>
       <p className="muted">{S.phone.settings.about}</p>
     </div>

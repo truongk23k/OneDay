@@ -7,6 +7,7 @@ import type { Stage } from '../story/state'
 import { useStory } from '../story/store'
 import { EmWalker, Riders, Scooter } from './Bike3D'
 import { ChaseCar, Checkpoint } from './Police3D'
+import { engine } from '../audio/sounds'
 import { BEACONS } from './city'
 import { buildCityParts } from './cityParts'
 import { Rain } from './Rain'
@@ -141,6 +142,7 @@ export default function StreetScene() {
       bikeRef.current.rotation.z = lean.current
     }
     if (pivotRef.current) pivotRef.current.rotation.x = b.pitch
+    engine.update(b.speed, readInput().throttle, b.lifted)
     // Lúc bốc đầu camera lượn chéo sang bên và hạ thấp để thấy rõ bánh trước nhấc lên.
     const lift = b.pitch / BIKE.wheelieMax
     orbit.current += (lift * 0.75 - orbit.current) * Math.min(1, dt * 3)

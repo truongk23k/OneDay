@@ -15,12 +15,14 @@ import { clampDelta, moveVector } from './movement'
 import { poseFor, type Pose } from './pose'
 import { useKeys } from './useKeys'
 import { activeLens } from '../ui/phone/phoneStore'
+import { playCue } from '../audio/sounds'
 
 const RADIUS = 0.25
 const SPEED = 2.2
 const SPRINT = 1.65
 const CAM_DIST = 2.0
 const LOOK_HEIGHT = 1.1
+const STRIDE = 0.55
 const PITCH_MIN = 0.15
 const PITCH_MAX = 1.1
 const MOUSE_SENS = 0.005
@@ -71,6 +73,7 @@ export function Player() {
   const motion = useRef<Motion>({ speed: 0 })
   // 0 = camera theo Anh, 1 = camera đứng trước tủ quần áo đang mở.
   const wardrobeCam = useRef(0)
+  const stride = useRef(0)
   const wasSitting = useRef(false)
   const lastSnap = useRef<(typeof SNAP)[Pose] | null>(null)
 
@@ -150,6 +153,12 @@ export function Player() {
         motion.current.speed = speed * run
         const step = SPEED * run * dt
         const next = resolveCircleBoxes({ x: s.x + v.x * step, z: s.z + v.z * step }, RADIUS, [...COLLIDERS, ...dynamicColliders()])
+        // Mỗi bước chân một tiếng (chạy thì bước dài hơn).
+        stride.current += Math.hypot(next.x - s.x, next.z - s.z)
+        if (stride.current > STRIDE * run) {
+          stride.current = 0
+          playCue('step')
+        }
         s.x = next.x
         s.z = next.z
         const target = Math.atan2(-v.x, -v.z)

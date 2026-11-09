@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useGame } from '../store'
 import { HelpPanel } from './HelpPanel'
-import { useSettings } from '../sfx'
+import { useSettings } from '../audio/engine'
 import { initialState } from '../story/state'
 import { useStory } from '../story/store'
 
@@ -63,4 +63,13 @@ test('help has a sound switch', async () => {
   await userEvent.click(sw)
   expect(useSettings.getState().sound).toBe(!before)
   useSettings.getState().setSound(before)
+})
+
+test('help has a background music switch', async () => {
+  render(<HelpPanel isTouch={false} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Hướng dẫn' }))
+  const before = useSettings.getState().music
+  await userEvent.click(screen.getByRole('switch', { name: /Nhạc nền/ }))
+  expect(useSettings.getState().music).toBe(!before)
+  useSettings.getState().setMusic(before)
 })
