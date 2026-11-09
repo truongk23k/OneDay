@@ -263,7 +263,7 @@ export function Computer() {
   return (
     <div className="pc-dock">
       <div className="pc" role="dialog" aria-label={S.pc.name}>
-        <button className="phone-close pc-close" aria-label={S.pc.standUp} onClick={standUp}>
+        <button className="icon-btn pc-close" aria-label={S.pc.standUp} onClick={standUp}>
           <X aria-hidden />
         </button>
         <div className="pc-screen" onPointerDown={(e) => startOpen && !(e.target as Element).closest('.pc-start, .start') && usePc.setState({ startOpen: false })}>

@@ -3831,8 +3831,13 @@ kbd {
 }
 
 .pc .pc-close {
-  top: -8px;
-  left: -8px;
+  --c1: #ff7a6b;
+  --c2: #e0412f;
+  --rim: #8c1f14;
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: calc(-1 * (var(--btn) + 8px));
 }
 
 .pc-screen {
@@ -4091,6 +4096,7 @@ kbd {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: contain;
@@ -4295,14 +4301,16 @@ kbd {
 .news-head {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 10px;
+  gap: 0 10px;
   padding: 8px 16px;
   background: #c8261b;
   color: #fff;
 }
 
 .news-head strong {
+  white-space: nowrap;
   font-family: var(--game);
   font-size: 22px;
 }
@@ -4314,7 +4322,7 @@ kbd {
 
 .news-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
   gap: 0 16px;
   margin: 0;
   padding: 6px 14px;
@@ -4580,6 +4588,9 @@ kbd {
   flex-direction: column;
   gap: 2px;
   width: 210px;
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+  box-sizing: border-box;
   padding: 8px;
   border-radius: 12px;
   background: rgba(32, 33, 38, 0.97);
@@ -4694,6 +4705,44 @@ kbd {
   }
 }
 
+/* Rất hẹp (cửa sổ dọc): bỏ logo nhỏ ở trang kết quả, nút cửa sổ gọn lại. */
+@container pc (max-width: 420px) {
+  .gugo-logo.small {
+    display: none;
+  }
+
+  .pc-winbtns button {
+    width: 34px;
+  }
+
+  .pc-tab {
+    padding: 0 10px;
+  }
+
+  .news-article h3 {
+    font-size: 17px;
+  }
+}
+
+/* Màn dọc (cửa sổ trình duyệt hẹp, máy tính bảng dựng đứng): máy tính rộng hết bề ngang, nằm dưới hàng nút "?". */
+@media (orientation: portrait) {
+  .pc-dock {
+    top: calc(var(--st) + var(--btn) + 12px);
+    left: var(--sl);
+    right: var(--sr);
+    justify-content: flex-start;
+  }
+
+  .pc {
+    height: min(calc(100% - 22px), calc((100vw - 20px) * 1.3));
+  }
+
+  .pc .pc-close {
+    top: calc(-1 * (var(--btn) + 12px));
+    left: 0;
+  }
+}
+
 /* Màn hình thấp (điện thoại xoay ngang): viền mỏng, bỏ chân đế, thanh gọn hơn. */
 @media (max-height: 450px) {
   .pc {
@@ -4764,5 +4813,21 @@ kbd {
 
   .gugo-box {
     height: 38px;
+  }
+
+  /* Menu Bắt đầu chia hai cột cho khỏi tràn lên trên. */
+  .pc-start {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(320px, calc(100% - 16px));
+    padding: 6px;
+  }
+
+  .pc-start button {
+    padding: 5px 8px;
+  }
+
+  .pc-start .pc-power {
+    grid-column: 1 / -1;
   }
 }
