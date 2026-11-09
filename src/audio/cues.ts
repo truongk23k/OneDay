@@ -37,6 +37,15 @@ export type Cue =
   | 'step'
   | 'click'
   | 'snooze'
+  | 'slash'
+  | 'spin'
+  | 'dash'
+  | 'thunder'
+  | 'enemySkill'
+  | 'kill'
+  | 'death'
+  | 'levelUp'
+  | 'towerHit'
 
 export type WorldView = {
   bathDoorOpen: boolean

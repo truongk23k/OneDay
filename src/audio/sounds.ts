@@ -120,6 +120,43 @@ const PLAY: Record<Cue, () => void> = {
     tone({ f: 440, dur: 0.34, gain: 0.08, type: 'square', attack: 0.01, filter: { type: 'lowpass', f: 1800 } })
     tone({ f: 554, dur: 0.34, gain: 0.08, type: 'square', attack: 0.01, filter: { type: 'lowpass', f: 1800 } })
   },
+  // ---------- Liên Quậy ----------
+  slash: () => {
+    noise({ dur: 0.09, gain: 0.14, filter: { type: 'bandpass', f: 2400, to: 900, q: 1.5 } })
+    tone({ f: 900, to: 400, dur: 0.06, gain: 0.05, type: 'triangle' })
+  },
+  spin: () => {
+    noise({ dur: 0.35, gain: 0.2, attack: 0.05, filter: { type: 'bandpass', f: 500, to: 2600, q: 2 } })
+    tone({ f: 300, to: 700, dur: 0.3, gain: 0.08, type: 'sawtooth', filter: { type: 'lowpass', f: 1500 } })
+  },
+  dash: () => {
+    noise({ dur: 0.22, gain: 0.2, attack: 0.02, filter: { type: 'highpass', f: 1200, to: 4000 } })
+    tone({ f: 500, to: 1400, dur: 0.15, gain: 0.07 })
+  },
+  thunder: () => {
+    noise({ dur: 0.08, gain: 0.45, filter: { type: 'highpass', f: 2000 } })
+    noise({ dur: 1.4, gain: 0.4, attack: 0.04, at: 0.05, filter: { type: 'lowpass', f: 900, to: 120 } })
+    tone({ f: 70, to: 32, dur: 0.9, gain: 0.35, at: 0.05 })
+  },
+  enemySkill: () => {
+    tone({ f: 220, to: 110, dur: 0.35, gain: 0.1, type: 'sawtooth', filter: { type: 'lowpass', f: 900 } })
+    noise({ dur: 0.25, gain: 0.1, filter: { type: 'bandpass', f: 700, q: 2 } })
+  },
+  kill: () => {
+    arp([72, 79, 84, 91], 0.07, 0.14, 'square')
+    noise({ dur: 0.3, gain: 0.08, at: 0.2, filter: { type: 'highpass', f: 5000 } })
+  },
+  death: () => {
+    ;[64, 60, 55].forEach((n, i) => tone({ f: hz(n), dur: 0.35, gain: 0.1, at: i * 0.18, type: 'triangle' }))
+  },
+  levelUp: () => {
+    arp([67, 71, 74, 79, 83], 0.06, 0.13, 'sine')
+    tone({ f: hz(86), dur: 0.5, gain: 0.08, at: 0.3 })
+  },
+  towerHit: () => {
+    tone({ f: 140, to: 70, dur: 0.15, gain: 0.25 })
+    noise({ dur: 0.08, gain: 0.12, filter: { type: 'lowpass', f: 600 } })
+  },
   step: () => {
     noise({ dur: 0.06, gain: 0.09, filter: { type: 'lowpass', f: 500 + Math.random() * 250 } })
     tone({ f: 70 + Math.random() * 20, dur: 0.05, gain: 0.06 })

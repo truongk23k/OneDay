@@ -14,7 +14,7 @@ import { input, keys } from './input'
 import { clampDelta, moveVector } from './movement'
 import { poseFor, type Pose } from './pose'
 import { useKeys } from './useKeys'
-import { activeLens } from '../ui/phone/phoneStore'
+import { activeLens, playingGame } from '../ui/phone/phoneStore'
 import { playCue } from '../audio/sounds'
 
 const RADIUS = 0.25
@@ -113,7 +113,7 @@ export function Player() {
     const s = state.current
     const st = useStory.getState().s
     // Chỉ đi lại được trong phòng và khi không mở bảng nào (báo thức, mini-game, tủ đồ…); cầm điện thoại vẫn đi được.
-    const paused = useGame.getState().paused || st.phase !== 'room' || (st.overlay !== null && st.overlay !== 'phone')
+    const paused = useGame.getState().paused || st.phase !== 'room' || (st.overlay !== null && st.overlay !== 'phone') || playingGame()
     let world = useWorld.getState()
     motion.current.pose = poseFor({ overlay: st.overlay, sitting: world.sitting, transient: world.transient, now: nowSeconds(), lens: activeLens() })
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { createTouchRouter, input, isSprintDrag, joystickVector } from '../player/input'
 import { useStory } from '../story/store'
+import { usePhone } from './phone/phoneStore'
 
 const JOY_RADIUS = 60
 const LOOK_SENS = 0.008
@@ -14,7 +15,8 @@ export function TouchControls() {
   const origin = useRef<{ x: number; y: number } | null>(null)
   const [joy, setJoy] = useState<Joy | null>(null)
   // Khi đang mở bảng (tủ đồ, mini-game…) thì nhường chạm cho bảng và cảnh 3D. Điện thoại thì vẫn vừa đi vừa xem được.
-  const busy = useStory((st) => (st.s.overlay !== null && st.s.overlay !== 'phone') || st.s.phase !== 'room')
+  const gaming = usePhone((p) => p.app === 'moba')
+  const busy = useStory((st) => (st.s.overlay !== null && (st.s.overlay !== 'phone' || gaming)) || st.s.phase !== 'room')
 
   // Lớp chạm biến mất thì sự kiện nhấc ngón không tới được: tự thả joystick và quên các ngón đang giữ.
   useEffect(() => {

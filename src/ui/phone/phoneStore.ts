@@ -116,6 +116,11 @@ export function activeLens(): Lens | null {
   return useStory.getState().s.overlay === 'phone' && p.app === 'camera' ? p.lens : null
 }
 
+// Đang chơi Liên Quậy (điện thoại xoay ngang): phím và chạm dành cho trận đấu, Anh đứng yên.
+export function playingGame(): boolean {
+  return useStory.getState().s.overlay === 'phone' && usePhone.getState().app === 'moba'
+}
+
 // Cất điện thoại thì lần sau mở lại từ màn hình chính; chơi lại thì không còn cuộc gọi, ảnh cũ nào.
 useStory.subscribe((st, prev) => {
   const closed = prev.s.overlay === 'phone' && st.s.overlay !== 'phone'

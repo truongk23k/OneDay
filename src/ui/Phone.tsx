@@ -123,8 +123,8 @@ export function Phone() {
   const View = id ? VIEWS[id] : null
   const close = () => dispatch({ type: 'close' })
   return (
-    <div className="phone-dock">
-      <div className={id === 'camera' ? 'phone cam' : 'phone'} role="dialog" aria-label={S.chat.phone}>
+    <div className={id === 'moba' ? 'phone-dock wide' : 'phone-dock'}>
+      <div className={id === 'camera' ? 'phone cam' : id === 'moba' ? 'phone wide' : 'phone'} role="dialog" aria-label={S.chat.phone}>
         <button className="phone-close" aria-label={S.hud.close} onClick={close}>
           <X aria-hidden />
         </button>
@@ -139,7 +139,7 @@ export function Phone() {
           </div>
           {View && id ? (
             <div className={`phone-app app-${id}`}>
-              {id !== 'messages' && id !== 'call' && (
+              {id !== 'messages' && id !== 'call' && id !== 'moba' && (
                 <div className="app-bar">
                   <button className="app-back" aria-label={S.phone.back} onClick={() => go('home')}>
                     <BackGlyph />
